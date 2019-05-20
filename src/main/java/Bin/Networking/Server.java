@@ -14,41 +14,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Server implements Startable{
 
-    private static AtomicInteger id;
-    private Map<Integer, ServerUser> users;
-    private AudioFormat audioFormat;
-    private int port;
-    private boolean init;
-    private boolean work;
     private ServerSocket serverSocket;
+//    private int port;
+    private boolean work;
+    private AudioFormat audioFormat;
+    private AtomicInteger id;
+    private Map<Integer, ServerUser> users;
 
-    private static Server server;
-
-    static {
+//    static {
         /*
         * initial value grater than 0 because of problem with transporting negative byte
          */
-        id = new AtomicInteger(3);
-    }
+//        id = new AtomicInteger(3);
+//    }
 
-    private Server() {
-        users = new HashMap<>();
-        server = this;
-        work = true;
-    }
-
-    public static Server getInstance(){
-        return server == null ? new Server() : server;
-    }
-
-    public void init(int port, int sampleRate, int sampleSize){
-        if (init) return;
-        this.port = port;
+    public Server(final int port, final int sampleRate, final int sampleSize) throws IOException {
+        serverSocket = new ServerSocket(port);
         audioFormat = new AudioFormat(sampleRate, sampleSize, 1, true, true);
-        init = true;
+        id = new AtomicInteger(1);
+        users = new HashMap<>();
     }
 
-    protected static int getIdAndIncrement() {
+//    public static Server getInstance(){
+//        return server == null ? new Server() : server;
+//    }
+
+//    public void init(int port, int sampleRate, int sampleSize){
+//        if (init) return;
+//        this.port = port;
+//        audioFormat = new AudioFormat(sampleRate, sampleSize, 1, true, true);
+//        init = true;
+//    }
+
+    protected int getIdAndIncrement() {
         return id.getAndIncrement();
     }
 
@@ -57,23 +55,16 @@ public class Server implements Startable{
 //        System.out.println(users);
     }
 
-    public void createServerSocket() throws IOException {
-        serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw e;
-        }
-    }
 
     @Override
     public void start() {
+        if (work) return;
+        work = true;
         new Thread(() -> {
             while (work) {
                 try {
                     Socket socket = serverSocket.accept();
-                    new Controller(socket).start();
+                    new Controller(socket, this).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -84,6 +75,7 @@ public class Server implements Startable{
     @Override
     public void close() {
         work = false;
+//        serverSocket.close();
     }
 
     public String getAudioFormat(){

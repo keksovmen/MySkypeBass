@@ -1,6 +1,7 @@
 package Bin.Networking.Writers;
 
 import Bin.Networking.DataParser.Package.BaseDataPackage;
+import Bin.Networking.DataParser.Package.DataPackagePool;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -12,7 +13,7 @@ public abstract class BaseWriter {
     protected DataOutputStream outputStream;
     protected boolean work;
     /*
-    * SEND_MESSAGE contain marker if 0 just message to a person if 1 message to a conference//
+     * SEND_MESSAGE contain marker if 0 just message to a person if 1 message to a conference//
      */
 
     public static final int SEND_NAME = 1;
@@ -39,19 +40,23 @@ public abstract class BaseWriter {
     }
 
     private void writeBase(BaseDataPackage dataPackage) throws IOException {
-        outputStream.writeInt(dataPackage.getLength());
-//        System.out.println("data length = " + dataPackage.getLength());
-        outputStream.writeInt(dataPackage.getFrom());
-        outputStream.writeInt(dataPackage.getTo());
-        outputStream.writeInt(dataPackage.getInstruction());
+        outputStream.write(dataPackage.getHeader().getRawHeader());
+//        outputStream.writeInt(dataPackage.getFullLength());
+//        System.out.println("data length = " + dataPackage.getFullLength());
+//        outputStream.writeInt(dataPackage.getFrom());
+//        outputStream.writeInt(dataPackage.getTo());
+//        outputStream.writeInt(dataPackage.getInstruction());
     }
 
-    protected synchronized void write(BaseDataPackage dataPackage) throws IOException {
-        writeBase(dataPackage);
-        if (dataPackage.getData() != null)
-            outputStream.write(dataPackage.getData());
-        outputStream.flush();
-        BaseDataPackage.returnObject(dataPackage);
+    //Check machine code and compare to syncrhonise in head
+    protected void write(BaseDataPackage dataPackage) throws IOException {
+        synchronized (this) {
+            writeBase(dataPackage);
+            if (dataPackage.getHeader().getLength() != 0)
+                outputStream.write(dataPackage.getData());
+//        outputStream.flush();
+        }
+        DataPackagePool.returnPackage(dataPackage);
     }
 
 }

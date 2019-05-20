@@ -44,49 +44,49 @@ public class ClientProcessor implements Processor, Startable {
              /*
              * wright here all possible instructions
              */
-        switch (dataPackage.getInstruction()) {
-            case BaseWriter.SEND_ID: {
-                Main.getInstance().setMe(dataPackage.getTo());
-//                System.out.println("id is " + dataPackage.getTo());
-                break;
-            }
-            case BaseWriter.SEND_AUDIO_FORMAT: {
-//                System.out.println("Client - " + Arrays.toString(dataPackage.getData()) + " Length = " + dataPackage.getLength() + "\n" + dataPackage.getDataAsString());
-                Main.getInstance().setAudioFormat(parseAudioFormat(dataPackage.getDataAsString()));
-                break;
-            }
-            case BaseWriter.SEND_USERS: {
-//                System.out.println("Users are " + dataPackage.getDataAsString());
-                Main.getInstance().resetUsers(parseUsers(dataPackage.getDataAsString()));
-                break;
-            }
-            case BaseWriter.SEND_MESSAGE: {
-                Main.getInstance().getMainFrame().showMessage(dataPackage.getDataAsString(), dataPackage.getFrom());
-                break;
-            }
-            case BaseWriter.SEND_CALL: {
-                Main.getInstance().getMainFrame().showCallDialog(dataPackage.getFrom());
-                break;
-            }
-            case BaseWriter.SEND_DENY: {
-                Main.getInstance().getMainFrame().denyReceived();
-                break;
-            }
-            case BaseWriter.SEND_CANCEL: {
-                Main.getInstance().getMainFrame().cancelReceived();
-                break;
-            }
-            case BaseWriter.SEND_APPROVE: {
-                Main.getInstance().getMainFrame().acceptReceived(dataPackage.getFrom());
-                break;
-            }
-            case BaseWriter.SEND_SOUND: {
-                AudioClient.getInstance().playAudio(dataPackage.getFrom(), true, dataPackage.getData());
-                break;
-            }
-        }
-
-        DataPackage.returnObject(dataPackage);
+//        switch (dataPackage.getInstruction()) {
+//            case BaseWriter.SEND_ID: {
+//                Main.getInstance().setMe(dataPackage.getTo());
+////                System.out.println("id is " + dataPackage.getTo());
+//                break;
+//            }
+//            case BaseWriter.SEND_AUDIO_FORMAT: {
+////                System.out.println("Client - " + Arrays.toString(dataPackage.getData()) + " Length = " + dataPackage.getFullLength() + "\n" + dataPackage.getDataAsString());
+//                Main.getInstance().setAudioFormat(parseAudioFormat(dataPackage.getDataAsString()));
+//                break;
+//            }
+//            case BaseWriter.SEND_USERS: {
+////                System.out.println("Users are " + dataPackage.getDataAsString());
+//                Main.getInstance().resetUsers(parseUsers(dataPackage.getDataAsString()));
+//                break;
+//            }
+//            case BaseWriter.SEND_MESSAGE: {
+//                Main.getInstance().getMainFrame().showMessage(dataPackage.getDataAsString(), dataPackage.getFrom());
+//                break;
+//            }
+//            case BaseWriter.SEND_CALL: {
+//                Main.getInstance().getMainFrame().showCallDialog(dataPackage.getFrom());
+//                break;
+//            }
+//            case BaseWriter.SEND_DENY: {
+//                Main.getInstance().getMainFrame().denyReceived();
+//                break;
+//            }
+//            case BaseWriter.SEND_CANCEL: {
+//                Main.getInstance().getMainFrame().cancelReceived();
+//                break;
+//            }
+//            case BaseWriter.SEND_APPROVE: {
+//                Main.getInstance().getMainFrame().acceptReceived(dataPackage.getFrom());
+//                break;
+//            }
+//            case BaseWriter.SEND_SOUND: {
+//                AudioClient.getInstance().playAudio(dataPackage.getFrom(), true, dataPackage.getData());
+//                break;
+//            }
+//        }
+//
+//        DataPackage.returnObject(dataPackage);
     }
 
     @Override

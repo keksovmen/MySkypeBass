@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 public class Test {
 
     public static void main(String[] args) throws IOException, UnsupportedAudioFileException {
+        System.out.println(123);
 //        AudioFormat audioFormat = new AudioFormat(48_000f, 16, 1, true, true);
 //        AudioClient audioClient = AudioClient.getInstance();
 //        boolean isSet = audioClient.setAudioFormat(audioFormat);
@@ -114,10 +115,10 @@ public class Test {
 //        byte[] bytes = a.getBytes(StandardCharsets.UTF_16);
 //        System.out.println(a);
 //        System.out.println(new java.lang.String(bytes, StandardCharsets.UTF_16));
-        Object o = new Object();
-        Class<?> c = o.getClass();
-        for (Method method : c.getMethods()) {
-//            c.getdeclaredfie("asd").get();
-        }
+//        Object o = new Object();
+//        Class<?> c = o.getClass();
+//        for (Method method : c.getMethods()) {
+////            c.getdeclaredfie("asd").get();
+//        }
     }
 }

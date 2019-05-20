@@ -13,9 +13,11 @@ public class Controller {
     private ServerReader reader;
     private ServerUser me;
     private Socket socket;
+    private Server server;
 
-    public Controller(Socket socket) throws IOException {
+    public Controller(Socket socket, Server server) throws IOException {
         this.socket = socket;
+        this.server = server;
         writer = new ServerWriter(socket.getOutputStream());
         reader = new ServerReader(socket.getInputStream(), this);
     }
@@ -25,8 +27,8 @@ public class Controller {
     }
 
     public void setUser(String name){
-        me = new ServerUser(name, Server.getIdAndIncrement(), this);
-        Server.getInstance().addUser(me);
+        me = new ServerUser(name, server.getIdAndIncrement(), this);
+        server.addUser(me);
 
     }
 
@@ -39,7 +41,13 @@ public class Controller {
     }
 
     public void disconnect() throws IOException {
-        Server.getInstance().removeUser(me.getId());
+        server.removeUser(me.getId());
         socket.close();
     }
+
+    public void sendUpdateUsers(){
+        server.sendUpdateUsers();
+    }
+
+
 }

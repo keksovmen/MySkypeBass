@@ -1,6 +1,8 @@
 package Bin.Networking.Readers;
 
 import Bin.Networking.DataParser.Package.BaseDataPackage;
+import Bin.Networking.DataParser.Package.DataPackageHeader;
+import Bin.Networking.DataParser.Package.DataPackagePool;
 import Bin.Networking.Processors.Processor;
 import Bin.Networking.Startable;
 
@@ -22,12 +24,19 @@ public abstract class BaseReader implements Processor, Startable {
     }
 
     protected BaseDataPackage read() throws IOException {
-        int length = inputStream.readInt();
-//        System.out.println("lemgth = " + length);
-        byte[] data = new byte[length];
+        BaseDataPackage aPackage = DataPackagePool.getPackage();
 
-        inputStream.readFully(data, 0, length);
-        return BaseDataPackage.getObject().init(data);
+        byte[] header = new byte[DataPackageHeader.INITIAL_SIZE];
+        inputStream.readFully(header);
+        aPackage.getHeader().init(header);
+
+        int length = aPackage.getHeader().getLength();
+        if (length == 0) return aPackage;
+
+        byte[] body = new byte[length];
+        inputStream.readFully(body);
+        aPackage.setData(body);
+        return aPackage;
     }
 
     @Override
