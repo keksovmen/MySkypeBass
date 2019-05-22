@@ -31,12 +31,12 @@ public class ClientController {
     }
 
     public boolean connect(String hostName, int port, String name) throws IOException {
-        try (Socket socket = new Socket()){
-            socket.connect(new InetSocketAddress(hostName, port));
+        socket = new Socket();
+        try {
+            socket.connect(new InetSocketAddress(hostName, port), 5_000);
             writer = new ClientWriter(socket.getOutputStream());
             processor = new ClientProcessor();
             reader = new ClientReader(socket.getInputStream(), processor);
-            this.socket = socket;
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -47,7 +47,10 @@ public class ClientController {
     private boolean authenticate(String name){
         try {
             writer.writeName(name);
+//            writer.writeName(name);
+//            System.out.println("written");
             BaseDataPackage read = reader.read();
+            System.out.println(read + " CLIENT");
             AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
             DataPackagePool.returnPackage(read);
             //stopped here need to verify is able to use audio format or not

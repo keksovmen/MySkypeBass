@@ -1,6 +1,9 @@
 import Bin.Networking.ClientController;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Server;
+import Bin.Networking.Writers.BaseWriter;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
@@ -9,15 +12,23 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class Test {
 
     public static void main(String[] args) throws IOException, UnsupportedAudioFileException {
         Server server = new Server(8188, 20_000, 16);
         server.start();
-
+//
         ClientController clientController = new ClientController();
-        clientController.connect("127.0.0.1", 8188, "LOH");
+        System.out.println(clientController.connect("127.0.0.1", 8188, "1234") + " CLIENT");
+
+//        BaseDataPackage aPackage = DataPackagePool.getPackage();
+//        aPackage.init(BaseWriter.CODE.SEND_NAME, BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode(), "LOH");
+//        System.out.println(aPackage);
+//        System.out.println(Arrays.toString(aPackage.getHeader().getRawHeader()));
+//        aPackage.getHeader().init(new byte[]{0, 1, 0, 8, 0, 0, 0, 1});
+//        System.out.println(aPackage);
 
 
 //        System.out.println(123);

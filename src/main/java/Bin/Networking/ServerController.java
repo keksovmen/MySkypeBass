@@ -25,9 +25,11 @@ public class ServerController {
         reader = new ServerReader(socket.getInputStream(), this);
     }
 
-    void start(){
+    void start() {
         try {
-            if (authenticate())
+            boolean authenticate = authenticate();
+            System.out.println(authenticate + " SERVER");
+            if (authenticate)
                 reader.start();
         } catch (IOException e) {
             e.printStackTrace();
@@ -37,15 +39,20 @@ public class ServerController {
 
     private boolean authenticate() throws IOException {
         BaseDataPackage dataPackage = reader.read();
+        System.out.println(dataPackage + " SERVER");
+//        DataPackagePool.returnPackage(dataPackage);
+//        dataPackage = reader.read();
+//        System.out.println(dataPackage + " SERVER");
         String name = dataPackage.getDataAsString();
         setUser(name);
 
         final int id = me.getId();
 
+//        System.out.println(server.getAudioFormat());
         writer.writeAudioFormat(id, server.getAudioFormat());
         DataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();
-        if (dataPackage.getHeader().getCode() != BaseWriter.CODE.SEND_APPROVE){
+        if (dataPackage.getHeader().getCode() != BaseWriter.CODE.SEND_APPROVE) {
             writer.writeDisconnect(id);
             disconnect();
             DataPackagePool.returnPackage(dataPackage);
@@ -61,7 +68,7 @@ public class ServerController {
         return true;
     }
 
-    private void setUser(String name){
+    private void setUser(String name) {
         me = new ServerUser(name, server.getIdAndIncrement(), this);
     }
 
@@ -79,7 +86,7 @@ public class ServerController {
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             server.sendUpdateUsers();
         }
     }

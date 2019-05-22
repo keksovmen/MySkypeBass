@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server implements Startable{
 
     private ServerSocket serverSocket;
-    private boolean work;
+    private volatile boolean work;
     private AudioFormat audioFormat;
     private AtomicInteger id;
     private Map<Integer, ServerUser> users;
