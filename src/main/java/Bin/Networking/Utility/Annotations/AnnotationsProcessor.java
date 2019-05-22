@@ -1,4 +1,4 @@
-package Bin.Utility.Annotations;
+package Bin.Networking.Utility.Annotations;
 
 import java.awt.event.ActionListener;
 import java.lang.reflect.*;

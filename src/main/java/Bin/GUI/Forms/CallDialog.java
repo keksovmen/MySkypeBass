@@ -1,10 +1,9 @@
 package Bin.GUI.Forms;
 
 import Bin.GUI.Main;
-import Bin.Utility.ClientUser;
+import Bin.Networking.Utility.ClientUser;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 

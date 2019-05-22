@@ -1,10 +1,9 @@
-package Bin.Utility;
+package Bin.Networking.Utility;
 
 
-import Bin.Networking.Controller;
-import Bin.Networking.DataParser.Package.BaseDataPackage;
+import Bin.Networking.ServerController;
+import Bin.Networking.DataParser.BaseDataPackage;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -30,7 +29,7 @@ public class Conversation {
         Stream.of(local).forEach(serverUser -> {
             if (serverUser.getId() != from){
 //                try {
-                Controller controller = serverUser.getController();
+                ServerController controller = serverUser.getController();
                 if (controller != null)
                     controller.getWriter().transferData(dataPackage);
 //                } catch (IOException e) {

@@ -1,8 +1,8 @@
 package Bin.GUI.Forms;
 
 import Bin.GUI.Main;
-import Bin.Utility.BaseUser;
-import Bin.Utility.ClientUser;
+import Bin.Networking.Utility.BaseUser;
+import Bin.Networking.Utility.ClientUser;
 
 import javax.swing.*;
 import java.awt.*;

@@ -44,8 +44,8 @@ public class AudioCapture implements Processor, Startable, Changeable {
     }
 
     @Override
-    public void start() {
-        if (started) return;
+    public boolean start() {
+        if (started) return false;
         started = true;
         new Thread(() -> {
             while (work) {
@@ -66,6 +66,7 @@ public class AudioCapture implements Processor, Startable, Changeable {
                 }
             }
         }, "Client capture").start();
+        return true;
     }
 
     @Override

@@ -1,12 +1,14 @@
 package Bin.Networking.Writers;
 
-import Bin.Networking.DataParser.Package.BaseDataPackage;
-import Bin.Networking.DataParser.Package.DataPackagePool;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackagePool;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.Optional;
 
 public abstract class BaseWriter {
 
@@ -16,23 +18,70 @@ public abstract class BaseWriter {
      * SEND_MESSAGE contain marker if 0 just message to a person if 1 message to a conference//
      */
 
-    public static final int SEND_NAME = 1;
-    public static final int SEND_ID = 2;
-    public static final int SEND_AUDIO_FORMAT = 3;
-    public static final int SEND_USERS = 4;
-    public static final int SEND_MESSAGE = 5;
-    public static final int SEND_CALL = 6;
-    public static final int SEND_APPROVE = 7;
-    public static final int SEND_DENY = 8;
-    public static final int SEND_CANCEL = 9;
-    public static final int SEND_SOUND = 10;
-    public static final int SEND_DISCONNECT = 11;
-    public static final int SEND_ADD = 12;
-    public static final int SEND_REMOVE = 13;
+    public enum CODE {
+        SEND_NAME(1),
+        SEND_ID(2),
+        SEND_AUDIO_FORMAT(3),
+        SEND_USERS(4),
+        SEND_MESSAGE(5),
+        SEND_CALL(6),
+        SEND_APPROVE(7),
+        SEND_DENY(8),
+        SEND_CANCEL(9),
+        SEND_SOUND(10),
+        SEND_DISCONNECT(11),
+        SEND_ADD(12),
+        SEND_REMOVE(13);
 
-    public static final int NO_NAME = 0;
-    public static final int SERVER = 1;
-    public static final int CONFERENCE = 2;
+        private int code;
+
+        CODE(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public static CODE parse(int code){
+            Optional<CODE> first = Arrays.stream(CODE.values()).filter(code1 -> code1.getCode() == code).findFirst();
+            return first.orElse(null);
+        }
+    }
+
+    public enum WHO {
+        NO_NAME(0),
+        SERVER(1),
+        CONFERENCE(2);
+
+        private int code;
+
+        WHO(int code) {
+            this.code = code;
+        }
+
+        public int getCode() {
+            return code;
+        }
+    }
+
+//    public static final int SEND_NAME = 1;
+//    public static final int SEND_ID = 2;
+//    public static final int SEND_AUDIO_FORMAT = 3;
+//    public static final int SEND_USERS = 4;
+//    public static final int SEND_MESSAGE = 5;
+//    public static final int SEND_CALL = 6;
+//    public static final int SEND_APPROVE = 7;
+//    public static final int SEND_DENY = 8;
+//    public static final int SEND_CANCEL = 9;
+//    public static final int SEND_SOUND = 10;
+//    public static final int SEND_DISCONNECT = 11;
+//    public static final int SEND_ADD = 12;
+//    public static final int SEND_REMOVE = 13;
+//
+//    public static final int NO_NAME = 0;
+//    public static final int SERVER = 1;
+//    public static final int CONFERENCE = 2;
 
     public BaseWriter(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
@@ -40,7 +89,7 @@ public abstract class BaseWriter {
     }
 
     private void writeBase(BaseDataPackage dataPackage) throws IOException {
-        outputStream.write(dataPackage.getHeader().getRawHeader());
+        outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
 //        outputStream.writeInt(dataPackage.getFullLength());
 //        System.out.println("data length = " + dataPackage.getFullLength());
 //        outputStream.writeInt(dataPackage.getFrom());
@@ -48,7 +97,8 @@ public abstract class BaseWriter {
 //        outputStream.writeInt(dataPackage.getInstruction());
     }
 
-    //Check machine code and compare to syncrhonise in head
+
+    //Check machine code and compare to synchronise in head
     protected void write(BaseDataPackage dataPackage) throws IOException {
         synchronized (this) {
             writeBase(dataPackage);

@@ -1,32 +1,31 @@
 package Bin.Networking.Readers;
 
-import Bin.Networking.Controller;
-import Bin.Networking.DataParser.Package.BaseDataPackage;
-import Bin.Networking.DataParser.Package.DataPackage;
-import Bin.Networking.Server;
+import Bin.Networking.ServerController;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Writers.BaseWriter;
-import Bin.Utility.Conversation;
-import Bin.Utility.ServerUser;
+import Bin.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 public class ServerReader extends BaseReader {
 
-//    private ServerWriter writer;
-    private Controller controller;
+    //    private ServerWriter writer;
+    private ServerController controller;
+    private ServerWriter writer;
 
 
-    public ServerReader(InputStream inputStream, Controller controller) {
+    public ServerReader(InputStream inputStream, ServerController controller) {
         super(inputStream);
         this.controller = controller;
+        writer = controller.getWriter();
     }
 
 
     @Override
     public void process() throws IOException {
 //        BaseDataPackage dataPackage = read();
-
 
 
 //        System.out.println(dataPackage);
@@ -79,7 +78,7 @@ public class ServerReader extends BaseReader {
 //
 //            }
 ////            System.out.println("//////////////////////////");
-//            Controller controller = Server.getInstance().getController(dataPackage.getTo());
+//            ServerController controller = Server.getInstance().getController(dataPackage.getTo());
 //            if (controller != null)
 //                controller.getWriter().transferData(dataPackage);
 //        }
@@ -90,34 +89,21 @@ public class ServerReader extends BaseReader {
     }
 
     @Override
-    public void start() {
-        try {
-            BaseDataPackage dataPackage = read();
-            String name = dataPackage.getDataAsString();
-            controller.setUser(name);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
+    public boolean start() {
         new Thread(() -> {
-            while (work){
+            while (work) {
                 try {
                     process();
                 } catch (IOException e) {
                     e.printStackTrace();
                     work = false;
 //                    Server.getInstance().removeUser(controller.getMe().getId());
-                    try {
-                        controller.disconnect();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }finally {
-                        controller.sendUpdateUsers();
-                    }
+                    controller.disconnect();
                 }
             }
-        }, "Server Reader").start();
-
+        }, "Server Reader + " + controller.getId()).start();
+        return true;
     }
+
+
 }

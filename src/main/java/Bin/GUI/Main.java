@@ -5,10 +5,9 @@ import Bin.Audio.AudioClient;
 import Bin.GUI.Forms.MainFrame;
 import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Readers.ClientReader;
-import Bin.Networking.Server;
 import Bin.Networking.Writers.ClientWriter;
-import Bin.Utility.BaseUser;
-import Bin.Utility.ClientUser;
+import Bin.Networking.Utility.BaseUser;
+import Bin.Networking.Utility.ClientUser;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -46,7 +45,7 @@ public class Main {
             socket = new Socket(ip, port);
             writer = new ClientWriter(socket.getOutputStream());
             clientProcessor = new ClientProcessor();
-            clientProcessor.start();
+//            clientProcessor.start();
             reader = new ClientReader(socket.getInputStream(), clientProcessor);
             reader.start();
             writer.writeName(name);
@@ -58,15 +57,15 @@ public class Main {
     }
 
     public boolean startServer(int port, int sampleRate, int sampleSize){
-        Server server = Server.getInstance();
-        server.init(port, sampleRate, sampleSize);
-        try {
-            server.createServerSocket();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        server.start();
+//        Server server = Server.getInstance();
+//        server.init(port, sampleRate, sampleSize);
+//        try {
+//            server.createServerSocket();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            return false;
+//        }
+//        server.start();
         return true;
     }
 
@@ -90,7 +89,7 @@ public class Main {
                 e.printStackTrace();
             }
             mainFrame.changeSecondToFirst();
-            clientProcessor.close();
+//            clientProcessor.close();
             mainFrame.showDialog("Disconnected from the server, may be its died or your connection was lost");
         }
 
@@ -142,7 +141,7 @@ public class Main {
     public void denyCall(ClientUser who){
         if (users.containsValue(who)){
             try {
-                writer.writeDenay(me.getId(), who.getId());
+                writer.writeDeny(me.getId(), who.getId());
             } catch (IOException e) {
                 e.printStackTrace();
                 disconnect();

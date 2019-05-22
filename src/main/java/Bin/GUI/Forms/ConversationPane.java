@@ -3,7 +3,7 @@ package Bin.GUI.Forms;
 import Bin.Audio.AudioClient;
 import Bin.Expendable;
 import Bin.GUI.Main;
-import Bin.Utility.BaseUser;
+import Bin.Networking.Utility.BaseUser;
 
 import javax.sound.sampled.FloatControl;
 import javax.swing.*;

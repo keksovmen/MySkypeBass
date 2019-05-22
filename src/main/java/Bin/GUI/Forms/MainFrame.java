@@ -2,7 +2,7 @@ package Bin.GUI.Forms;
 
 import Bin.Audio.AudioClient;
 import Bin.GUI.Main;
-import Bin.Utility.ClientUser;
+import Bin.Networking.Utility.ClientUser;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -165,7 +165,7 @@ public class MainFrame extends JFrame {
 //                * handle here
 //                 */
 //                try {
-//                    Main.getInstance().getWriter().writeDenay(Main.getInstance().getMeId(), from);
+//                    Main.getInstance().getWriter().writeDeny(Main.getInstance().getMeId(), from);
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }
@@ -180,7 +180,7 @@ public class MainFrame extends JFrame {
 //                    * handle here
 //                     */
 //                    try {
-//                        Main.getInstance().getWriter().writeDenay(Main.getInstance().getMeId(), from);
+//                        Main.getInstance().getWriter().writeDeny(Main.getInstance().getMeId(), from);
 //                    } catch (IOException e) {
 //                        e.printStackTrace();
 //                    }

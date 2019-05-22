@@ -1,7 +1,7 @@
 package Bin.Networking.Writers;
 
-import Bin.Networking.DataParser.Package.BaseDataPackage;
-import Bin.Networking.Server;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackagePool;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,15 +13,19 @@ public class ServerWriter extends BaseWriter {
     }
 
     public void writeId(int id) throws IOException {
-        write(BaseDataPackage.getObject().init(SERVER, id, SEND_ID, null));
+        write(DataPackagePool.getPackage().init(CODE.SEND_ID, WHO.SERVER.getCode(), id));
     }
 
     public void writeAudioFormat(int id, String format) throws IOException {
-        write(BaseDataPackage.getObject().init(format, SERVER, id, SEND_AUDIO_FORMAT));
+        write(DataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
     }
 
-    public void writeUsers(int id) throws IOException {
-        write(BaseDataPackage.getObject().init(Server.getInstance().getUsers(id), SERVER, id, SEND_USERS));
+    public void writeUsers(int id, String users) throws IOException {
+        write(DataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+    }
+
+    public void writeDisconnect(int id) throws IOException {
+        write(DataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
     }
     /*
     check this peace of garbage

@@ -2,6 +2,6 @@ package Bin.Networking;
 
 public interface Startable {
 
-    void start();
+    boolean start();
     void close();
 }

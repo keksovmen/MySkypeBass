@@ -1,3 +1,7 @@
+import Bin.Networking.ClientController;
+import Bin.Networking.Processors.ClientProcessor;
+import Bin.Networking.Server;
+
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -9,7 +13,14 @@ import java.nio.charset.StandardCharsets;
 public class Test {
 
     public static void main(String[] args) throws IOException, UnsupportedAudioFileException {
-        System.out.println(123);
+        Server server = new Server(8188, 20_000, 16);
+        server.start();
+
+        ClientController clientController = new ClientController();
+        clientController.connect("127.0.0.1", 8188, "LOH");
+
+
+//        System.out.println(123);
 //        AudioFormat audioFormat = new AudioFormat(48_000f, 16, 1, true, true);
 //        AudioClient audioClient = AudioClient.getInstance();
 //        boolean isSet = audioClient.setAudioFormat(audioFormat);

@@ -1,4 +1,4 @@
-package Bin.Utility;
+package Bin.Networking.Utility;
 
 import Bin.GUI.Forms.ThirdSkin;
 

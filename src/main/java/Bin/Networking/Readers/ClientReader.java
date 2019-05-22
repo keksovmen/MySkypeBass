@@ -14,31 +14,13 @@ public class ClientReader extends BaseReader {
         this.processor = processor;
     }
 
-//    @Override
-//    public void createServerSocket() {
-//        A:
-//        while (work){
-//            try {
-//                process();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                break A;
-//            }
-//        }
-//        try {
-//            inputStream.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
     @Override
     public void process() throws IOException {
-        processor.push(read());
+        processor.doJob(read());
     }
 
     @Override
-    public void start() {
+    public boolean start() {
         new Thread(() ->{
             while (work){
                 try {
@@ -46,9 +28,10 @@ public class ClientReader extends BaseReader {
                 } catch (IOException e) {
                     e.printStackTrace();
                     work = false;
-//                    processor.wakeUp();
                 }
             }
         }, "Client Reader").start();
+        return true;
     }
+
 }

@@ -1,9 +1,9 @@
 package Bin.GUI.Forms;
 
 import Bin.GUI.Main;
-import Bin.Utility.Annotations.AnnotationsProcessor;
+import Bin.Networking.Utility.Annotations.AnnotationsProcessor;
 //import Bin.Utility.Annotations.ListenerFor;
-import Bin.Utility.BaseUser;
+import Bin.Networking.Utility.BaseUser;
 
 import javax.swing.*;
 import java.awt.*;

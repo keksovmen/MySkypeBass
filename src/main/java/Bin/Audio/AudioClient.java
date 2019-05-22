@@ -17,7 +17,7 @@ public class AudioClient implements Expendable {
      */
     private static final int CAPTURE_SIZE = 16384;
     private Map<Integer, SourceDataLine> mainAudio;
-    private Map<Integer, SourceDataLine> soundBoardAudio;
+//    private Map<Integer, SourceDataLine> soundBoardAudio;
 
     private AudioFormat audioFormat;
 
@@ -33,7 +33,7 @@ public class AudioClient implements Expendable {
 
     private AudioClient(){
         mainAudio = new HashMap<>();
-        soundBoardAudio = new HashMap<>();
+//        soundBoardAudio = new HashMap<>();
 
 //        audioClient = this;
     }
@@ -59,6 +59,11 @@ public class AudioClient implements Expendable {
         return speaker & mic;
     }
 
+    public static boolean isFormatSupported(AudioFormat audioFormat){
+        return AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat)) &
+                AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
+    }
+
     public boolean isMic() {
         return mic;
     }
@@ -71,7 +76,7 @@ public class AudioClient implements Expendable {
         if (!speaker) return false;
         try {
             mainAudio.put(IDofUser, (SourceDataLine) obtainAndOpen(SourceDataLine.class));
-            soundBoardAudio.put(IDofUser, (SourceDataLine) obtainAndOpen(SourceDataLine.class));
+//            soundBoardAudio.put(IDofUser, (SourceDataLine) obtainAndOpen(SourceDataLine.class));
         } catch (LineUnavailableException e) {
             e.printStackTrace();
             return false;
@@ -95,7 +100,7 @@ public class AudioClient implements Expendable {
 
     private void clearSourceLine(int IDofUser){
         if (mainAudio.containsKey(IDofUser)) mainAudio.remove(IDofUser).close();
-        if (soundBoardAudio.containsKey(IDofUser)) soundBoardAudio.remove(IDofUser).close();
+//        if (soundBoardAudio.containsKey(IDofUser)) soundBoardAudio.remove(IDofUser).close();
     }
 
     private boolean obtainTargetLine(){
@@ -118,11 +123,11 @@ public class AudioClient implements Expendable {
     }
 
     public void playAudio(int IDofUser, boolean isMainAudio, byte[] sound){
-        SourceDataLine line;
+        SourceDataLine line = null;
         if (isMainAudio)
             line = mainAudio.get(IDofUser);
-        else
-            line = soundBoardAudio.get(IDofUser);
+//        else
+//            line = soundBoardAudio.get(IDofUser);
         System.out.println("Available " + line.available() + " length " + sound.length + " buffer size " + line.getBufferSize());
         if (line.available() < sound.length) {
             line.flush();
@@ -159,8 +164,8 @@ public class AudioClient implements Expendable {
     public void close() {
         mainAudio.forEach((integer, sourceDataLine) -> sourceDataLine.close());
         mainAudio.clear();
-        soundBoardAudio.forEach((integer, sourceDataLine) -> sourceDataLine.close());
-        soundBoardAudio.clear();
+//        soundBoardAudio.forEach((integer, sourceDataLine) -> sourceDataLine.close());
+//        soundBoardAudio.clear();
         closeTargetLine();
     }
 
@@ -168,7 +173,7 @@ public class AudioClient implements Expendable {
     public String toString() {
         return "AudioClient{" +
                 "\n mainAudio=" + mainAudio +
-                ",\n soundBoardAudio=" + soundBoardAudio +
+//                ",\n soundBoardAudio=" + soundBoardAudio +
                 ",\n audioFormat=" + audioFormat +
                 ",\n targetDataLine=" + targetDataLine +
                 ",\n mic=" + mic +

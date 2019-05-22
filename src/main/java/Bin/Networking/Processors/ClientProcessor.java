@@ -1,49 +1,57 @@
 package Bin.Networking.Processors;
 
-import Bin.Audio.AudioClient;
-import Bin.GUI.Main;
-import Bin.Networking.DataParser.Package.BaseDataPackage;
-import Bin.Networking.DataParser.Package.DataPackage;
-import Bin.Networking.Startable;
-import Bin.Networking.Writers.BaseWriter;
-import Bin.Utility.ClientUser;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackagePool;
 
-import javax.sound.sampled.AudioFormat;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Queue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-public class ClientProcessor implements Processor, Startable {
+public class ClientProcessor /*implements Processor, Startable*/ {
 
-    private final Queue<BaseDataPackage> taskStorage;
-//    private final MainFrame mainFrame;
-    private boolean work;
+    private Executor executor;
+    private List<Task> listeners;
 
     public ClientProcessor() {
-//        this.mainFrame = mainFrame;
-        taskStorage = new ArrayDeque<>();
-        work = true;
+        listeners = new ArrayList<>();
+        executor = Executors.newSingleThreadExecutor();
     }
 
-    @Override
-    public void process() {
-        BaseDataPackage dataPackage = null;
-        synchronized (taskStorage) {
-            dataPackage = taskStorage.poll();
-            if (dataPackage == null) {
-                try {
-                    taskStorage.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return;
-            }
-        }
-             /*
-             * wright here all possible instructions
-             */
+    public void doJob(final BaseDataPackage dataPackage) {
+        executor.execute(() -> {
+            listeners.forEach(task -> task.doJob(dataPackage));
+            DataPackagePool.returnPackage(dataPackage);
+        });
+    }
+
+    public void addTaskListener(Task task){
+        listeners.add(task);
+    }
+
+    public void removeTaskListener(Task task){
+        listeners.remove(task);
+    }
+
+//    @Override
+//    public void process() {
+//        BaseDataPackage dataPackage = null;
+//        synchronized (taskStorage) {
+//            dataPackage = taskStorage.poll();
+//            if (dataPackage == null) {
+//                try {
+//                    taskStorage.wait();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                return;
+//            }
+//        }
+//
+//    }
+    /*
+     * wright here all possible instructions
+     */
 //        switch (dataPackage.getInstruction()) {
 //            case BaseWriter.SEND_ID: {
 //                Main.getInstance().setMe(dataPackage.getTo());
@@ -87,36 +95,36 @@ public class ClientProcessor implements Processor, Startable {
 //        }
 //
 //        DataPackage.returnObject(dataPackage);
-    }
+//    }
 
-    @Override
-    public void start() {
-        new Thread(() -> {
-            while (work) {
-                process();
-            }
-        }, "Client processor").start();
-    }
-
-    @Override
-    public void close() {
-        synchronized (taskStorage) {
-            work = false;
-            taskStorage.notifyAll();
-        }
-    }
+//    @Override
+//    public void start() {
+//        new Thread(() -> {
+//            while (work) {
+//                process();
+//            }
+//        }, "Client processor").start();
+//    }
+//
+//    @Override
+//    public void close() {
+//        synchronized (taskStorage) {
+//            work = false;
+//            taskStorage.notifyAll();
+//        }
+//    }
 
     /*
-    * uses by readers to add data in to a stack
-    * byte[] data = pocket of data
+     * uses by readers to add data in to a stack
+     * byte[] data = pocket of data
      */
 
-    public void push(BaseDataPackage data){
-        synchronized (taskStorage) {
-            taskStorage.offer(data);
-            taskStorage.notifyAll();
-        }
-    }
+//    public void push(BaseDataPackage data){
+//        synchronized (taskStorage) {
+//            taskStorage.offer(data);
+//            taskStorage.notifyAll();
+//        }
+//    }
 
 //    public void wakeUp(){
 //        synchronized (taskStorage){
@@ -124,23 +132,6 @@ public class ClientProcessor implements Processor, Startable {
 //        }
 //    }
 
-    private AudioFormat parseAudioFormat(String data){
-//        System.out.println(data);
-        String[] strings = data.split("\n");
-        Pattern pattern = Pattern.compile("\\d+?\\b");
-        Matcher matcher = pattern.matcher(strings[0]);
-        matcher.find();
-        int sampleRate = Integer.valueOf(matcher.group());
-        matcher = pattern.matcher(strings[1]);
-        matcher.find();
-        int sampleSize = Integer.valueOf(matcher.group());
-        return new AudioFormat(sampleRate, sampleSize, 1, true, true);
-    }
 
-    private ClientUser[] parseUsers(String data){
-        if (data.length() < 5) return new ClientUser[0];
-        String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s -> ClientUser.parser.matcher(s).matches()).map(ClientUser::parse).toArray(ClientUser[]::new);
-    }
 
 }

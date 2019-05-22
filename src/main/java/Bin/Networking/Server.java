@@ -1,13 +1,11 @@
 package Bin.Networking;
 
-import Bin.Utility.ServerUser;
+import Bin.Networking.Utility.ServerUser;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,7 +13,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server implements Startable{
 
     private ServerSocket serverSocket;
-//    private int port;
     private boolean work;
     private AudioFormat audioFormat;
     private AtomicInteger id;
@@ -31,20 +28,9 @@ public class Server implements Startable{
     public Server(final int port, final int sampleRate, final int sampleSize) throws IOException {
         serverSocket = new ServerSocket(port);
         audioFormat = new AudioFormat(sampleRate, sampleSize, 1, true, true);
-        id = new AtomicInteger(1);
-        users = new HashMap<>();
+        id = new AtomicInteger(3);//because 0 1 2 already in use @see BaseWriter enum WHO
+        users = new HashMap<>();//change to one of concurent maps
     }
-
-//    public static Server getInstance(){
-//        return server == null ? new Server() : server;
-//    }
-
-//    public void init(int port, int sampleRate, int sampleSize){
-//        if (init) return;
-//        this.port = port;
-//        audioFormat = new AudioFormat(sampleRate, sampleSize, 1, true, true);
-//        init = true;
-//    }
 
     protected int getIdAndIncrement() {
         return id.getAndIncrement();
@@ -57,19 +43,20 @@ public class Server implements Startable{
 
 
     @Override
-    public void start() {
-        if (work) return;
+    public boolean start() {
+        if (work) return false;
         work = true;
         new Thread(() -> {
             while (work) {
                 try {
                     Socket socket = serverSocket.accept();
-                    new Controller(socket, this).start();
+                    new ServerController(socket, this).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }, "Server").start();
+        return true;
     }
 
     @Override
@@ -78,12 +65,12 @@ public class Server implements Startable{
 //        serverSocket.close();
     }
 
-    public String getAudioFormat(){
+    String getAudioFormat(){
         return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
                 "Sample size = " + audioFormat.getSampleSizeInBits();
     }
 
-    public synchronized String getUsers(int exclusiveId){
+    synchronized String getUsers(final int exclusiveId){
         StringBuilder stringBuilder = new StringBuilder(50);
         users.forEach((integer, serverUser) -> {
             if (integer != exclusiveId) {
@@ -93,21 +80,21 @@ public class Server implements Startable{
         return stringBuilder.toString();
     }
 
-    public synchronized void removeUser(int id){
+    synchronized void removeUser(int id){
         users.remove(id);
     }
 
-    public synchronized Controller getController(int who){
+    public synchronized ServerController getController(int who){
 //        System.out.println(users);
         ServerUser serverUser = users.get(who);
         if (serverUser != null) return serverUser.getController();
         return null;
     }
 
-    public synchronized void sendUpdateUsers(){
+    synchronized void sendUpdateUsers(){
         users.values().forEach(serverUser -> {
             try {
-                serverUser.getController().getWriter().writeUsers(serverUser.getId());
+                serverUser.getController().getWriter().writeUsers(serverUser.getId(), getUsers(serverUser.getId()));
             } catch (IOException e) {
                 e.printStackTrace();
             }

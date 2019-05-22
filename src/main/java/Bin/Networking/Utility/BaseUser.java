@@ -1,4 +1,4 @@
-package Bin.Utility;
+package Bin.Networking.Utility;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

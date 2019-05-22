@@ -1,4 +1,4 @@
-package Bin.Utility.Annotations;
+package Bin.Networking.Utility.Annotations;
 
 
 import java.lang.annotation.ElementType;

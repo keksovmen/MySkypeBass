@@ -1,8 +1,8 @@
 package Bin.Networking.Readers;
 
-import Bin.Networking.DataParser.Package.BaseDataPackage;
-import Bin.Networking.DataParser.Package.DataPackageHeader;
-import Bin.Networking.DataParser.Package.DataPackagePool;
+import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.DataParser.DataPackageHeader;
+import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Processors.Processor;
 import Bin.Networking.Startable;
 
@@ -16,14 +16,14 @@ public abstract class BaseReader implements Processor, Startable {
     private final static int BUFFER_SIZE = 16384;
 
     protected DataInputStream inputStream;
-    protected boolean work;
+    protected volatile boolean work;
 
     public BaseReader(InputStream inputStream) {
         this.inputStream = new DataInputStream(new BufferedInputStream(inputStream, BUFFER_SIZE));
         work = true;
     }
 
-    protected BaseDataPackage read() throws IOException {
+    public BaseDataPackage read() throws IOException {
         BaseDataPackage aPackage = DataPackagePool.getPackage();
 
         byte[] header = new byte[DataPackageHeader.INITIAL_SIZE];
@@ -39,26 +39,24 @@ public abstract class BaseReader implements Processor, Startable {
         return aPackage;
     }
 
-    @Override
-    public void start() {
-        new Thread(() -> {
-            while (work){
-                try {
-                    process();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    work = false;
-                }
-            }
-        }).start();
-    }
+//    @Override
+//    public void start() {
+//        new Thread(() -> {
+//            while (work){
+//                try {
+//                    process();
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    work = false;
+//                }
+//            }
+//        }).start();
+//    }
 
     @Override
     public void close() {
         work = false;
     }
-
-    //    public abstract void createServerSocket();
 
 
 }

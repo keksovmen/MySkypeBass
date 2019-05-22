@@ -1,22 +1,22 @@
-package Bin.Utility;
+package Bin.Networking.Utility;
 
-import Bin.Networking.Controller;
+import Bin.Networking.ServerController;
 
 //import java.net.Socket;
 
 public class ServerUser extends BaseUser {
 
 //    private Socket socket;
-    private Controller controller;
+    private ServerController controller;
     private volatile Conversation conversation;
 
-    public ServerUser(String name, int id, Controller controller) {
+    public ServerUser(String name, int id, ServerController controller) {
         super(name, id);
         this.controller = controller;
 //        this.socket = socket;
     }
 
-    public Controller getController() {
+    public ServerController getController() {
         return controller;
     }
 
