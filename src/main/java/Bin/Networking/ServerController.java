@@ -39,16 +39,11 @@ public class ServerController {
 
     private boolean authenticate() throws IOException {
         BaseDataPackage dataPackage = reader.read();
-        System.out.println(dataPackage + " SERVER");
-//        DataPackagePool.returnPackage(dataPackage);
-//        dataPackage = reader.read();
-//        System.out.println(dataPackage + " SERVER");
         String name = dataPackage.getDataAsString();
         setUser(name);
 
         final int id = me.getId();
 
-//        System.out.println(server.getAudioFormat());
         writer.writeAudioFormat(id, server.getAudioFormat());
         DataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();

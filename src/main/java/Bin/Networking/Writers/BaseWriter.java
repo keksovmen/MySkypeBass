@@ -77,14 +77,10 @@ public abstract class BaseWriter {
 
     //Check machine code and compare to synchronise in head
     protected synchronized void write(BaseDataPackage dataPackage) throws IOException {
-//        synchronized (this){
-//        writeBase(dataPackage);
         outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
         if (dataPackage.getHeader().getLength() != 0)
             outputStream.write(dataPackage.getData());
-        System.out.println(dataPackage + " " + Thread.currentThread().getName() + " " + " WRITTEN");
         outputStream.flush();
-//        }
         DataPackagePool.returnPackage(dataPackage);
     }
 

@@ -21,7 +21,7 @@ public class Test {
         server.start();
 //
         ClientController clientController = new ClientController();
-        System.out.println(clientController.connect("127.0.0.1", 8188, "1234") + " CLIENT");
+        System.out.println(clientController.connect("127.0.0.1", 8188, "1") + " CLIENT");
 
 //        BaseDataPackage aPackage = DataPackagePool.getPackage();
 //        aPackage.init(BaseWriter.CODE.SEND_NAME, BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode(), "LOH");

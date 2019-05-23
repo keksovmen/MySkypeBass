@@ -47,10 +47,7 @@ public class ClientController {
     private boolean authenticate(String name){
         try {
             writer.writeName(name);
-//            writer.writeName(name);
-//            System.out.println("written");
             BaseDataPackage read = reader.read();
-            System.out.println(read + " CLIENT");
             AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
             DataPackagePool.returnPackage(read);
             //stopped here need to verify is able to use audio format or not
