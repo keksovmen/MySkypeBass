@@ -3,8 +3,19 @@ package Bin.Audio;
 import Bin.Expendable;
 
 import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AudioClient implements Expendable {
 
@@ -16,6 +27,7 @@ public class AudioClient implements Expendable {
     * After receiving audioFormat check if client can obtain such lines
      */
     private static final int CAPTURE_SIZE = 16384;
+    private static final Path sounds = Paths.get("src\\main\\resources\\sound\\");
     private Map<Integer, SourceDataLine> mainAudio;
 //    private Map<Integer, SourceDataLine> soundBoardAudio;
 
@@ -31,8 +43,12 @@ public class AudioClient implements Expendable {
 
     private static volatile AudioClient audioClient;
 
+    private Random random;
+
     private AudioClient(){
         mainAudio = new HashMap<>();
+        random = new Random();
+
 //        soundBoardAudio = new HashMap<>();
 
 //        audioClient = this;
@@ -128,7 +144,7 @@ public class AudioClient implements Expendable {
             line = mainAudio.get(IDofUser);
 //        else
 //            line = soundBoardAudio.get(IDofUser);
-        System.out.println("Available " + line.available() + " length " + sound.length + " buffer size " + line.getBufferSize());
+//        System.out.println("Available " + line.available() + " length " + sound.length + " buffer size " + line.getBufferSize());
         if (line.available() < sound.length) {
             line.flush();
             System.out.println("flush");
@@ -168,6 +184,39 @@ public class AudioClient implements Expendable {
 //        soundBoardAudio.clear();
         closeTargetLine();
     }
+
+    public void playMessageSound(){
+            new Thread(() -> {
+                try {
+                    //obtain a random sound for notification
+                    List<Path> collect = Files.list(sounds.resolve(Paths.get("messageNotification"))).collect(Collectors.toList());//think optimize to cashe it
+//                    random = new Random();
+                    Path path = collect.get(random.nextInt(collect.size()));
+
+                    //open source data line in default mixer
+                    AudioFileFormat audioFileFormat = AudioSystem.getAudioFileFormat(path.toFile());
+                    SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFileFormat.getFormat());
+                    sourceDataLine.open(audioFileFormat.getFormat());
+                    sourceDataLine.start();
+
+                    //start playing sound
+                    InputStream audioInputStream = AudioSystem.getAudioInputStream(path.toFile());
+
+                    byte[] data = new byte[CAPTURE_SIZE];
+                    int amount;
+                    while ((amount = audioInputStream.read(data)) != -1){
+                        sourceDataLine.write(data, 0, amount);
+                    }
+                    sourceDataLine.drain();
+                    sourceDataLine.close();
+
+                } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
+                    e.printStackTrace();
+                }
+            }, "Message notifier").start();
+    }
+
+
 
     @Override
     public String toString() {

@@ -25,39 +25,67 @@ public class ClientController {
     private ClientReader reader;
     private ClientProcessor processor;
     private BaseUser me;
+//    private Runnable disconnectAction;
+
+    /**
+     * Uses only for holder of network stuff
+     * and handle networking
+     */
 
     public ClientController() {
-
+        processor = new ClientProcessor();
     }
 
-    public boolean connect(String hostName, int port, String name) throws IOException {
+    /**
+     * Try to establish a TCP connection
+     * @param hostName ip address
+     * @param port to connect
+     * @param name your nickname to others
+     * @return true if audio format is supported false otherwise
+     * @throws IOException if server doesn't exist
+     */
+
+    public boolean connect(final String name, final String hostName, final int port) throws IOException {
         socket = new Socket();
         try {
             socket.connect(new InetSocketAddress(hostName, port), 5_000);
             writer = new ClientWriter(socket.getOutputStream());
-            processor = new ClientProcessor();
+//            processor = new ClientProcessor();
             reader = new ClientReader(socket.getInputStream(), processor);
         } catch (IOException e) {
             e.printStackTrace();
+            disconnect();
             throw e;
         }
         return authenticate(name);
     }
+
+    public boolean connect(final String name, final String hostName, final String port) throws IOException {
+        return connect(name, hostName, Integer.parseInt(port));
+    }
+
+        /**
+         * Trying to authenticate first writes your name
+         * second read audio format and checks it if supported
+         * third creates client user with unique id from the server
+         * @param name your nickname
+         * @return true only if audio format accepted in mic and speakers false otherwise
+         */
 
     private boolean authenticate(String name){
         try {
             writer.writeName(name);
             BaseDataPackage read = reader.read();
             AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
-            DataPackagePool.returnPackage(read);
             //stopped here need to verify is able to use audio format or not
             if (!AudioClient.isFormatSupported(audioFormat)) {
                 writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
                 return false;
             }
+            AudioClient.getInstance().setAudioFormat(audioFormat);
             writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
-            read = reader.read();
             me = new BaseUser(name, read.getHeader().getTo());
+            DataPackagePool.returnPackage(read);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -74,11 +102,19 @@ public class ClientController {
         }finally {
             try {
                 socket.close();
+//                processor.
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
+
+    /**
+     * Parse string like this Sample rate = 01...n\nSample size = 01....n
+     * retrive from them digits
+     * @param data got from the server
+     * @return default audio format
+     */
 
     private AudioFormat parseAudioFormat(String data) {
         String[] strings = data.split("\n");
@@ -92,9 +128,21 @@ public class ClientController {
         return new AudioFormat(sampleRate, sampleSize, 1, true, true);
     }
 
-    private ClientUser[] parseUsers(String data) {
-        if (data.length() < 5) return new ClientUser[0];
+    public static BaseUser[] parseUsers(String data) {
+        if (data.length() == 0) return new BaseUser[0];
         String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s -> ClientUser.parser.matcher(s).matches()).map(ClientUser::parse).toArray(ClientUser[]::new);
+        return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(ClientUser::parse).toArray(ClientUser[]::new);
+    }
+
+    public BaseUser getMe() {
+        return me;
+    }
+
+    public ClientWriter getWriter() {
+        return writer;
+    }
+
+    public ClientProcessor getProcessor() {
+        return processor;
     }
 }

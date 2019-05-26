@@ -70,9 +70,9 @@ public abstract class BaseWriter {
         work = true;
     }
 
-    private void writeBase(BaseDataPackage dataPackage) throws IOException {
-        outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
-    }
+//    private void writeBase(BaseDataPackage dataPackage) throws IOException {
+//        outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
+//    }
 
 
     //Check machine code and compare to synchronise in head
@@ -81,6 +81,7 @@ public abstract class BaseWriter {
         if (dataPackage.getHeader().getLength() != 0)
             outputStream.write(dataPackage.getData());
         outputStream.flush();
+//        System.out.println(dataPackage + " " + Thread.currentThread().getName());
         DataPackagePool.returnPackage(dataPackage);
     }
 

@@ -2,7 +2,7 @@ package Bin.GUI.Forms;
 
 import Bin.Audio.AudioClient;
 import Bin.Expendable;
-import Bin.GUI.Main;
+import Bin.Main;
 import Bin.Networking.Utility.BaseUser;
 
 import javax.sound.sampled.FloatControl;
@@ -66,7 +66,7 @@ public class ConversationPane implements Expendable {
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.fill = GridBagConstraints.BOTH;
             constraints.gridy = offset++;
-            conferencePane.getCenterPane().add(createUser(Main.getInstance().getUserById(id)), constraints);
+//            conferencePane.getCenterPane().add(createUser(Main.getInstance().getUserById(id)), constraints);
 
         });
         return true;

@@ -1,8 +1,7 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Main;
-
 import javax.swing.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class FirstSkin{
@@ -11,53 +10,47 @@ public class FirstSkin{
     private JTextField portField;
     private JButton connectButton;
     private JButton createButton;
-    private JPanel pane;
+    private JPanel mainPane;
 
-    public FirstSkin(MainFrame mainFrame) {
+    private AudioFormatStats audioFormatStats;
 
-        connectButton.addActionListener(e -> connect(mainFrame));
+    public FirstSkin(Consumer<String[]> connect, Consumer<String[]> createServer) {
 
-        createButton.addActionListener(e -> create(mainFrame));
+        audioFormatStats = new AudioFormatStats(createServer);
+
+        connectButton.addActionListener(e -> connect.accept(new String[]{getMyName(), getIp(), getPort()}));
+
+        createButton.addActionListener(e -> audioFormatStats.display());
+
+
 
     }
 
     JPanel getPane() {
-        return pane;
+        return mainPane;
     }
 
-    private boolean verifyPort(){
-        return portField.getText().matches("\\d+?");
-    }
-
-    private boolean verifyIp(String ip){
-        String digitAndDotThenDigits = "((\\d){1,3}\\.){3}(\\d{1,3})";
-        return Pattern.compile(digitAndDotThenDigits).matcher(ip.trim()).matches();
-    }
-
-    String getMyName(){
+    private String getMyName(){
         return nameField.getText().equals("") ? System.getProperty("user.name").trim() : nameField.getText().trim();
     }
 
-    private void connect(MainFrame mainFrame){
-        if (verifyIp(ipField.getText()) && verifyPort()){
-            if (!Main.getInstance().connect(getMyName(), ipField.getText(), Integer.parseInt(portField.getText()))){
-                mainFrame.showDialog("Cannot connect to the server, check ip and port correctly, or server is shut down");
-            }
-        }else
-            mainFrame.showDialog("Ip should be like xxx.xxx.xxx.xxx\nPort should contain only digits");
+    private String getIp(){
+        String ip = ipField.getText();
+        return verifyIp(ip) ? ip : "127.0.0.1";
     }
 
-    private void create(MainFrame mainFrame){
-        if (verifyPort()){
-            AudioFormatStats audioFormatStats = new AudioFormatStats(mainFrame);
-            if (audioFormatStats.isStarted()){
-                if (!Main.getInstance().startServer(Integer.parseInt(portField.getText()), audioFormatStats.sampleRate, audioFormatStats.sampleSize)) {
-                    mainFrame.showDialog("Server has not started, check if the port is not already on use, or out of the available range");
-                }else {
-                    createButton.setVisible(false);
-                }
-            }
-        }else Main.getInstance().getMainFrame().showDialog("Port is invalid should contain only digits");
+    private String getPort(){
+        String port = portField.getText();
+        return verifyPort(port) ? port : "8188";
+    }
+
+    public static boolean verifyPort(String port){
+        return port.matches("\\d+?");
+    }
+
+    public static boolean verifyIp(String ip){
+        String digitAndDotThenDigits = "((\\d){1,3}\\.){3}(\\d{1,3})";
+        return Pattern.compile(digitAndDotThenDigits).matcher(ip.trim()).matches();
     }
 
 }

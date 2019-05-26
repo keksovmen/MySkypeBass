@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
-public class ClientProcessor /*implements Processor, Startable*/ {
+public class ClientProcessor {
 
     private Executor executor;
-    private List<Task> listeners;
+    private List<Consumer<BaseDataPackage>> listeners;
 
     public ClientProcessor() {
         listeners = new ArrayList<>();
@@ -20,18 +21,23 @@ public class ClientProcessor /*implements Processor, Startable*/ {
 
     public void doJob(final BaseDataPackage dataPackage) {
         executor.execute(() -> {
-            listeners.forEach(task -> task.doJob(dataPackage));
+//            System.out.println(listeners.size());
+            listeners.forEach(baseDataPackageConsumer -> baseDataPackageConsumer.accept(dataPackage));
             DataPackagePool.returnPackage(dataPackage);
         });
     }
 
-    public void addTaskListener(Task task){
-        listeners.add(task);
+    public void addTaskListener(Consumer<BaseDataPackage> consumer){
+        listeners.add(consumer);
     }
 
-    public void removeTaskListener(Task task){
-        listeners.remove(task);
+    public void removeTaskListener(Consumer<BaseDataPackage> consumer){
+        listeners.remove(consumer);
     }
+
+//    void shutdown(){
+//
+//    }
 
 //    @Override
 //    public void process() {

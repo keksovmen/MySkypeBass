@@ -16,6 +16,7 @@ public class DataPackagePool {
     }
 
     public static void returnPackage(BaseDataPackage dataPackage){
+//        System.out.println(dataPackage);
         dataPackage.clear();
         pool.offer(dataPackage);
     }

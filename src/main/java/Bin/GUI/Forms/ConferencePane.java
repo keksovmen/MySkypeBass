@@ -1,6 +1,6 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Main;
+import Bin.Main;
 
 import javax.swing.*;
 
@@ -12,16 +12,16 @@ public class ConferencePane {
     private JPanel mainPane;
 
     ConferencePane() {
-        volume.addChangeListener(e -> Main.getInstance().getAudioCapture().change((Integer) volume.getModel().getValue()));
-
-        muteButton.addActionListener(e -> {
-            Main.getInstance().getAudioCapture().mute();
-            if (muteButton.getText().equals("Mute"))
-                muteButton.setText("Un Mute");
-            else muteButton.setText("Mute");
-        });
-
-        endCallButton.addActionListener(e -> Main.getInstance().endCall());
+//        volume.addChangeListener(e -> Main.getInstance().getAudioCapture().change((Integer) volume.getModel().getValue()));
+//
+//        muteButton.addActionListener(e -> {
+//            Main.getInstance().getAudioCapture().mute();
+//            if (muteButton.getText().equals("Mute"))
+//                muteButton.setText("Un Mute");
+//            else muteButton.setText("Mute");
+//        });
+//
+//        endCallButton.addActionListener(e -> Main.getInstance().endCall());
     }
 
     JPanel getCenterPane() {

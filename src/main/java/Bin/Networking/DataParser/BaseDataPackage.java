@@ -65,8 +65,10 @@ public class BaseDataPackage {
         return new String(data, charset);
     }
 
+    //make to null for performance increase
     void clear() {
         data = new byte[0];
+//        data = null;
     }
 
     @Override

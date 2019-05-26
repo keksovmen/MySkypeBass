@@ -12,7 +12,6 @@ public class BaseUser {
     public BaseUser(String name, int id) {
         this.name = name;
         this.id = id;
-//        System.out.println(toString());
     }
 
     public String getName() {

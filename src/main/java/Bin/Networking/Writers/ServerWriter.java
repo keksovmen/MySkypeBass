@@ -30,12 +30,17 @@ public class ServerWriter extends BaseWriter {
     /*
     check this peace of garbage
      */
-    public void transferData(BaseDataPackage dataPackage){
-        try {
-            write(dataPackage);
-        } catch (IOException e) {
-            e.printStackTrace();
-
-        }
+    public synchronized void transferData(BaseDataPackage dataPackage) throws IOException {
+//        try {
+        outputStream.write(dataPackage.getHeader().getRaw());//uses already calculated header
+        if (dataPackage.getHeader().getLength() != 0)
+            outputStream.write(dataPackage.getData());
+        outputStream.flush();
+        DataPackagePool.returnPackage(dataPackage);
+//            write(dataPackage);//cashe somehow header cause he is already calculated
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//
+//        }
     }
 }

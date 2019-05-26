@@ -8,7 +8,7 @@
     <properties/>
     <border type="none"/>
     <children>
-      <grid id="94766" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="94766" layout-manager="GridLayoutManager" row-count="1" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
           <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -16,15 +16,10 @@
         <properties/>
         <border type="none"/>
         <children>
-          <hspacer id="98af6">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-            </constraints>
-          </hspacer>
           <grid id="9538f" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="true" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
-              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties/>
             <border type="none"/>
@@ -47,9 +42,27 @@
               </component>
             </children>
           </grid>
+          <component id="ec862" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Port"/>
+            </properties>
+          </component>
+          <component id="f4ebc" class="javax.swing.JTextField" binding="textFieldPort" custom-create="true">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+            </constraints>
+            <properties>
+              <text value="8188"/>
+            </properties>
+          </component>
         </children>
       </grid>
-      <grid id="e3588" layout-manager="GridLayoutManager" row-count="2" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+      <grid id="e3588" layout-manager="GridLayoutManager" row-count="3" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
         <margin top="0" left="0" bottom="0" right="0"/>
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -65,7 +78,7 @@
               <text value="Sample Rate in Hz"/>
             </properties>
           </component>
-          <component id="2bcab" class="javax.swing.JCheckBox" binding="a8000CheckBox" default-binding="true">
+          <component id="ac36b" class="javax.swing.JRadioButton" binding="a8000RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -73,7 +86,7 @@
               <text value="8000"/>
             </properties>
           </component>
-          <component id="b8295" class="javax.swing.JCheckBox" binding="a16000CheckBox" default-binding="true">
+          <component id="64206" class="javax.swing.JRadioButton" binding="a16000RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -81,7 +94,7 @@
               <text value="16000"/>
             </properties>
           </component>
-          <component id="e76d3" class="javax.swing.JCheckBox" binding="a44100CheckBox" default-binding="true">
+          <component id="2f396" class="javax.swing.JRadioButton" binding="a44100RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -90,12 +103,22 @@
               <text value="44100"/>
             </properties>
           </component>
-          <component id="eab9d" class="javax.swing.JCheckBox" binding="a48000CheckBox" default-binding="true">
+          <component id="1ade2" class="javax.swing.JRadioButton" binding="a48000RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
               <text value="48000"/>
+            </properties>
+          </component>
+          <component id="5805b" class="javax.swing.JTextField" binding="customRate" custom-create="true">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="4" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="150" height="-1"/>
+              </grid>
+            </constraints>
+            <properties>
+              <text value="44100"/>
             </properties>
           </component>
         </children>
@@ -116,7 +139,7 @@
               <text value="Sample Size in Bits"/>
             </properties>
           </component>
-          <component id="5fdd5" class="javax.swing.JCheckBox" binding="a8CheckBox" default-binding="true">
+          <component id="5fbd1" class="javax.swing.JRadioButton" binding="a8RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -124,7 +147,7 @@
               <text value="8"/>
             </properties>
           </component>
-          <component id="fa5a3" class="javax.swing.JCheckBox" binding="a16CheckBox" default-binding="true">
+          <component id="70924" class="javax.swing.JRadioButton" binding="a16RadioButton" default-binding="true">
             <constraints>
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -149,11 +172,18 @@
       <member id="b8295"/>
       <member id="e76d3"/>
       <member id="eab9d"/>
+      <member id="ac36b"/>
+      <member id="ac36b"/>
+      <member id="64206"/>
+      <member id="2f396"/>
+      <member id="1ade2"/>
     </group>
     <group name="sampleSize">
       <member id="5fdd5"/>
       <member id="5fdd5"/>
       <member id="fa5a3"/>
+      <member id="5fbd1"/>
+      <member id="70924"/>
     </group>
   </buttonGroups>
 </form>

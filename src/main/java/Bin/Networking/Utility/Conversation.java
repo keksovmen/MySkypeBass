@@ -30,8 +30,8 @@ public class Conversation {
             if (serverUser.getId() != from){
 //                try {
                 ServerController controller = serverUser.getController();
-                if (controller != null)
-                    controller.getWriter().transferData(dataPackage);
+//                if (controller != null)
+//                    controller.getWriter().transferData(dataPackage);
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                }

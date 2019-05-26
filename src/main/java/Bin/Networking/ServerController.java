@@ -9,6 +9,7 @@ import Bin.Networking.Utility.ServerUser;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.function.Consumer;
 
 public class ServerController {
 
@@ -25,17 +26,68 @@ public class ServerController {
         reader = new ServerReader(socket.getInputStream(), this);
     }
 
+    /**
+     * Start authenticate procedure
+     * if success starts a new thread to handle the user
+     * otherwise disconnect him
+     */
+
     void start() {
         try {
-            boolean authenticate = authenticate();
-            System.out.println(authenticate + " SERVER");
-            if (authenticate)
-                reader.start();
+            if (authenticate())
+                launch();
+//                reader.start();
         } catch (IOException e) {
             e.printStackTrace();
             disconnect();
         }
     }
+
+    private void launch() {
+        reader.addListener(createUsersRequestListener(this));
+        reader.addListener(createTransferHandler(this));
+        reader.start();
+    }
+
+    private static Consumer<BaseDataPackage> createUsersRequestListener(ServerController controller) {
+        return baseDataPackage -> {
+            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
+                try {
+                    controller.writer.writeUsers(controller.me.getId(), controller.server.getUsers(controller.me.getId()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    controller.disconnect();
+                }
+            }
+        };
+    }
+
+    private static Consumer<BaseDataPackage> createTransferHandler(ServerController controller){
+        return baseDataPackage -> {
+            if (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()){
+                ServerController controllerReceiver = controller.server.getController(baseDataPackage.getHeader().getTo());
+                try {
+                    controllerReceiver.writer.transferData(baseDataPackage);//test it
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    controllerReceiver.disconnect();
+                }
+            }
+        };
+    }
+
+    /**
+     * Trying to register a new user for the server
+     * first read name from the user
+     * second writes audio format
+     * third gets true or false on the audio format
+     * than add user or disconnect him
+     * after write all users on server to him
+     * and notify all other users
+     *
+     * @return true if only audio format is accepted
+     * @throws IOException if connection get ruined or disconnected
+     */
 
     private boolean authenticate() throws IOException {
         BaseDataPackage dataPackage = reader.read();
@@ -55,12 +107,23 @@ public class ServerController {
         }
         DataPackagePool.returnPackage(dataPackage);
 
-        writer.writeId(id);
-        writer.writeUsers(id, server.getUsers(id));
+//        writer.writeId(id);
+//        writer.writeUsers(id, server.getUsers(id));
         server.addUser(me);
         server.sendUpdateUsers();
 
         return true;
+    }
+
+    public void disconnect() {
+        server.removeUser(me.getId());
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            server.sendUpdateUsers();
+        }
     }
 
     private void setUser(String name) {
@@ -73,17 +136,6 @@ public class ServerController {
 
     public int getId() {
         return me.getId();
-    }
-
-    public void disconnect() {
-        server.removeUser(me.getId());
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            server.sendUpdateUsers();
-        }
     }
 
 }

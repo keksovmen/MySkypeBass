@@ -8,25 +8,42 @@ import Bin.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class ServerReader extends BaseReader {
 
     //    private ServerWriter writer;
     private ServerController controller;
-    private ServerWriter writer;
+    //    private ServerWriter writer;
+    private List<Consumer<BaseDataPackage>> handlers;
 
 
     public ServerReader(InputStream inputStream, ServerController controller) {
         super(inputStream);
         this.controller = controller;
-        writer = controller.getWriter();
+//        writer = controller.getWriter();
+        handlers = new ArrayList<>();
     }
 
 
     @Override
     public void process() throws IOException {
-//        BaseDataPackage dataPackage = read();
+        BaseDataPackage dataPackage = read();
+        handlers.forEach(consumer -> consumer.accept(dataPackage));
+//        switch (dataPackage.getHeader().getCode()){
+//            case SEND_SOUND:{
+//
+//            }
+//            case SEND_USERS:{
+//
+//            }
+    }
 
+    public void addListener(Consumer<BaseDataPackage> consumer) {
+        handlers.add(consumer);
+    }
 
 //        System.out.println(dataPackage);
 ////        System.out.println("Server package = " + dataPackage.toString());
@@ -86,7 +103,7 @@ public class ServerReader extends BaseReader {
 //
 ////        }
 //        DataPackage.returnObject(dataPackage);
-    }
+//    }
 
     @Override
     public boolean start() {
@@ -97,7 +114,6 @@ public class ServerReader extends BaseReader {
                 } catch (IOException e) {
                     e.printStackTrace();
                     work = false;
-//                    Server.getInstance().removeUser(controller.getMe().getId());
                     controller.disconnect();
                 }
             }

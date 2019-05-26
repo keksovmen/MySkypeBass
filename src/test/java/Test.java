@@ -1,3 +1,5 @@
+import Bin.Audio.AudioClient;
+import Bin.Main;
 import Bin.Networking.ClientController;
 import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
@@ -16,12 +18,17 @@ import java.util.Arrays;
 
 public class Test {
 
-    public static void main(String[] args) throws IOException, UnsupportedAudioFileException {
-        Server server = new Server(8188, 20_000, 16);
-        server.start();
-//
-        ClientController clientController = new ClientController();
-        System.out.println(clientController.connect("127.0.0.1", 8188, "1") + " CLIENT");
+    public static void main(String[] args) throws IOException, UnsupportedAudioFileException, InterruptedException {
+//        Server server = new Server(8188, 20_000, 16);
+//        server.start();
+
+        Main.main(args);
+
+//        AudioClient.getInstance().playMessageSound();
+//        Thread.sleep(5_000);
+////
+//        ClientController clientController = new ClientController();
+//        System.out.println(clientController.connect("loh pidr", "127.0.0.1", 8188) + " CLIENT");
 
 //        BaseDataPackage aPackage = DataPackagePool.getPackage();
 //        aPackage.init(BaseWriter.CODE.SEND_NAME, BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode(), "LOH");

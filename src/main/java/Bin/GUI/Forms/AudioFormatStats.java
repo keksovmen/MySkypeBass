@@ -2,38 +2,39 @@ package Bin.GUI.Forms;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.text.NumberFormat;
+import java.util.function.Consumer;
 
 public class AudioFormatStats extends JDialog {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
-    private JCheckBox a8000CheckBox;
-    private JCheckBox a16000CheckBox;
-    private JCheckBox a44100CheckBox;
-    private JCheckBox a48000CheckBox;
-    private JCheckBox a8CheckBox;
-    private JCheckBox a16CheckBox;
+    private JRadioButton a8000RadioButton;
+    private JRadioButton a16000RadioButton;
+    private JRadioButton a44100RadioButton;
+    private JRadioButton a48000RadioButton;
+    private JRadioButton a8RadioButton;
+    private JRadioButton a16RadioButton;
+    private JTextField customRate;
+    private JTextField textFieldPort;
 
-    int sampleRate;
-    int sampleSize;
-    private boolean started;
-
-    public AudioFormatStats(JFrame parent) {
+    public AudioFormatStats(Consumer<String[]> createServer) {
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
+        ActionListener actionListener = e -> customRate.setText(((JRadioButton) e.getSource()).getText());
+        a8000RadioButton.addActionListener(actionListener);
+        a16000RadioButton.addActionListener(actionListener);
+        a44100RadioButton.addActionListener(actionListener);
+        a48000RadioButton.addActionListener(actionListener);
+
+        buttonOK.addActionListener(e -> {
+            createServer.accept(new String[]{getPort(), getSampleRate(), getSampleSize()});
+            onOK();
         });
 
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel());
 
         // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -44,35 +45,19 @@ public class AudioFormatStats extends JDialog {
         });
 
         // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
         pack();
         setTitle("Audio Format Settings");
-        setIconImage(parent.getIconImage());
-        setLocation(parent.getX() + 30, parent.getY() + 30);
+    }
+
+    protected void display(){
+        setLocationRelativeTo(getRootPane());
         setVisible(true);
     }
 
     private void onOK() {
         // add your code here
-        started = true;
-        if (a8000CheckBox.isSelected())
-            sampleRate = Integer.parseInt(a8000CheckBox.getText());
-        else if (a16000CheckBox.isSelected())
-            sampleRate = Integer.parseInt(a16000CheckBox.getText());
-        else if (a44100CheckBox.isSelected())
-            sampleRate = Integer.parseInt(a44100CheckBox.getText());
-        else
-            sampleRate = Integer.parseInt(a48000CheckBox.getText());
-
-        if (a8CheckBox.isSelected())
-            sampleSize = Integer.parseInt(a8CheckBox.getText());
-        else
-            sampleSize = Integer.parseInt(a16CheckBox.getText());
         dispose();
     }
 
@@ -81,14 +66,22 @@ public class AudioFormatStats extends JDialog {
         dispose();
     }
 
-//    public static void main(String[] args) {
-//        AudioFormatStats dialog = new AudioFormatStats();
-//        dialog.pack();
-//        dialog.setVisible(true);
-//        System.exit(0);
-//    }
-
-    public boolean isStarted() {
-        return started;
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
+        customRate = new JFormattedTextField(NumberFormat.getInstance());
+        textFieldPort = new JFormattedTextField(NumberFormat.getInstance());
     }
+
+    private String getPort(){
+        return textFieldPort.getText().matches("\\d+") ? textFieldPort.getText() : "8188";
+    }
+
+    private String getSampleRate(){
+        return customRate.getText().matches("\\d+") ? customRate.getText() : "44100";
+    }
+
+    private String getSampleSize(){
+        return a8RadioButton.isSelected() ? "8" : "16";
+    }
+
 }

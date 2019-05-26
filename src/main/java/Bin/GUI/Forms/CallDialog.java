@@ -1,6 +1,6 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Main;
+import Bin.Main;
 import Bin.Networking.Utility.ClientUser;
 
 import javax.swing.*;
@@ -85,19 +85,19 @@ public class CallDialog {
 
     private void onAccept(){
         //Main.accept();
-        Main.getInstance().acceptCall(who);
+//        Main.getInstance().acceptCall(who);
         dispose();
     }
 
     private void onDeny(){
         //Main.deny
-        Main.getInstance().denyCall(who);
+//        Main.getInstance().denyCall(who);
         dispose();
     }
 
     private void onCancel(){
         //Main.cancel
-        Main.getInstance().cancelCall(who);
+//        Main.getInstance().cancelCall(who);
         dispose();
     }
 
