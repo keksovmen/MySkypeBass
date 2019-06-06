@@ -3,12 +3,14 @@ package Bin.Networking;
 import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Readers.ServerReader;
+import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Writers.BaseWriter;
 import Bin.Networking.Writers.ServerWriter;
 import Bin.Networking.Utility.ServerUser;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ServerController {
@@ -36,7 +38,6 @@ public class ServerController {
         try {
             if (authenticate())
                 launch();
-//                reader.start();
         } catch (IOException e) {
             e.printStackTrace();
             disconnect();
@@ -45,6 +46,7 @@ public class ServerController {
 
     private void launch() {
         reader.addListener(createUsersRequestListener(this));
+        reader.addListener(createConvHandler(this));
         reader.addListener(createTransferHandler(this));
         reader.start();
     }
@@ -62,9 +64,61 @@ public class ServerController {
         };
     }
 
-    private static Consumer<BaseDataPackage> createTransferHandler(ServerController controller){
+    private static Consumer<BaseDataPackage> createConvHandler(ServerController controller) {
+        return dataPackage -> {
+
+            switch (dataPackage.getHeader().getCode()) {
+                case SEND_APPROVE: {
+                    ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
+                    ServerUser receiverUser = receiver.me;
+                    Conversation conversation;
+                    Conversation receiverConversation;
+
+                    if (controller.me.inConv()) {
+                        if (receiverUser.inConv()) {
+                            conversation = controller.me.getConversation();
+                            receiverConversation = receiverUser.getConversation();
+                            new Conversation(conversation.getAll(), receiverConversation.getAll());
+                        } else {
+                            conversation = controller.me.getConversation();
+                            dataPackage.setData(conversation.getAllToString(controller.me));
+                            conversation.addDude(controller.me, receiverUser);
+                        }
+                    } else {
+                        if (receiverUser.inConv()) {
+                            conversation = receiverUser.getConversation();
+                            conversation.addDude(receiverUser, controller.me);
+                        } else {
+                            new Conversation(controller.me, receiverUser);
+                        }
+                    }
+                    break;
+                }
+                case SEND_DISCONNECT_FROM_CONV: {
+                    controller.me.getConversation().removeDude(controller.me);
+                    break;
+                }
+                case SEND_SOUND: {
+                    System.out.println(controller.me.getString() + " " + Thread.currentThread().getName());
+                    if (controller.me.getConversation() != null) {
+                        controller.me.getConversation().send(dataPackage, controller.getId());
+                    }
+                    break;
+                }
+                case SEND_CALL: {
+                    if (controller.me.inConv()){
+                        dataPackage.setData(controller.me.getConversation().getAllToString(controller.me));
+                    }
+                    break;
+                }
+            }
+        };
+    }
+
+    private static Consumer<BaseDataPackage> createTransferHandler(ServerController controller) {
         return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()){
+            if ((baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode())
+                    && (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.CONFERENCE.getCode())) {        //add to conversation condition
                 ServerController controllerReceiver = controller.server.getController(baseDataPackage.getHeader().getTo());
                 try {
                     controllerReceiver.writer.transferData(baseDataPackage);//test it

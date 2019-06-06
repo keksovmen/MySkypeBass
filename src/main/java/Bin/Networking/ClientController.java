@@ -77,12 +77,11 @@ public class ClientController {
             writer.writeName(name);
             BaseDataPackage read = reader.read();
             AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
-            //stopped here need to verify is able to use audio format or not
-            if (!AudioClient.isFormatSupported(audioFormat)) {
+            //sets audio format and return true only if mic and speaker is set
+            if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
                 writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
                 return false;
             }
-            AudioClient.getInstance().setAudioFormat(audioFormat);
             writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
             me = new BaseUser(name, read.getHeader().getTo());
             DataPackagePool.returnPackage(read);

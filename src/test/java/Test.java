@@ -19,10 +19,10 @@ import java.util.Arrays;
 public class Test {
 
     public static void main(String[] args) throws IOException, UnsupportedAudioFileException, InterruptedException {
-//        Server server = new Server(8188, 20_000, 16);
-//        server.start();
+        Server server = new Server(8188, 20_000, 16);
+        server.start();
 
-        Main.main(args);
+//        Main.main(args);
 
 //        AudioClient.getInstance().playMessageSound();
 //        Thread.sleep(5_000);

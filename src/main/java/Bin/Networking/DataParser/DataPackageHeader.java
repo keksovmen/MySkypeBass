@@ -66,6 +66,11 @@ public class DataPackageHeader {
         return raw;
     }
 
+    void setLength(int length){
+        this.length = length;
+        raw = getRawHeader();
+    }
+
     @Override
     public String toString() {
         return "DataPackageHeader{" +

@@ -7,46 +7,40 @@ import Bin.Networking.Writers.ClientWriter;
 
 import java.io.IOException;
 
-public class AudioCapture implements Processor, Startable, Changeable {
+public class AudioCapture /*implements Processor, Startable*/ {
 
-    private ClientWriter writer;
+    private volatile boolean started;
+    private volatile boolean mute;
     private boolean work;
-    private int multiplier = 1;
-    private int from;
-    private boolean mute;
-    private boolean started;
 
-
-    public AudioCapture(ClientWriter writer, int from) {
-        this.writer = writer;
+    public AudioCapture() {
         work = true;
-        this.from = from;
     }
 
-    public synchronized void mute(){
+    synchronized boolean mute() {
         mute = !mute;
         notify();
+        return mute;
     }
 
-    @Override
-    public void process() throws IOException {
+    //    @Override
+    private void process(final ClientWriter writer, final int from) throws IOException {
         byte[] audio = AudioClient.getInstance().captureAudio();
-        if (audio == null){
+        if (audio == null) {
             work = false;
             return;
-        }
-        if (multiplier > 1){
-            for (int i = 0; i < audio.length; i++) {
-                audio[i] = (byte) (audio[i] * multiplier);
-            }
         }
         writer.writeSound(from, audio);
     }
 
-    @Override
-    public boolean start() {
-        if (started) return false;
+    //    @Override
+    void start(final ClientWriter writer, final int from) {
+        if (started) {
+            return;
+        }
         started = true;
+        work = true;
+        mute = false;
         new Thread(() -> {
             while (work) {
                 synchronized (this) {
@@ -59,24 +53,19 @@ public class AudioCapture implements Processor, Startable, Changeable {
                     }
                 }
                 try {
-                    process();
+                    process(writer, from);
                 } catch (IOException e) {
                     e.printStackTrace();
                     close();
                 }
             }
+            started = false;
         }, "Client capture").start();
-        return true;
     }
 
-    @Override
-    public void close() {
+    //    @Override
+    void close() {
         work = false;
     }
 
-    @Override
-    public void change(int amount) {
-        if (amount >= 1)
-            multiplier = amount;
-    }
 }

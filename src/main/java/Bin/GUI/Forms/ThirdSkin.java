@@ -1,7 +1,5 @@
 package Bin.GUI.Forms;
 
-//import Bin.Utility.Annotations.ListenerFor;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -31,8 +29,6 @@ public class ThirdSkin {
         textField.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
         closeButton.addActionListener(e -> closeTab.run());
-//
-//        AnnotationsProcessor.process(this);
     }
 
     JPanel getMainPane() {
@@ -41,11 +37,11 @@ public class ThirdSkin {
 
     void showMessage(String message, boolean me) {
         EventQueue.invokeLater(() -> {
-            if (message.length() != 0) messageBoard.append((me ? "Me" : nameWho.getText()) + " " + getTime() + ": " + message + "\n");
+            if (message.length() != 0)
+                messageBoard.append((me ? "Me" : nameWho.getText()) + " (" + getTime() + "): " + message + "\n");
         });
     }
 
-    //    @ListenerFor(source="sendButton")
     private void sendMessage(Consumer<String> send) {
         String message = textField.getText();
         if (message.length() == 0) return;
@@ -54,7 +50,7 @@ public class ThirdSkin {
         textField.setText("");
     }
 
-    private String getTime(){
+    private String getTime() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
         return dateFormat.format(calendar.getTime());

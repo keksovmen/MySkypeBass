@@ -2,18 +2,14 @@ package Bin.Networking.Utility;
 
 import Bin.Networking.ServerController;
 
-//import java.net.Socket;
-
 public class ServerUser extends BaseUser {
 
-//    private Socket socket;
     private ServerController controller;
     private volatile Conversation conversation;
 
     public ServerUser(String name, int id, ServerController controller) {
         super(name, id);
         this.controller = controller;
-//        this.socket = socket;
     }
 
     public ServerController getController() {
@@ -27,4 +23,17 @@ public class ServerUser extends BaseUser {
     public synchronized void setConversation(Conversation conversation) {
         this.conversation = conversation;
     }
+
+    public boolean inConv(){
+        return conversation != null;
+    }
+
+    public String getString() {
+        return "ServerUser{" +
+                "controller=" + controller +
+                ", conversation=" + conversation +
+                '}';
+    }
+
+
 }

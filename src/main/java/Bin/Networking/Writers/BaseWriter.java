@@ -31,7 +31,10 @@ public abstract class BaseWriter {
         SEND_SOUND(10),
         SEND_DISCONNECT(11),
         SEND_ADD(12),
-        SEND_REMOVE(13);
+        SEND_REMOVE(13),
+        SEND_CONFIRM(14),
+        SEND_DISCONNECT_FROM_CONV(15),
+        SEND_STOP_CONV(16);
 
         private int code;
 
@@ -69,10 +72,6 @@ public abstract class BaseWriter {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
         work = true;
     }
-
-//    private void writeBase(BaseDataPackage dataPackage) throws IOException {
-//        outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
-//    }
 
 
     //Check machine code and compare to synchronise in head

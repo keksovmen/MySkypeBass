@@ -39,6 +39,10 @@ public class ClientWriter extends BaseWriter {
         write(DataPackagePool.getPackage().init(CODE.SEND_CANCEL, from, to));
     }
 
+    public void writeConfirm(int from, int to) throws IOException {
+        write(DataPackagePool.getPackage().init(CODE.SEND_CONFIRM, from, to));
+    }
+
     public void writeSound(int from, byte[] data) throws IOException {
         write(DataPackagePool.getPackage().init(CODE.SEND_SOUND, from, WHO.CONFERENCE.getCode(), data));
     }
@@ -46,6 +50,12 @@ public class ClientWriter extends BaseWriter {
     public void writeDisconnect(int from) throws IOException {
         write(DataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, from, WHO.SERVER.getCode()));
     }
+
+    public void writeDisconnectFromConv(int from) throws IOException {
+        write(DataPackagePool.getPackage().init(CODE.SEND_DISCONNECT_FROM_CONV, from, WHO.CONFERENCE.getCode()));
+    }
+
+
 
 //    public void writeAdd(int from) throws IOException {
 //        write(DataPackagePool.getPackage().init(CODE.SEND_ADD, from, to));

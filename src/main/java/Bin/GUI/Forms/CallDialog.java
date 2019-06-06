@@ -1,107 +1,90 @@
 package Bin.GUI.Forms;
 
-import Bin.Main;
-import Bin.Networking.Utility.ClientUser;
-
 import javax.swing.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
+import java.util.function.Consumer;
 
-public class CallDialog {
-    private JDialog dialog;
-    private JLabel label;
+public class CallDialog extends JDialog {
     private JPanel contentPane;
-    private JButton acceptButton;
+    private JButton buttonOK;
+    private JButton buttonCancel;
+    private JLabel nameTo;
     private JButton denyButton;
-    private JButton cancelButton;
+    private JLabel conversationInfo;
 
-    private ClientUser who;
-    private boolean shown;
-    enum CALL {OUT, IN}
-    private CALL state;
+    public CallDialog(Consumer<String> cancelCall, Consumer<String> acceptCall, Consumer<String> denyCall) {
+        setContentPane(contentPane);
+        setModal(true);
+        getRootPane().setDefaultButton(buttonOK);
 
+        buttonOK.addActionListener(e -> onOK(acceptCall));
 
-    public CallDialog(MainFrame mainFrame) {
-        dialog = new JDialog(mainFrame, "Call", true);
-        dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        buttonCancel.addActionListener(e -> onCancel(cancelCall));
 
-        label = new JLabel();
-        contentPane = new JPanel();
-//        contentPane.add(label);
-        acceptButton = new JButton("Accept");
-        denyButton = new JButton("Deny");
-        cancelButton = new JButton("Cancel");
-        dialog.setContentPane(contentPane);
-        dialog.setLocation(mainFrame.getX() + 30, mainFrame.getY() + 30);
-        dialog.setSize(200, 150);
+        denyButton.addActionListener(e -> onDeny(denyCall));
 
-        cancelButton.addActionListener(e -> onCancel());
-        dialog.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                onCancel();
-            }
-        });
+        // call onCancel() when cross is clicked
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+//        addWindowListener(new WindowAdapter() {
+//            public void windowClosing(WindowEvent e) {
+//                onCancel(cancelCall);
+//            }
+//        });
 
-        denyButton.addActionListener(e -> onDeny());
-        acceptButton.addActionListener(e -> onAccept());
+        // call onCancel() on ESCAPE
+//        contentPane.registerKeyboardAction(e -> onCancel(cancelCall), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+
+        pack();
     }
 
-    synchronized boolean showCallingDialog(ClientUser who){
-        if (shown) return false;
-        shown = true;
-        state = CALL.OUT;
-        this.who = who;
-        label.setText("Calling to " + who);
-        contentPane.add(label);
-        contentPane.add(cancelButton);
-        dialog.setVisible(true);
-        return true;
-    }
-
-    synchronized boolean showCallDialog(ClientUser who){
-        if (shown) return false;
-        shown = true;
-        state = CALL.IN;
-        this.who = who;
-        label.setText("Call from " + who);
-        contentPane.add(label);
-        contentPane.add(acceptButton);
-        contentPane.add(denyButton);
-        dialog.setVisible(true);
-        return true;
-    }
-
-    void dispose(){
-        dialog.setVisible(false);
-        shown = false;
-        contentPane.removeAll();
-
-    }
-
-    public CALL getType(){
-        return state;
-    }
-
-    private void onAccept(){
-        //Main.accept();
-//        Main.getInstance().acceptCall(who);
+    private void onOK(Consumer<String> acceptCall) {
+        // add your code here
+        acceptCall.accept(nameTo.getText() + "\n" + conversationInfo.getText());
         dispose();
     }
 
-    private void onDeny(){
-        //Main.deny
-//        Main.getInstance().denyCall(who);
+    private void onCancel(Consumer<String> cancel) {
+        // add your code here if necessary
+        cancel.accept(nameTo.getText());
         dispose();
     }
 
-    private void onCancel(){
-        //Main.cancel
-//        Main.getInstance().cancelCall(who);
+    private void onDeny(Consumer<String> denyCall){
+        denyCall.accept(nameTo.getText());
         dispose();
     }
 
-    public ClientUser getWho() {
-        return who;
+    void showOutcoming(String who){
+        setTitle("Calling");
+
+        nameTo.setText(who);
+
+        nameTo.setVisible(true);
+        conversationInfo.setVisible(false);
+        buttonOK.setVisible(false);
+        denyButton.setVisible(false);
+        buttonCancel.setVisible(true);
+
+        setLocationRelativeTo(getRootPane());
+
+        setVisible(true);
     }
+
+    void showIncoming(String fromWho, String conversationInfo){
+        setTitle("Incoming");
+
+        nameTo.setText(fromWho);
+        this.conversationInfo.setText(conversationInfo);
+
+        nameTo.setVisible(true);
+        this.conversationInfo.setVisible(true);
+        buttonOK.setVisible(true);
+        denyButton.setVisible(true);
+        buttonCancel.setVisible(false);
+
+        setLocationRelativeTo(getRootPane());
+
+        setVisible(true);
+    }
+
 }

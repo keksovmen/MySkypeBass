@@ -1,5 +1,6 @@
 package Bin.Networking.Utility;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,8 +24,22 @@ public class BaseUser {
     }
 
     @Override
-    public String toString() {
+    public final String toString() {
         return name + " - " + id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BaseUser baseUser = (BaseUser) o;
+        return id == baseUser.id &&
+                Objects.equals(name, baseUser.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, id);
     }
 
     public static BaseUser parse(String data){

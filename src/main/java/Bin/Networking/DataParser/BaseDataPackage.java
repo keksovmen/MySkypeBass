@@ -20,7 +20,7 @@ public class BaseDataPackage {
 
     public BaseDataPackage() {
         header = new DataPackageHeader();
-        data = new byte[0];
+        data = null;
     }
 
 
@@ -52,6 +52,11 @@ public class BaseDataPackage {
         this.data = data;
     }
 
+    public void setData(String data) {
+        this.data = data.getBytes(charset);
+        header.setLength(this.data.length);
+    }
+
     public DataPackageHeader getHeader() {
         return header;
     }
@@ -62,13 +67,13 @@ public class BaseDataPackage {
     }
 
     public String getDataAsString() {
-        return new String(data, charset);
+        return data == null ? "" : new String(data, charset);
     }
 
     //make to null for performance increase
     void clear() {
-        data = new byte[0];
-//        data = null;
+//        data = new byte[0];
+        data = null;
     }
 
     @Override

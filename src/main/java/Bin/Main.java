@@ -1,23 +1,19 @@
 package Bin;
 
-import Bin.Audio.AudioCapture;
 import Bin.Audio.AudioClient;
 import Bin.GUI.Forms.MainFrame;
 import Bin.Networking.ClientController;
 import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.Processors.ClientProcessor;
-import Bin.Networking.Readers.ClientReader;
 import Bin.Networking.Server;
-import Bin.Networking.Writers.BaseWriter;
-import Bin.Networking.Writers.ClientWriter;
 import Bin.Networking.Utility.BaseUser;
-import Bin.Networking.Utility.ClientUser;
+import Bin.Networking.Utility.Call;
+import Bin.Networking.Writers.BaseWriter;
 
-import javax.sound.sampled.AudioFormat;
 import java.awt.*;
 import java.io.IOException;
-import java.net.Socket;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,40 +21,35 @@ import java.util.function.Supplier;
 
 public class Main {
 
-    /*
-     * SingleTone
-     */
-
-//    private static final Main main = new Main();
-
-    //    private ClientWriter writer;
-//    private ClientProcessor clientProcessor;
-//    private ClientReader reader;
-//    private BaseUser me;
-//    private MainFrame mainFrame;
-//    private Socket socket;
-//    private final Map<Integer, ClientUser> users;
-//    private AudioCapture audioCapture;
     private MainFrame mainFrame;
     private ClientController controller;
     private Server server;
     private final Map<Integer, BaseUser> users;
-    private final AudioClient audioClient = AudioClient.getInstance();
+    private final AudioClient audioClient;
+    private final Call callDialog;
 
     private Main() {
 //        users = new HashMap<>();
 //        mainFrame = new MainFrame();
+        audioClient = AudioClient.getInstance();
         users = new HashMap<>();
+        callDialog = new Call();
         EventQueue.invokeLater(() -> {
             controller = new ClientController();
-            mainFrame = new MainFrame(connect(), createServer(), nameAndId(), disconnect(), callForUsers(), sendMessage());
+            mainFrame = new MainFrame(connect(), createServer(), nameAndId(), disconnect(), callForUsers(), sendMessage(),
+                    callSomeOne(), cancelCall(true), acceptCall(), denyCall());
             controller.getProcessor().addTaskListener(usersIncome());
             controller.getProcessor().addTaskListener(showMessage());
+            controller.getProcessor().addTaskListener(callHandler());
+            controller.getProcessor().addTaskListener(audioHandler());
         });
     }
 
     public static void main(String[] args) {
-        Main main = new Main();
+//        Main main = new Main();
+        new Main();
+//        new Main();
+
     }
 
     private Function<String[], Boolean> connect() {
@@ -131,6 +122,7 @@ public class Main {
     private void error() {
         controller.disconnect();
         mainFrame.errorCase();
+        audioClient.close();
     }
 
     private Consumer<BaseDataPackage> showMessage() {
@@ -141,193 +133,196 @@ public class Main {
             }
         };
     }
-//    public static Main getInstance() {
-//        return main;
-//    }
 
-//    public boolean connect(String name, String ip, int port){
-//        try {
-//            socket = new Socket(ip, port);
-//            writer = new ClientWriter(socket.getOutputStream());
-//            clientProcessor = new ClientProcessor();
-////            clientProcessor.start();
-//            reader = new ClientReader(socket.getInputStream(), clientProcessor);
-//            reader.start();
-//            writer.writeName(name);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//        return true;
-//    }
+    private Consumer<BaseUser> callSomeOne() {
+        return baseUser -> {
+            try {
+//                if (isCalling.get()) return;//shouldn't happen because of GUI
+                controller.getWriter().writeCall(controller.getMe().getId(), baseUser.getId());
+                callDialog.setCalling(true, false);
+                callDialog.setReceiver(baseUser);
+            } catch (IOException e) {
+                e.printStackTrace();
+                error();
+            }
+        };
+    }
 
-//    public boolean startServer(int port, int sampleRate, int sampleSize){
-////        Server server = Server.getInstance();
-////        server.init(port, sampleRate, sampleSize);
-////        try {
-////            server.createServerSocket();
-////        } catch (IOException e) {
-////            e.printStackTrace();
-////            return false;
-////        }
-////        server.start();
-//        return true;
-//    }
+    private Consumer<BaseUser> cancelCall(boolean isYou) {
+        return baseUser -> {
+            try {
+                controller.getWriter().writeCancel(controller.getMe().getId(), baseUser.getId());
+                if (isYou)
+                    callDialog.setCalling(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+                error();
+            }
+        };
+    }
 
-//    public void setAudioFormat(AudioFormat format){
-//        if (!AudioClient.getInstance().setAudioFormat(format))
-//            mainFrame.showDialog("Something doesn't work on this settings (" + format.toString() +"), check it if false " +
-//                    "microphone = " + AudioClient.getInstance().isMic() + " speaker = " + AudioClient.getInstance().isSpeaker());
-//        mainFrame.setUserName(me.toString());
-//        mainFrame.changeFirstToSecond();
-//    }
+    private Consumer<BaseUser[]> acceptCall() {
+        return baseUsers -> {
+            try {
+                int from = baseUsers[0].getId();
+                callDialog.setCalling(false);
+                controller.getWriter().writeAccept(controller.getMe().getId(), from);
 
-//    public void disconnect(){
-//        try {
-//            writer.writeDisconnect(me.getId());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }finally {
-//            try {
-//                socket.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            mainFrame.changeSecondToFirst();
-////            clientProcessor.close();
-//            mainFrame.showDialog("Disconnected from the server, may be its died or your connection was lost");
-//        }
-//
-//    }
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int i = 1; i < baseUsers.length; i++) {
+                    stringBuilder.append(baseUsers[i].toString()).append("\n");
+                }
+                startConv(from, stringBuilder.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+                error();
+            }
+        };
+    }
 
-//    public boolean writeMessage(String message, int to){
-//        try {
-//            writer.writeMessage(me.getId(), to, message);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            disconnect();
-//            return false;
-//        }
-//        return true;
-//    }
-//
-//    public void writeRefresh(){
-//        try {
-//            writer.writeUsersRequest(me.getId());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            disconnect();
-//        }
-//    }
-//
-//    public void call(ClientUser user){
-//        if (users.containsValue(user)){
-//            try {
-//                writer.writeCall(me.getId(), user.getId());
-//                mainFrame.showCallingDialog(user);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                disconnect();
-//            }
-//        }
-//    }
+    private Consumer<BaseUser> denyCall() {
+        return baseUser -> {
+            try {
+                controller.getWriter().writeDeny(controller.getMe().getId(), baseUser.getId());
+                callDialog.setCalling(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+                error();
+            }
+        };
+    }
 
-//    public void cancelCall(ClientUser user){
-//        if (users.containsValue(user)){
-//            try {
-//                writer.writeCancel(me.getId(), user.getId());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                disconnect();
-//            }
-//        }
-//    }
+    private Consumer<BaseDataPackage> callHandler() {
+        return baseDataPackage -> {
+            switch (baseDataPackage.getHeader().getCode()) {
+                case SEND_CALL: {
+                    int from = baseDataPackage.getHeader().getFrom();
+                    //auto accept and cancel
+                    if (callDialog.isCalling()) {
+                        if (callDialog.getReceiver().getId() == from) {
+                            BaseUser[] users = null;
+                            if (baseDataPackage.getHeader().getLength() > 0){
+                                BaseUser[] parseUsers = ClientController.parseUsers(baseDataPackage.getDataAsString());
+                                users = new BaseUser[parseUsers.length + 1];
+                                users[0] = callDialog.getReceiver();
+                                System.arraycopy(parseUsers, 0, users, 1, parseUsers.length);
+                            }else {
+                                users = new BaseUser[]{callDialog.getReceiver()};
+                            }
+                            acceptCall().accept(users);
+                            //auto accept call handle here
+                            mainFrame.closeCall("Call was accepted");
+                        } else {
+                            BaseUser caller = users.get(from);
+                            //auto cancel call because you are busied already
+                            cancelCall(false).accept(caller);
+                            mainFrame.showMessage(caller, "I called you, but you were busy, call me");
+                        }
+                        break;
+                    }
+                    //ordinary 1 side call
+                    callDialog.setCalling(true, true);
+                    callDialog.setReceiver(users.get(baseDataPackage.getHeader().getFrom()));
+                    mainFrame.showIncomingCall(users.get(baseDataPackage.getHeader().getFrom()).toString(), baseDataPackage.getDataAsString());
+                    break;
+                }
+                case SEND_CANCEL: {
+                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
+                        mainFrame.closeCall("Call was canceled");
+                        callDialog.setCalling(false);
+                    }
+                    break;
+                }
+                case SEND_APPROVE: {
+                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
+                        mainFrame.closeCall("Call was accepted");
+                        callDialog.setCalling(false);
+                        startConv(baseDataPackage);
+//                        audioClient.startConversation(controller.getWriter(), controller.getMe().getId(), baseDataPackage.getHeader().getFrom());
+                    }
+                    break;
+                }
+                case SEND_DENY: {
+                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
+                        mainFrame.closeCall("Call was denied");
+                        callDialog.setCalling(false);
+                    }
+                    break;
+                }
+            }
+        };
+    }
 
-//    public void denyCall(ClientUser who){
-//        if (users.containsValue(who)){
-//            try {
-//                writer.writeDeny(me.getId(), who.getId());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                disconnect();
-//            }
-//        }
-//    }
+    private void startConv(BaseDataPackage baseDataPackage){
+        startConv(baseDataPackage.getHeader().getFrom(), baseDataPackage.getDataAsString());
+    }
 
-//    public void acceptCall(ClientUser who){
-//        if (users.containsValue(who)){
-//            try {
-//                writer.writeAccept(me.getId(), who.getId());
-//                mainFrame.acceptReceived(who.getId());
-////                writer.writeAdd(me.getId());
-////                AudioClient.getInstance().add(who.getId());
-////                    AudioClient.getInstance().add(who.getId());
-////                audioCapture.start();
-////                mainFrame.addUserToConversation(audioCapture, who);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                disconnect();
-//            }
-//        }
-//    }
+    private void startConv(int from, String convUsers){
+        if (convUsers.length() > 0){
+            BaseUser[] baseUsers = ClientController.parseUsers(convUsers);
+            int[] indexes = new int[baseUsers.length + 1];
+            for (int i = 0; i < baseUsers.length; i++) {
+                indexes[i] = baseUsers[i].getId();
+            }
+            indexes[indexes.length - 1] = from;
+            audioClient.startConversation(controller.getWriter(), controller.getMe().getId(), indexes);
+            mainFrame.startConversation(endConversation(), muteAction(),
+                                        users.get(from).toString(), audioClient.getSettings(from));
+            for (BaseUser baseUser : baseUsers) {
+                mainFrame.addToConv(baseUser.toString(), audioClient.getSettings(baseUser.getId()));
+            }
+        }else {
+            audioClient.startConversation(controller.getWriter(), controller.getMe().getId(), from);
+            mainFrame.startConversation(endConversation(), muteAction(),
+                    users.get(from).toString(), audioClient.getSettings(from));
+        }
 
-//    public void endCall(){
-//
-//    }
-//
-//    public void setMe(int id) {
-//        me = new BaseUser(mainFrame.getMyName(), id);
-//        audioCapture = new AudioCapture(writer, id);
-//    }
 
-//    public String[] getListUsers(){
-//        synchronized (users) {
-//            if (users.size() == 0) return new String[0];
-//            return users.stream().map(BaseUser::toString).toArray(String[]::new);
-//        }
-//    }
+    }
 
-//    public Collection<ClientUser> getUsers(){
-//        synchronized (users) {
-//            return users.values();
-//        }
-//    }
-//
-//    public ClientUser getUserById(int who){
-//        synchronized (users) {
-//            return users.get(who);
-//        }
-//    }
+    private Consumer<BaseDataPackage> audioHandler(){
+        return dataPackage -> {
+            switch (dataPackage.getHeader().getCode()){
+                case SEND_SOUND:{
+                    audioClient.playAudio(dataPackage.getHeader().getFrom(), dataPackage.getData());
+                    break;
+                }
+                case SEND_ADD:{
+                    int from = dataPackage.getHeader().getFrom();
+                    audioClient.add(from);
+                    mainFrame.addToConv(users.get(from).toString(), audioClient.getSettings(from));
+                    break;
+                }
+                case SEND_REMOVE:{
+                    audioClient.remove(dataPackage.getHeader().getFrom());
+                    mainFrame.removeFromConv(users.get(dataPackage.getHeader().getFrom()).toString());
+                    break;
+                }
+                case SEND_STOP_CONV:{
+                    audioClient.close();
+                    mainFrame.closeConversation();
+                    break;
+                }
+            }
+        };
+    }
 
-//    public void resetUsers(ClientUser[] users){
-//        synchronized (this.users) {
-//            ClientUser[] clientUsers = this.users.values().stream().filter(dude -> {
-//                for (ClientUser user : users) {
-//                    if (user.getId() == dude.getId()) return true;
-//                }
-//                return false;
-//            }).toArray(ClientUser[]::new);
-//            this.users.clear();
-//
-//            Arrays.stream(users).forEach(baseUser -> this.users.put(baseUser.getId(), baseUser));
-//            Arrays.stream(clientUsers).forEach(user -> this.users.put(user.getId(), user));
-//        }
-//        mainFrame.updateList();
-//    }
-//
-//    public MainFrame getMainFrame() {
-//        return mainFrame;
-//    }
+    private Runnable endConversation(){
+        return () -> {
+            try {
+                audioClient.close();
+                mainFrame.closeConversation();
+                controller.getWriter().writeDisconnectFromConv(controller.getMe().getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+                error();
+            }
+        };
+    }
 
-//    public ClientWriter getWriter() {
-//        return writer;
-//    }
-//
-//    public int getMeId() {
-//        return me.getId();
-//    }
+    private Supplier<Boolean> muteAction(){
+        return audioClient::mute;
+    }
 
-//    public AudioCapture getAudioCapture() {
-//        return audioCapture;
-//    }
+
 }
