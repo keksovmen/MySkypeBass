@@ -1,8 +1,12 @@
 package Bin.GUI.Interfaces;
 
-import java.util.function.Consumer;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+
+import java.util.function.Function;
 
 public interface AudioFormatStatsActions {
 
-    Consumer<String[]> createServer();
+    Function<String[], Boolean> createServer() throws NotInitialisedException;
+
+    void updateCreateServer(Function<String[], Boolean> createServer);
 }

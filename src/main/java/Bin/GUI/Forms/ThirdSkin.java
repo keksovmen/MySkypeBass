@@ -1,12 +1,15 @@
 package Bin.GUI.Forms;
 
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+import Bin.GUI.Interfaces.ThirdSkinActions;
+import Bin.Networking.Utility.BaseUser;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class ThirdSkin {
     private JPanel mainPane;
@@ -15,20 +18,34 @@ public class ThirdSkin {
     private JButton sendButton;
     private JButton closeButton;
     private JTextField textField;
-//    private final BaseUser who;
+
+    private ThirdSkinActions actions;
+    private int who;
 
 
-    public ThirdSkin(String name, Consumer<String> sendMessage, Runnable closeTab) {
-//        this.who = who;
+    public ThirdSkin(String name, ThirdSkinActions actions) {
+        this.actions = actions;
+        who = BaseUser.parse(name).getId();
 
         nameWho.setText(name);
-//
-//
-        sendButton.addActionListener(e -> sendMessage(sendMessage));
-//
+
+        sendButton.addActionListener(e -> {
+            try {
+                sendMessage(actions.sendMessage());
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
+
         textField.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
-        closeButton.addActionListener(e -> closeTab.run());
+        closeButton.addActionListener(e -> {
+            try {
+                actions.closeTab().run();
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
     }
 
     JPanel getMainPane() {
@@ -42,10 +59,10 @@ public class ThirdSkin {
         });
     }
 
-    private void sendMessage(Consumer<String> send) {
+    private void sendMessage(BiConsumer<Integer, String> send) {
         String message = textField.getText();
         if (message.length() == 0) return;
-        send.accept(message);
+        send.accept(who, message);
         showMessage(message, true);
         textField.setText("");
     }

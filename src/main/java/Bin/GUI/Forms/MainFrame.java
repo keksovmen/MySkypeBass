@@ -1,5 +1,7 @@
 package Bin.GUI.Forms;
 
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+import Bin.GUI.Interfaces.MainFrameActions;
 import Bin.Networking.Utility.BaseUser;
 
 import javax.imageio.ImageIO;
@@ -7,19 +9,22 @@ import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class MainFrame extends JFrame {
 
     private FirstSkin firstSkin;
     private SecondSkin secondSkin;
 
-    public MainFrame(Function<String[], Boolean> connect, Function<String[], Boolean> createServer, Supplier<String> nameAndId,
-                     Runnable disconnect, Runnable callForUsers, BiConsumer<Integer, String> sendMessage,
-                     Consumer<BaseUser> call, Consumer<BaseUser> callCancel, Consumer<BaseUser[]> callAccept, Consumer<BaseUser> callDeny) {
+    private MainFrameActions actions;
+
+
+    public MainFrame(MainFrameActions actions) throws NotInitialisedException {
+        this.actions = actions;
+        updateActions();
+
+        firstSkin = new FirstSkin(actions);
+        add(firstSkin.getPane());
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setBounds(screenSize.width / 2 - 200, screenSize.height / 2 - 200,
@@ -36,49 +41,56 @@ public class MainFrame extends JFrame {
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        firstSkin = new FirstSkin(connect(connect, nameAndId, disconnect(disconnect), callForUsers, sendMessage,
-                call, callCancel, callAccept, callDeny), createServer(createServer));
-
-        add(firstSkin.getPane());
-
         setVisible(true);
 
     }
 
-    private Consumer<String[]> connect(Function<String[], Boolean> connect, Supplier<String> nameAndId,
-                                       Runnable disconnect, Runnable callForUsers, BiConsumer<Integer, String> sendMessage,
-                                       Consumer<BaseUser> call, Consumer<BaseUser> callCancel, Consumer<BaseUser[]> callAccept, Consumer<BaseUser> callDeny) {
+    private void updateActions() throws NotInitialisedException {
+        actions.updateConnect(connect(actions.connect()));
+        actions.updateCreateServer(createServerFunction(actions.createServer()));
+        actions.updateDisconnect(disconnect(actions.disconnect()));
+    }
+
+    private Function<String[], Boolean> connect(Function<String[], Boolean> connect) {
         return strings -> {
             Boolean aBoolean = connect.apply(strings);
             if (aBoolean == null) {
                 errorCase();
-                return;
+                return false;
             }
             if (aBoolean) {
                 remove(firstSkin.getPane());
                 if (secondSkin == null) {
-                    secondSkin = new SecondSkin(nameAndId.get(), disconnect, callForUsers, sendMessage, call, callCancel, callAccept, callDeny);
+                    try {
+                        secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
+                    } catch (NotInitialisedException e) {
+                        e.printStackTrace();
+                    }
                 }
                 add(secondSkin.getPane());
                 revalidate();
-//                    repaint();
+                repaint();
             } else {
                 showDialog("Audio format is not acceptable");
             }
+            return true;
         };
     }
 
-    private Consumer<String[]> createServer(Function<String[], Boolean> createServer) {
+    private Function<String[], Boolean> createServerFunction(Function<String[], Boolean> createServer) {
         return strings -> {
             Boolean created = createServer.apply(strings);
             if (created == null) {
                 showDialog("Port already in use, server wasn't created");
-                return;
+                return false;
             }
-            if (created)
+            if (created) {
                 showDialog("Server created");
-            else
+                return true;
+            } else {
                 showDialog("Server already created");
+                return false;
+            }
         };
     }
 
@@ -93,7 +105,7 @@ public class MainFrame extends JFrame {
 
     }
 
-    public void showDialog(String text) {
+    private void showDialog(String text) {
         EventQueue.invokeLater(() -> JOptionPane.showMessageDialog(this, text, "Message", JOptionPane.INFORMATION_MESSAGE));
     }
 
@@ -113,30 +125,30 @@ public class MainFrame extends JFrame {
         EventQueue.invokeLater(() -> secondSkin.showMessage(from, message));
     }
 
-    public void showIncomingCall(String who, String convInfo){
+    public void showIncomingCall(String who, String convInfo) {
         EventQueue.invokeLater(() -> secondSkin.callIncomingDialog(who, convInfo));
     }
 
-    public void closeCall(String message){
+    public void closeCall(String message) {
         EventQueue.invokeLater(() -> {
             secondSkin.closeCallDialog();
             JOptionPane.showMessageDialog(this, message, "Message", JOptionPane.INFORMATION_MESSAGE);
         });
     }
 
-    public void startConversation(Runnable end, Supplier<Boolean> mute, String user, FloatControl control){
-        EventQueue.invokeLater(() -> secondSkin.conversationStart(end, mute, user, control));
+    public void startConversation(String user, FloatControl control) {
+        EventQueue.invokeLater(() -> secondSkin.conversationStart(user, control));
     }
 
-    public void addToConv(String name, FloatControl control){
+    public void addToConv(String name, FloatControl control) {
         EventQueue.invokeLater(() -> secondSkin.addToConv(name, control));
     }
 
-    public void removeFromConv(String name){
+    public void removeFromConv(String name) {
         EventQueue.invokeLater(() -> secondSkin.removeFromConf(name));
     }
 
-    public void closeConversation(){
+    public void closeConversation() {
         EventQueue.invokeLater(() -> secondSkin.stopConversation());
     }
 }

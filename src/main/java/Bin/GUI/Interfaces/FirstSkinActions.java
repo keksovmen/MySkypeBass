@@ -1,9 +1,13 @@
 package Bin.GUI.Interfaces;
 
-import java.util.function.Consumer;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+
+import java.util.function.Function;
 
 public interface FirstSkinActions extends AudioFormatStatsActions{
 
-    Consumer<String[]> connect();
+    Function<String[], Boolean> connect() throws NotInitialisedException;
+
+    void updateConnect(Function<String[], Boolean> connect);
 
 }

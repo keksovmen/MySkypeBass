@@ -1,10 +1,16 @@
 package Bin.GUI.Interfaces;
 
-import java.util.function.Consumer;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+
+import java.util.function.BiConsumer;
 
 public interface ThirdSkinActions {
 
-    Consumer<String> sendMessage();
+    BiConsumer<Integer, String> sendMessage() throws NotInitialisedException;
 
-    Runnable closeTab();
+    Runnable closeTab() throws NotInitialisedException;
+
+    void updateSendMessage(BiConsumer<Integer, String> sendMessage);
+
+    void updateCloseTab(Runnable closeTab);
 }

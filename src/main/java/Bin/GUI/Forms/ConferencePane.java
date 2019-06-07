@@ -1,13 +1,13 @@
 package Bin.GUI.Forms;
 
-import Bin.Main;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+import Bin.GUI.Interfaces.ConferencePaneActions;
 
 import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public class ConferencePane {
     private JSpinner volume;
@@ -18,12 +18,28 @@ public class ConferencePane {
 
     private Map<String, UserSettings> conferenceMembers;
 
-    ConferencePane(Runnable endCall, Supplier<Boolean> mute) {
+    private ConferencePaneActions actions;
+
+
+    ConferencePane(ConferencePaneActions actions) {
+        this.actions = actions;
         conferenceMembers = new HashMap<>();
 
-        endCallButton.addActionListener(e -> endCall.run());
+        endCallButton.addActionListener(e -> {
+            try {
+                actions.endCall().run();
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
 
-        muteButton.addActionListener(e -> reactToMute(mute.get()));
+        muteButton.addActionListener(e -> {
+            try {
+                reactToMute(actions.mute().get());
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
     }
 
     JPanel getMainPane() {

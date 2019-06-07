@@ -1,10 +1,12 @@
 package Bin.GUI.Forms;
 
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+import Bin.GUI.Interfaces.FirstSkinActions;
+
 import javax.swing.*;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-public class FirstSkin{
+public class FirstSkin {
     private JTextField nameField;
     private JTextField ipField;
     private JTextField portField;
@@ -14,15 +16,22 @@ public class FirstSkin{
 
     private AudioFormatStats audioFormatStats;
 
-    public FirstSkin(Consumer<String[]> connect, Consumer<String[]> createServer) {
+    private FirstSkinActions actions;
 
-        audioFormatStats = new AudioFormatStats(createServer);
+    public FirstSkin(FirstSkinActions actions) {
+        this.actions = actions;
 
-        connectButton.addActionListener(e -> connect.accept(new String[]{getMyName(), getIp(), getPort()}));
+        audioFormatStats = new AudioFormatStats(actions);
+
+        connectButton.addActionListener(e -> {
+            try {
+                actions.connect().apply(new String[]{getMyName(), getIp(), getPort()});
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
 
         createButton.addActionListener(e -> audioFormatStats.display());
-
-
 
     }
 
@@ -30,25 +39,25 @@ public class FirstSkin{
         return mainPane;
     }
 
-    private String getMyName(){
+    private String getMyName() {
         return nameField.getText().equals("") ? System.getProperty("user.name").trim() : nameField.getText().trim();
     }
 
-    private String getIp(){
+    private String getIp() {
         String ip = ipField.getText();
         return verifyIp(ip) ? ip : "127.0.0.1";
     }
 
-    private String getPort(){
+    private String getPort() {
         String port = portField.getText();
         return verifyPort(port) ? port : "8188";
     }
 
-    public static boolean verifyPort(String port){
+    public static boolean verifyPort(String port) {
         return port.matches("\\d+?");
     }
 
-    public static boolean verifyIp(String ip){
+    public static boolean verifyIp(String ip) {
         String digitAndDotThenDigits = "((\\d){1,3}\\.){3}(\\d{1,3})";
         return Pattern.compile(digitAndDotThenDigits).matcher(ip.trim()).matches();
     }

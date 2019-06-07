@@ -1,6 +1,8 @@
 package Bin;
 
 import Bin.Audio.AudioClient;
+import Bin.GUI.ActionsBox;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Forms.MainFrame;
 import Bin.Networking.ClientController;
 import Bin.Networking.DataParser.BaseDataPackage;
@@ -21,6 +23,7 @@ import java.util.function.Supplier;
 
 public class Main {
 
+    private ActionsBox actionsBox;
     private MainFrame mainFrame;
     private ClientController controller;
     private Server server;
@@ -29,20 +32,38 @@ public class Main {
     private final Call callDialog;
 
     private Main() {
-//        users = new HashMap<>();
-//        mainFrame = new MainFrame();
         audioClient = AudioClient.getInstance();
         users = new HashMap<>();
         callDialog = new Call();
+        actionsBox = new ActionsBox();
+        controller = new ClientController();
+
+        initialInitForActions();
         EventQueue.invokeLater(() -> {
-            controller = new ClientController();
-            mainFrame = new MainFrame(connect(), createServer(), nameAndId(), disconnect(), callForUsers(), sendMessage(),
-                    callSomeOne(), cancelCall(true), acceptCall(), denyCall());
+            try {
+                mainFrame = new MainFrame(actionsBox);
+            } catch (NotInitialisedException e) {
+                e.printStackTrace();
+            }
             controller.getProcessor().addTaskListener(usersIncome());
             controller.getProcessor().addTaskListener(showMessage());
             controller.getProcessor().addTaskListener(callHandler());
             controller.getProcessor().addTaskListener(audioHandler());
         });
+    }
+
+    private void initialInitForActions() {
+        actionsBox.updateConnect(connect());
+        actionsBox.updateCreateServer(createServer());
+        actionsBox.updateNameAndId(nameAndId());
+        actionsBox.updateDisconnect(disconnect());
+        actionsBox.updateCallForUsers(callForUsers());
+        actionsBox.updateSendMessage(sendMessage());
+        actionsBox.updateCallSomeOne(callSomeOne());
+        actionsBox.updateCancelCall(cancelCall(true));
+        actionsBox.updateAcceptCall(acceptCall());
+        actionsBox.updateDenyCall(denyCall());
+
     }
 
     public static void main(String[] args) {
@@ -201,12 +222,12 @@ public class Main {
                     if (callDialog.isCalling()) {
                         if (callDialog.getReceiver().getId() == from) {
                             BaseUser[] users = null;
-                            if (baseDataPackage.getHeader().getLength() > 0){
+                            if (baseDataPackage.getHeader().getLength() > 0) {
                                 BaseUser[] parseUsers = ClientController.parseUsers(baseDataPackage.getDataAsString());
                                 users = new BaseUser[parseUsers.length + 1];
                                 users[0] = callDialog.getReceiver();
                                 System.arraycopy(parseUsers, 0, users, 1, parseUsers.length);
-                            }else {
+                            } else {
                                 users = new BaseUser[]{callDialog.getReceiver()};
                             }
                             acceptCall().accept(users);
@@ -253,12 +274,12 @@ public class Main {
         };
     }
 
-    private void startConv(BaseDataPackage baseDataPackage){
+    private void startConv(BaseDataPackage baseDataPackage) {
         startConv(baseDataPackage.getHeader().getFrom(), baseDataPackage.getDataAsString());
     }
 
-    private void startConv(int from, String convUsers){
-        if (convUsers.length() > 0){
+    private void startConv(int from, String convUsers) {
+        if (convUsers.length() > 0) {
             BaseUser[] baseUsers = ClientController.parseUsers(convUsers);
             int[] indexes = new int[baseUsers.length + 1];
             for (int i = 0; i < baseUsers.length; i++) {
@@ -266,39 +287,37 @@ public class Main {
             }
             indexes[indexes.length - 1] = from;
             audioClient.startConversation(controller.getWriter(), controller.getMe().getId(), indexes);
-            mainFrame.startConversation(endConversation(), muteAction(),
-                                        users.get(from).toString(), audioClient.getSettings(from));
+            mainFrame.startConversation(users.get(from).toString(), audioClient.getSettings(from));
             for (BaseUser baseUser : baseUsers) {
                 mainFrame.addToConv(baseUser.toString(), audioClient.getSettings(baseUser.getId()));
             }
-        }else {
+        } else {
             audioClient.startConversation(controller.getWriter(), controller.getMe().getId(), from);
-            mainFrame.startConversation(endConversation(), muteAction(),
-                    users.get(from).toString(), audioClient.getSettings(from));
+            mainFrame.startConversation(users.get(from).toString(), audioClient.getSettings(from));
         }
 
 
     }
 
-    private Consumer<BaseDataPackage> audioHandler(){
+    private Consumer<BaseDataPackage> audioHandler() {
         return dataPackage -> {
-            switch (dataPackage.getHeader().getCode()){
-                case SEND_SOUND:{
+            switch (dataPackage.getHeader().getCode()) {
+                case SEND_SOUND: {
                     audioClient.playAudio(dataPackage.getHeader().getFrom(), dataPackage.getData());
                     break;
                 }
-                case SEND_ADD:{
+                case SEND_ADD: {
                     int from = dataPackage.getHeader().getFrom();
                     audioClient.add(from);
                     mainFrame.addToConv(users.get(from).toString(), audioClient.getSettings(from));
                     break;
                 }
-                case SEND_REMOVE:{
+                case SEND_REMOVE: {
                     audioClient.remove(dataPackage.getHeader().getFrom());
                     mainFrame.removeFromConv(users.get(dataPackage.getHeader().getFrom()).toString());
                     break;
                 }
-                case SEND_STOP_CONV:{
+                case SEND_STOP_CONV: {
                     audioClient.close();
                     mainFrame.closeConversation();
                     break;
@@ -307,7 +326,7 @@ public class Main {
         };
     }
 
-    private Runnable endConversation(){
+    private Runnable endConversation() {
         return () -> {
             try {
                 audioClient.close();
@@ -320,7 +339,7 @@ public class Main {
         };
     }
 
-    private Supplier<Boolean> muteAction(){
+    private Supplier<Boolean> muteAction() {
         return audioClient::mute;
     }
 

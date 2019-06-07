@@ -1,6 +1,7 @@
 package Bin.GUI.Forms;
 
-import Bin.Networking.ClientController;
+import Bin.GUI.Forms.Exceptions.NotInitialisedException;
+import Bin.GUI.Interfaces.SecondSkinActions;
 import Bin.Networking.Utility.BaseUser;
 
 import javax.sound.sampled.FloatControl;
@@ -8,9 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class SecondSkin {
 
@@ -25,41 +24,52 @@ public class SecondSkin {
     private DefaultListModel<BaseUser> model;
     private Map<String, ThirdSkin> tabs;
 
-    private BiConsumer<Integer, String> sendMessage;
-
     private CallDialog callDialog;
     private ConferencePane conferencePane;
-//    private ConversationPane conversationPane;
-//    private Dialog callingDialog;
 
-    public SecondSkin(String nameAndId, Runnable disconnect, Runnable callForUsers, BiConsumer<Integer,
-            String> sendMessage, Consumer<BaseUser> call, Consumer<BaseUser> onCancel,
-                      Consumer<BaseUser[]> onAccept, Consumer<BaseUser> onDeny) {
+    private SecondSkinActions actions;
 
-        this.sendMessage = sendMessage;
 
+
+    public SecondSkin(String nameAndId, SecondSkinActions actions) throws NotInitialisedException {
+        this.actions = actions;
+        updateActions();
         tabs = new HashMap<>();
+        callDialog = new CallDialog(actions);
 
         labelMe.setText(nameAndId);
 
-        disconnectButton.addActionListener(e -> disconnect.run());
+        disconnectButton.addActionListener(e -> {
+            try {
+                actions.disconnect().run();
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
 
-        callButton.addActionListener(e -> callOutcomDialog(call));
+        callButton.addActionListener(e -> {
+            try {
+                callOutcomDialog(actions.callSomeOne());
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
 
         callTable.addChangeListener(e -> decolored(callTable.getSelectedIndex()));
 
-        createPopupMenu(callForUsers, sendMessage);
+        createPopupMenu();
 
-        callDialog = new CallDialog(onSomethingCall(onCancel), onAcceptCall(onAccept), onSomethingCall(onDeny));
+    }
 
-
+    private void updateActions(){
+        actions.updateCloseTab(closeTabRun());
     }
 
     JPanel getPane() {
         return mainPane;
     }
 
-    private void createPopupMenu(Runnable callForUsers, BiConsumer<Integer, String> sendMessage) {
+    private void createPopupMenu() {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
         sendMessageMenu.addActionListener(e -> EventQueue.invokeLater(() -> {
@@ -67,13 +77,21 @@ public class SecondSkin {
             BaseUser selected = getSelected();
             String s = selected.toString();
             if (isExist(s)) return;
-            if (contain(s))
+            if (contain(s)) {
                 callTable.addTab(s, tabs.get(s).getMainPane());
-            else
-                callTable.addTab(s, createPane(s, (message) -> sendMessage.accept(selected.getId(), message)).getMainPane());
+            }
+            else {
+                callTable.addTab(s, createPane(s).getMainPane());
+            }
         }));
         JMenuItem refresh = new JMenuItem("Refresh");
-        refresh.addActionListener(e -> callForUsers.run());
+        refresh.addActionListener(e -> {
+            try {
+                actions.callForUsers().run();
+            } catch (NotInitialisedException e1) {
+                e1.printStackTrace();
+            }
+        });
         popupMenu.add(sendMessageMenu);
         popupMenu.add(refresh);
 
@@ -103,8 +121,8 @@ public class SecondSkin {
         return tabs.containsKey(nameAndId);
     }
 
-    private ThirdSkin createPane(String name, Consumer<String> sendMessage) {
-        ThirdSkin thirdSkin = new ThirdSkin(name, sendMessage, this::closeTab);
+    private ThirdSkin createPane(String name) {
+        ThirdSkin thirdSkin = new ThirdSkin(name, actions);
         tabs.put(name, thirdSkin);
         return thirdSkin;
     }
@@ -119,7 +137,7 @@ public class SecondSkin {
                 callTable.addTab(s, thirdSkin.getMainPane());
                 thirdSkin.showMessage(message, false);
             } else {
-                ThirdSkin pane = createPane(s, letter -> sendMessage.accept(from.getId(), letter));
+                ThirdSkin pane = createPane(s);
                 callTable.addTab(s, pane.getMainPane());
                 pane.showMessage(message, false);
             }
@@ -127,10 +145,12 @@ public class SecondSkin {
         colorForMessage(callTable.indexOfTab(s));
     }
 
-    private void closeTab() {
-        int selectedIndex = callTable.getSelectedIndex();
-        if (selectedIndex == -1) return;
-        callTable.removeTabAt(selectedIndex);
+    private Runnable closeTabRun() {
+        return () -> {
+            int selectedIndex = callTable.getSelectedIndex();
+            if (selectedIndex == -1) return;
+            callTable.removeTabAt(selectedIndex);
+        };
     }
 
     private void colorForMessage(final int indexOfTab) {
@@ -144,7 +164,9 @@ public class SecondSkin {
     }
 
     private void callOutcomDialog(Consumer<BaseUser> call) {
-        if (!selected()) return;
+        if (!selected()) {
+            return;
+        }
         BaseUser selected = getSelected();
         call.accept(selected);
 
@@ -155,21 +177,13 @@ public class SecondSkin {
         callDialog.showIncoming(who, convInfo);
     }
 
-    private Consumer<String> onSomethingCall(Consumer<BaseUser> onSomethingCall) {
-        return s -> onSomethingCall.accept(BaseUser.parse(s));
-    }
-
-    private Consumer<String> onAcceptCall(Consumer<BaseUser[]> onSomethingCall) {
-        return s -> onSomethingCall.accept(ClientController.parseUsers(s));
-    }
-
     void closeCallDialog() {
         callDialog.dispose();
     }
 
-    void conversationStart(Runnable end, Supplier<Boolean> mute, String user, FloatControl control) {
+    void conversationStart(String user, FloatControl control) {
         if (conferencePane == null) {
-            conferencePane = new ConferencePane(endCall(end), mute);
+            conferencePane = new ConferencePane(actions);
         }
         conferencePane.addUser(user, control);
         callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
@@ -192,17 +206,6 @@ public class SecondSkin {
             }
             callTable.revalidate();
         }
-    }
-
-    private Runnable endCall(Runnable end) {
-        return () -> {
-            end.run();
-            int i = callTable.indexOfTab(CONVERSATION_TAB_NAME);
-            if (i != -1) {
-                callTable.removeTabAt(i);
-                callTable.revalidate();
-            }
-        };
     }
 
     private void createUIComponents() {
