@@ -8,11 +8,31 @@ import java.util.function.Consumer;
 
 public interface SecondSkinActions extends CallDialogActions, ConferencePaneActions, ThirdSkinActions {
 
+    /**
+     * Action for disconnecting
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
+
     Runnable disconnect() throws NotInitialisedException;
+
+    /**
+     * Action for refresh call of users
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
 
     Runnable callForUsers() throws NotInitialisedException;
 
-    BiConsumer<Integer, String> sendMessage() throws NotInitialisedException;
+
+
+//    BiConsumer<Integer, String> sendMessage() throws NotInitialisedException;
+
+    /**
+     * Action for call some one
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
 
     Consumer<BaseUser> callSomeOne() throws NotInitialisedException;
 

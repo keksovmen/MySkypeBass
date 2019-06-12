@@ -20,6 +20,9 @@ public class ClientProcessor {
     }
 
     public void doJob(final BaseDataPackage dataPackage) {
+        if (dataPackage == null){
+            return;
+        }
         executor.execute(() -> {
             listeners.forEach(baseDataPackageConsumer -> baseDataPackageConsumer.accept(dataPackage));
             DataPackagePool.returnPackage(dataPackage);

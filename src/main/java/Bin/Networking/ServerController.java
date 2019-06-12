@@ -4,6 +4,7 @@ import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Readers.ServerReader;
 import Bin.Networking.Utility.Conversation;
+import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Writers.BaseWriter;
 import Bin.Networking.Writers.ServerWriter;
 import Bin.Networking.Utility.ServerUser;
@@ -13,7 +14,7 @@ import java.net.Socket;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ServerController {
+public class ServerController implements ErrorHandler {
 
     private ServerWriter writer;
     private ServerReader reader;
@@ -24,8 +25,8 @@ public class ServerController {
     public ServerController(Socket socket, Server server) throws IOException {
         this.socket = socket;
         this.server = server;
-        writer = new ServerWriter(socket.getOutputStream());
-        reader = new ServerReader(socket.getInputStream(), this);
+        writer = new ServerWriter(socket.getOutputStream(), this);
+        reader = new ServerReader(socket.getInputStream(), this::getId, this);
     }
 
     /**
@@ -40,7 +41,8 @@ public class ServerController {
                 launch();
         } catch (IOException e) {
             e.printStackTrace();
-            disconnect();
+            errorCase();
+//            disconnect();
         }
     }
 
@@ -54,12 +56,12 @@ public class ServerController {
     private static Consumer<BaseDataPackage> createUsersRequestListener(ServerController controller) {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
-                try {
-                    controller.writer.writeUsers(controller.me.getId(), controller.server.getUsers(controller.me.getId()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    controller.disconnect();
-                }
+//                try {
+                controller.writer.writeUsers(controller.me.getId(), controller.server.getUsers(controller.me.getId()));
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    controller.disconnect();
+//                }
             }
         };
     }
@@ -99,14 +101,14 @@ public class ServerController {
                     break;
                 }
                 case SEND_SOUND: {
-                    System.out.println(controller.me.getString() + " " + Thread.currentThread().getName());
+//                    System.out.println(controller.me.getString() + " " + Thread.currentThread().getName());
                     if (controller.me.getConversation() != null) {
                         controller.me.getConversation().send(dataPackage, controller.getId());
                     }
                     break;
                 }
                 case SEND_CALL: {
-                    if (controller.me.inConv()){
+                    if (controller.me.inConv()) {
                         dataPackage.setData(controller.me.getConversation().getAllToString(controller.me));
                     }
                     break;
@@ -120,15 +122,18 @@ public class ServerController {
             if ((baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode())
                     && (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.CONFERENCE.getCode())) {        //add to conversation condition
                 ServerController controllerReceiver = controller.server.getController(baseDataPackage.getHeader().getTo());
-                try {
-                    controllerReceiver.writer.transferData(baseDataPackage);//test it
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    controllerReceiver.disconnect();
-                }
+                controllerReceiver.writer.transferData(baseDataPackage);//test it
             }
         };
     }
+
+//    private static Consumer<BaseDataPackage> createDisconnectHandler(ServerController serverController) {
+//        return baseDataPackage -> {
+//            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_DISCONNECT)) {
+//
+//            }
+//        };
+//    }
 
     /**
      * Trying to register a new user for the server
@@ -155,30 +160,26 @@ public class ServerController {
         dataPackage = reader.read();
         if (dataPackage.getHeader().getCode() != BaseWriter.CODE.SEND_APPROVE) {
             writer.writeDisconnect(id);
-            disconnect();
+            errorCase();
+//            disconnect();
             DataPackagePool.returnPackage(dataPackage);
             return false;
         }
         DataPackagePool.returnPackage(dataPackage);
 
-//        writer.writeId(id);
-//        writer.writeUsers(id, server.getUsers(id));
         server.addUser(me);
-        server.sendUpdateUsers();
 
         return true;
     }
 
-    public void disconnect() {
-        server.removeUser(me.getId());
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            server.sendUpdateUsers();
-        }
-    }
+//    public void disconnect() {
+//        server.removeUser(me.getId());
+//        try {
+//            socket.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     private void setUser(String name) {
         me = new ServerUser(name, server.getIdAndIncrement(), this);
@@ -190,6 +191,28 @@ public class ServerController {
 
     public int getId() {
         return me.getId();
+    }
+
+
+    @Override
+    public void errorCase() {
+        if (me.inConv()) {
+            me.getConversation().removeDude(me);
+//            me.setConversation(null);
+        }
+        server.removeUser(me.getId());
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            iterate();
+        }
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return new ErrorHandler[]{reader};
     }
 
 }

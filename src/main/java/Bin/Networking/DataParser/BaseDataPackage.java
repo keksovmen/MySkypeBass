@@ -40,7 +40,8 @@ public class BaseDataPackage {
 
     public BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to, @Nullable final byte[] data) {
         header.init(code, data == null ? 0 : data.length, from, to);
-        this.data = data == null ? new byte[0] : data;
+//        this.data = data == null ? new byte[0] : data;
+        this.data = data;
         return this;
     }
 

@@ -1,12 +1,11 @@
 package Bin.Networking.Utility;
 
 
+import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.ServerController;
-import Bin.Networking.DataParser.BaseDataPackage;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -29,24 +28,25 @@ public class Conversation {
         for (ServerUser right : rightSide) {
             right.setConversation(this);
             for (ServerUser left : leftSide) {
-                try {
-                    right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    //handle some how
-                }
+//                try {
+                right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+                //handle some how
+//                }
             }
         }
         for (ServerUser left : leftSide) {
             left.setConversation(this);
             for (ServerUser right : rightSide) {
-                try {
-                    left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                try {
+                left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
+
         users.addAll(Arrays.asList(rightSide));
         users.addAll(Arrays.asList(leftSide));
 
@@ -74,40 +74,40 @@ public class Conversation {
     public synchronized void addDude(ServerUser exclusive, ServerUser... user) {
         for (ServerUser serverUserExist : users) {
             if (!serverUserExist.equals(exclusive)) {
-                try {
-                    for (ServerUser serverUserToAdd : user) {
-                        serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
-                        serverUserToAdd.setConversation(this);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    removeDude(serverUserExist);
+//                try {
+                for (ServerUser serverUserToAdd : user) {
+                    serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
+                    serverUserToAdd.setConversation(this);
                 }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                    removeDude(serverUserExist);
+//                }
             }
         }
         users.addAll(Arrays.asList(user));
     }
 
     public synchronized void removeDude(ServerUser user) {
+        user.setConversation(null);
         if (!users.remove(user)) {
             return;
         }
         for (ServerUser serverUser : users) {
-            try {
-                serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
-            } catch (IOException e) {
-                e.printStackTrace();
-                removeDude(serverUser);
-            }
+//            try {
+            serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                removeDude(serverUser);
+//            }
         }
-        user.setConversation(null);
         if (users.size() == 1) {
             ServerUser lastUser = users.get(0);
-            try {
-                lastUser.getController().getWriter().writeStopConv(lastUser.getId());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+            lastUser.getController().getWriter().writeStopConv(lastUser.getId());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             lastUser.setConversation(null);
             users.clear();
         }
@@ -121,7 +121,7 @@ public class Conversation {
         return users.toArray(new ServerUser[0]);
     }
 
-    public synchronized String getAllToString(ServerUser exclusive){
+    public synchronized String getAllToString(ServerUser exclusive) {
         StringBuilder result = new StringBuilder();
         for (ServerUser user : users) {
             if (!user.equals(exclusive)) {

@@ -2,9 +2,12 @@ package Bin.Networking.DataParser;
 
 import Bin.Networking.Writers.BaseWriter;
 
+import java.util.Arrays;
+
 public class DataPackageHeader {
 
     public static final int INITIAL_SIZE = 8;
+    public static final int MAX_LENGTH = Short.MAX_VALUE * 2;
 
     private BaseWriter.CODE code;
     private int length;
@@ -15,6 +18,9 @@ public class DataPackageHeader {
 
     public void init (BaseWriter.CODE code, int length, int from, int to){
         this.code = code;
+        if (length > MAX_LENGTH){
+            throw new IllegalArgumentException("length must be less or equal to " + MAX_LENGTH);
+        }
         this.length = length;
         this.from = from;
         this.to = to;
@@ -28,7 +34,19 @@ public class DataPackageHeader {
         raw = data;
     }
 
-    //test this sheet with 2 bytes and more about negative numbers
+    private int parser(byte[] data, int position){
+        return (((data[position]  & 0xff) << 8) + (data[++position] & 0xff));
+    }
+
+//    public static void main(String[] args) {
+//        System.out.println(Integer.toBinaryString(-2));
+//        DataPackageHeader dataPackageHeader = new DataPackageHeader();
+//        dataPackageHeader.init(BaseWriter.CODE.SEND_MESSAGE, MAX_LENGTH, 3, 2);
+//        System.out.println(dataPackageHeader);
+//        dataPackageHeader.init(dataPackageHeader.getRawHeader());
+//        System.out.println(dataPackageHeader);
+//    }
+
     public byte[] getRawHeader(){
         byte[] pocket = new byte[INITIAL_SIZE];
         pocket[0] = (byte) ((code.getCode() >> 8) & 0xFF);
@@ -40,10 +58,6 @@ public class DataPackageHeader {
         pocket[6] = (byte) ((to >> 8) & 0xFF);
         pocket[7] = (byte) (to & 0xFF);
         return pocket;
-    }
-
-    private int parser(byte[] data, int position){
-        return (data[position] << 8) + data[++position];
     }
 
     public BaseWriter.CODE getCode() {
@@ -78,6 +92,7 @@ public class DataPackageHeader {
                 ", length=" + length +
                 ", from=" + from +
                 ", to=" + to +
+                ", raw=" + Arrays.toString(getRawHeader()) +
                 '}';
     }
 }

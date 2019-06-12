@@ -26,7 +26,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="127.0.0.1"/>
+          <text value=""/>
           <toolTipText value="format is xxx.xxx.xxx.xxx"/>
         </properties>
       </component>
@@ -46,14 +46,14 @@
           <text value="IP"/>
         </properties>
       </component>
-      <component id="58b8f" class="javax.swing.JTextField" binding="portField">
+      <component id="6be5d" class="javax.swing.JFormattedTextField" binding="portField" custom-create="true">
         <constraints>
           <grid row="5" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
         <properties>
-          <text value="8188"/>
+          <text value=""/>
         </properties>
       </component>
       <component id="81dc3" class="javax.swing.JLabel">

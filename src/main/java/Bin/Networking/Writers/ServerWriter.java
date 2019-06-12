@@ -2,6 +2,7 @@ package Bin.Networking.Writers;
 
 import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -19,31 +20,41 @@ public class ServerWriter extends BaseWriter {
         lock = new ReentrantLock();
     }
 
-    public void writeId(int id) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_ID, WHO.SERVER.getCode(), id));
+    public ServerWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
+        super(outputStream, mainErrorHandler);
+        lock = new ReentrantLock();
     }
 
-    public void writeAudioFormat(int id, String format) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
+//    public void writeId(int id) throws IOException {
+//        write(DataPackagePool.getPackage().init(CODE.SEND_ID, WHO.SERVER.getCode(), id));
+//    }
+
+    public void writeAudioFormat(int id, String format) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
     }
 
-    public void writeUsers(int id, String users) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+    public void writeUsers(int id, String users) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
-    public void writeDisconnect(int id) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
+    public void writeDisconnect(int id) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
     }
 
     /*
     check this peace of garbage
      */
-    public synchronized void transferData(BaseDataPackage dataPackage) throws IOException {
-        outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header
-        if (dataPackage.getHeader().getLength() != 0)
-            outputStream.write(dataPackage.getData());
-        outputStream.flush();
-        DataPackagePool.returnPackage(dataPackage);
+    public synchronized void transferData(BaseDataPackage dataPackage) {
+        try {
+            outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header
+            if (dataPackage.getHeader().getLength() != 0)
+                outputStream.write(dataPackage.getData());
+            outputStream.flush();
+            DataPackagePool.returnPackage(dataPackage);
+        }catch (IOException e){
+            e.printStackTrace();
+            mainErrorHandler.errorCase();
+        }
     }
 
     public void transferAudio(BaseDataPackage dataPackage) throws IOException {
@@ -64,15 +75,15 @@ public class ServerWriter extends BaseWriter {
         }
     }
 
-    public void writeAddToConv(int whoToAdd, int to) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_ADD, whoToAdd, to));
+    public void writeAddToConv(int whoToAdd, int to) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_ADD, whoToAdd, to));
     }
 
-    public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_REMOVE, whoToRemove, to));
+    public void writeRemoveFromConv(int whoToRemove, int to) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_REMOVE, whoToRemove, to));
     }
 
-    public void writeStopConv(int to) throws IOException {
-        write(DataPackagePool.getPackage().init(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
+    public void writeStopConv(int to) {
+        writeA(DataPackagePool.getPackage().init(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
     }
 }

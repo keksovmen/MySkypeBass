@@ -50,14 +50,14 @@
               <text value="Port"/>
             </properties>
           </component>
-          <component id="f4ebc" class="javax.swing.JTextField" binding="textFieldPort" custom-create="true">
+          <component id="3cfea" class="javax.swing.JFormattedTextField" binding="textFieldPort" custom-create="true">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
             </constraints>
             <properties>
-              <text value="8188"/>
+              <text value=""/>
             </properties>
           </component>
         </children>
@@ -111,14 +111,14 @@
               <text value="48000"/>
             </properties>
           </component>
-          <component id="5805b" class="javax.swing.JTextField" binding="customRate" custom-create="true">
+          <component id="b435f" class="javax.swing.JFormattedTextField" binding="customRate" custom-create="true">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="4" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                 <preferred-size width="150" height="-1"/>
               </grid>
             </constraints>
             <properties>
-              <text value="44100"/>
+              <text value=""/>
             </properties>
           </component>
         </children>

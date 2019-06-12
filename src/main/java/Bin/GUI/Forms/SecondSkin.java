@@ -3,6 +3,7 @@ package Bin.GUI.Forms;
 import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.SecondSkinActions;
 import Bin.Networking.Utility.BaseUser;
+import Bin.Networking.Utility.ErrorHandler;
 
 import javax.sound.sampled.FloatControl;
 import javax.swing.*;
@@ -11,31 +12,73 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class SecondSkin {
+/**
+ * Handles messaging, call pane
+ * Can call and disconnect from here
+ * Has pop up menu in usersList
+ */
+
+class SecondSkin implements ErrorHandler {
+
+    /**
+     * Name for conversation tab uses in search cases
+     * so decided to make it as a variable
+     */
 
     private static final String CONVERSATION_TAB_NAME = "Conversation";
 
     private JLabel labelMe;
+
+    /**
+     * Has pop up menu
+     */
+
     private JList<BaseUser> usersList;
     private JButton callButton;
     private JButton disconnectButton;
     private JTabbedPane callTable;
     private JPanel mainPane;
+
+    /**
+     * Contain baseUser[] that on server
+     */
+
     private DefaultListModel<BaseUser> model;
+
+    /**
+     * Need for messaging contain entries name - pane
+     */
+
     private Map<String, ThirdSkin> tabs;
 
     private CallDialog callDialog;
     private ConferencePane conferencePane;
 
+    /**
+     * Available actions
+     */
+
     private SecondSkinActions actions;
 
+    /**
+     * Default constructor
+     * Init firstly
+     * 1 - update actions
+     * 2 - set my name and id
+     * 3 - register buttons action
+     * 4 - create pop up menu for userList
+     *
+     * @param nameAndId your data
+     * @param actions   available actions
+     * @throws NotInitialisedException if an action was null when called
+     */
 
-
-    public SecondSkin(String nameAndId, SecondSkinActions actions) throws NotInitialisedException {
+    SecondSkin(String nameAndId, SecondSkinActions actions) throws NotInitialisedException {
         this.actions = actions;
         updateActions();
+
         tabs = new HashMap<>();
-        callDialog = new CallDialog(actions);
+        callDialog = new CallDialog(actions, mainPane);
 
         labelMe.setText(nameAndId);
 
@@ -55,35 +98,63 @@ public class SecondSkin {
             }
         });
 
-        callTable.addChangeListener(e -> decolored(callTable.getSelectedIndex()));
+        callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
 
-        createPopupMenu();
+        registerPopUp();
 
     }
 
-    private void updateActions(){
+    /**
+     * Upgrades already existed actions
+     *
+     * @throws NotInitialisedException if action was null
+     */
+
+    private void updateActions() throws NotInitialisedException {
         actions.updateCloseTab(closeTabRun());
+        actions.updateDisconnect(disconnect(actions.disconnect()));
+        actions.updateEndCall(endCall(actions.endCall()));
+    }
+
+    private Runnable disconnect(Runnable disconnect) {
+        return () -> {
+            disconnect.run();
+            clearSkin();
+        };
+    }
+
+    private Runnable endCall(Runnable end) {
+        return () -> {
+            end.run();
+            stopConversation();
+        };
     }
 
     JPanel getPane() {
         return mainPane;
     }
 
-    private void createPopupMenu() {
+    /**
+     * Creates and register pop up menu on usersList
+     * Consist of
+     * Send message - when user is selected open ThirdSkin on callTable
+     * Refresh - ask for users on the server
+     */
+
+    private void registerPopUp() {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
-        sendMessageMenu.addActionListener(e -> EventQueue.invokeLater(() -> {
+        sendMessageMenu.addActionListener(e -> {
             if (!selected()) return;
             BaseUser selected = getSelected();
             String s = selected.toString();
             if (isExist(s)) return;
             if (contain(s)) {
                 callTable.addTab(s, tabs.get(s).getMainPane());
-            }
-            else {
+            } else {
                 callTable.addTab(s, createPane(s).getMainPane());
             }
-        }));
+        });
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e -> {
             try {
@@ -97,6 +168,13 @@ public class SecondSkin {
 
         usersList.setComponentPopupMenu(popupMenu);
     }
+
+    /**
+     * Display all users
+     * there can be no users mean server is empty
+     *
+     * @param users income users
+     */
 
     void displayUsers(BaseUser[] users) {
         model.removeAllElements();
@@ -121,11 +199,28 @@ public class SecondSkin {
         return tabs.containsKey(nameAndId);
     }
 
+    /**
+     * Creates ThirdSkin object which has JPane
+     *
+     * @param name for who you create it
+     * @return ready to use ThirdSkin
+     */
+
     private ThirdSkin createPane(String name) {
         ThirdSkin thirdSkin = new ThirdSkin(name, actions);
         tabs.put(name, thirdSkin);
         return thirdSkin;
     }
+
+    /**
+     * Display a user message
+     * if there is no ThirdSkin creates
+     * otherwise uses cashed
+     * or already displayed one
+     *
+     * @param from    message sent
+     * @param message plain text
+     */
 
     void showMessage(final BaseUser from, final String message) {
         String s = from.toString();
@@ -153,15 +248,37 @@ public class SecondSkin {
         };
     }
 
+    /**
+     * Pain a tab which has received a message and not in focus
+     * it red
+     *
+     * @param indexOfTab wich to paint
+     */
+
     private void colorForMessage(final int indexOfTab) {
-        if (callTable.getSelectedIndex() == indexOfTab) return;
+        if (callTable.getSelectedIndex() == indexOfTab) {
+            return;
+        }
         callTable.setBackgroundAt(indexOfTab, Color.RED);
     }
 
-    private void decolored(final int indexOfTab) {
+    /**
+     * Remove color from the tab when focused
+     *
+     * @param indexOfTab focused tab
+     */
+
+    private void deColored(final int indexOfTab) {
         if (indexOfTab == -1 || !callTable.getBackgroundAt(indexOfTab).equals(Color.RED)) return;
         callTable.setBackgroundAt(indexOfTab, null);
     }
+
+    /**
+     * Call a selected user
+     * show CallDialog with appropriate actions
+     *
+     * @param call action that send call to some one
+     */
 
     private void callOutcomDialog(Consumer<BaseUser> call) {
         if (!selected()) {
@@ -173,13 +290,32 @@ public class SecondSkin {
         callDialog.showOutcoming(selected.toString());
     }
 
+    /**
+     * Show CallDialog when you get called
+     *
+     * @param who      calls you
+     * @param convInfo contain baseUser.toString() + "\n" and so on
+     */
+
     void callIncomingDialog(String who, String convInfo) {
         callDialog.showIncoming(who, convInfo);
     }
 
+    /**
+     * Just to dispose CallDialog
+     */
+
     void closeCallDialog() {
         callDialog.dispose();
     }
+
+    /**
+     * Creates if necessary conferencePane
+     * and add user who called you in
+     *
+     * @param user    who calls you
+     * @param control volume for him
+     */
 
     void conversationStart(String user, FloatControl control) {
         if (conferencePane == null) {
@@ -189,13 +325,30 @@ public class SecondSkin {
         callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
     }
 
+    /**
+     * Add some one on conferencePane
+     *
+     * @param name    who to add
+     * @param control sound volume
+     */
+
     void addToConv(String name, FloatControl control) {
         conferencePane.addUser(name, control);
     }
 
+    /**
+     * Remove fro conferencePane
+     *
+     * @param name to remove
+     */
+
     void removeFromConf(String name) {
         conferencePane.removeUser(name);
     }
+
+    /**
+     * Removes conference tab when is over
+     */
 
     void stopConversation() {        // CODE SEND_DISCONNECT_FROM_CONV
         if (conferencePane != null) {
@@ -206,6 +359,31 @@ public class SecondSkin {
             }
             callTable.revalidate();
         }
+    }
+
+    /**
+     * Remove all tabs and clear all collections
+     * Prepare for new server to connect
+     */
+
+    private void clearSkin() {
+        for (int i = 0; i < callTable.getTabCount(); i++) {
+            callTable.removeTabAt(i);
+        }
+        tabs.clear();
+        model.removeAllElements();
+    }
+
+    @Override
+    public void errorCase() {
+        stopConversation();
+        clearSkin();
+        iterate();
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return new ErrorHandler[]{callDialog, conferencePane};
     }
 
     private void createUIComponents() {

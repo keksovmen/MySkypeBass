@@ -2,6 +2,7 @@ package Bin.Networking.Writers;
 
 import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -13,10 +14,8 @@ import java.util.Optional;
 public abstract class BaseWriter {
 
     protected DataOutputStream outputStream;
-    protected boolean work;
-    /*
-     * SEND_MESSAGE contain marker if 0 just message to a person if 1 message to a conference//
-     */
+
+    protected ErrorHandler mainErrorHandler;
 
     public enum CODE {
         SEND_NAME(1),
@@ -70,7 +69,11 @@ public abstract class BaseWriter {
 
     public BaseWriter(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
-        work = true;
+    }
+
+    public BaseWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
+        this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
+        this.mainErrorHandler = mainErrorHandler;
     }
 
 
@@ -82,6 +85,19 @@ public abstract class BaseWriter {
         outputStream.flush();
 //        System.out.println(dataPackage + " " + Thread.currentThread().getName());
         DataPackagePool.returnPackage(dataPackage);
+    }
+
+    protected synchronized void writeA(BaseDataPackage dataPackage){
+        try {
+            outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
+            if (dataPackage.getHeader().getLength() != 0)
+                outputStream.write(dataPackage.getData());
+            outputStream.flush();
+            DataPackagePool.returnPackage(dataPackage);
+        }catch (IOException e){
+            e.printStackTrace();
+            mainErrorHandler.errorCase();
+        }
     }
 
 }

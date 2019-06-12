@@ -80,13 +80,6 @@ public class ActionsBox implements MainFrameActions {
     private Runnable callForUsers;
 
     /**
-     * Send message on second skin
-     * Think how to make it proper
-     */
-
-//    private BiConsumer<Integer, String> sendMessageBi;
-
-    /**
      * Send message from third skin
      */
 
@@ -103,6 +96,12 @@ public class ActionsBox implements MainFrameActions {
      */
 
     private Consumer<BaseUser> callSomeOne;
+
+    /**
+     * Change bass boost value on audio capture
+     */
+
+    private Consumer<Double> changeMultiplier;
 
 
     @Override
@@ -185,14 +184,6 @@ public class ActionsBox implements MainFrameActions {
         return callForUsers;
     }
 
-//    @Override
-//    public BiConsumer<Integer, String> sendMessageBi() throws NotInitialisedException {
-//        if (sendMessageBi == null) {
-//            throw new NotInitialisedException("Send message bi is not initialised");
-//        }
-//        return sendMessageBi;
-//    }
-
     @Override
     public BiConsumer<Integer, String> sendMessage() throws NotInitialisedException {
         if (sendMessage == null) {
@@ -215,6 +206,14 @@ public class ActionsBox implements MainFrameActions {
             throw new NotInitialisedException("Call some one is not initialised");
         }
         return callSomeOne;
+    }
+
+    @Override
+    public Consumer<Double> changeMultiplier() throws NotInitialisedException {
+        if (changeMultiplier == null) {
+            throw new NotInitialisedException("Change multiplier one is not initialised");
+        }
+        return changeMultiplier;
     }
 
     @Override
@@ -282,7 +281,10 @@ public class ActionsBox implements MainFrameActions {
         this.callSomeOne = callSomeOne;
     }
 
-
+    @Override
+    public void updateChangeMultiplier(Consumer<Double> changeMultiplier) {
+        this.changeMultiplier = changeMultiplier;
+    }
 
     /**
      * Check if all fields are not null

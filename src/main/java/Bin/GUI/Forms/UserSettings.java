@@ -3,14 +3,17 @@ package Bin.GUI.Forms;
 import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 
-public class UserSettings {
+/**
+ * Handle volume level of particular user
+ * Contain his name and id too
+ */
+
+class UserSettings {
     private JSlider volumeLevel;
     private JLabel name;
     private JPanel mainPane;
 
-//    private FloatControl control;
-
-    public UserSettings(String name, FloatControl control) {
+    UserSettings(String name, FloatControl control) {
         this.name.setText(name);
 
         volumeLevel.setMaximum((int) control.getMaximum());

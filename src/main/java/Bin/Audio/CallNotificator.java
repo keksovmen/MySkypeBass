@@ -1,28 +1,40 @@
 package Bin.Audio;
 
-import javax.sound.sampled.AudioSystem;
+import Bin.Main;
+
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * Need for playing sound while calling or get called
+ */
 
 public class CallNotificator {
 
-    private final Path incomingPath = AudioClient.sounds.resolve(Paths.get("callNotification\\vint.WAV"));
-    private final Path outComingPath = AudioClient.sounds.resolve(Paths.get("callNotification\\start.WAV"));
-    private final Path bodyPath = AudioClient.sounds.resolve(Paths.get("callNotification\\body.WAV"));
+    private static final String incomingFileName = "vint";
+    private static final String outComingHeadFileName = "start";
+    private static final String outComingBodyFileName = "body";
 
     private SourceDataLine speaker;
     private volatile boolean work;
 
-    public void playIncoming(){
+    /**
+     * STARTS NEW THREAD
+     * Should call when an incoming call received
+     * will play until stop method is called
+     */
+
+    public void playIncoming() {
         work = true;
         new Thread(() -> {
             while (work) {
-                try (InputStream inputStream = new BufferedInputStream(AudioSystem.getAudioInputStream(incomingPath.toFile()))) {
-                    speaker = AudioClient.getInstance().getFromFile(incomingPath.toFile());
+                try (BufferedInputStream inputStream = new BufferedInputStream(
+                        Main.class.getResourceAsStream("/sound/callNotification/" + incomingFileName + ".WAV"))) {
+                    speaker = AudioClient.getInstance().getFromInput(inputStream);
                     byte[] data = new byte[AudioClient.CAPTURE_SIZE];
                     int i;
                     int j;
@@ -31,8 +43,9 @@ public class CallNotificator {
                         if (i == -1) {
                             break;
                         }
+                        //handle odd number in case of sample size = 2 bytes
                         j = i % speaker.getFormat().getFrameSize();
-                        if (j != 0){
+                        if (j != 0) {
                             i -= j;
                         }
                         speaker.write(data, 0, i);
@@ -49,11 +62,18 @@ public class CallNotificator {
         }, "Incoming call").start();
     }
 
-    public void playOutComing(){
+    /**
+     * STARTS NEW THREAD
+     * Should call when an out coming call is made
+     * will play until stop method is called
+     */
+
+    public void playOutComing() {
         work = true;
         new Thread(() -> {
-            try(InputStream inputStream = new BufferedInputStream(AudioSystem.getAudioInputStream(outComingPath.toFile()))){
-                speaker = AudioClient.getInstance().getFromFile(incomingPath.toFile());
+            try (BufferedInputStream inputStream = new BufferedInputStream(
+                    Main.class.getResourceAsStream("/sound/callNotification/" + outComingHeadFileName + ".WAV"))) {
+                speaker = AudioClient.getInstance().getFromInput(inputStream);
                 byte[] data = new byte[AudioClient.CAPTURE_SIZE];
                 int i;
                 int j;
@@ -63,22 +83,24 @@ public class CallNotificator {
                     if (i == -1) {
                         break;
                     }
+                    //handle odd number in case of sample size = 2 bytes
                     j = i % speaker.getFormat().getFrameSize();
-                    if (j != 0){
+                    if (j != 0) {
                         i -= j;
                     }
                     speaker.write(data, 0, i);
                 }
                 //Play body of the melody for n time
-                while (work){
-                    try(InputStream bodyStream = new BufferedInputStream(AudioSystem.getAudioInputStream(bodyPath.toFile()))){
+                while (work) {
+                    try (InputStream bodyStream = new BufferedInputStream(
+                            Main.class.getResourceAsStream("/sound/callNotification/" + outComingBodyFileName + ".WAV"))) {
                         while (work) {
                             i = bodyStream.read(data);
                             if (i == -1) {
                                 break;
                             }
                             j = i % speaker.getFormat().getFrameSize();
-                            if (j != 0){
+                            if (j != 0) {
                                 i -= j;
                             }
                             speaker.write(data, 0, i);
@@ -88,14 +110,14 @@ public class CallNotificator {
                 }
             } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 work = false;
                 speaker.close();
             }
         }, "Out coming call").start();
     }
 
-    public void stop(){
+    public void stop() {
         work = false;
     }
 

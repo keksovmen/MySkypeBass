@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server implements Startable {
 
@@ -20,6 +22,12 @@ public class Server implements Startable {
     private AtomicInteger id;
     private Map<Integer, ServerUser> users;
     private Executor executor;
+
+    private static final Logger logger = Logger.getLogger("MyLogger");
+
+    static {
+        logger.setLevel(Level.FINE);
+    }
 
 //    static {
     /*
@@ -44,16 +52,6 @@ public class Server implements Startable {
         executor = Executors.newFixedThreadPool(3);
 
     }
-
-    protected int getIdAndIncrement() {
-        return id.getAndIncrement();
-    }
-
-    protected synchronized void addUser(ServerUser serverUser) {
-        users.put(serverUser.getId(), serverUser);
-//        System.out.println(users);
-    }
-
 
     @Override
     public boolean start() {
@@ -83,6 +81,23 @@ public class Server implements Startable {
 //        serverSocket.close();
     }
 
+    protected int getIdAndIncrement() {
+        return id.getAndIncrement();
+    }
+
+    protected synchronized void addUser(ServerUser serverUser) {
+        users.put(serverUser.getId(), serverUser);
+        logger.fine("Added - " + serverUser + "\nCONTAINS " + users.toString());
+        sendUpdateUsers();
+//        System.out.println(users);
+    }
+
+    protected synchronized void removeUser(int id) {
+        users.remove(id);
+        logger.fine("Removed - " + id + "\nCONTAINS " + users.toString());
+        sendUpdateUsers();
+    }
+
     String getAudioFormat() {
         return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
                 "Sample size = " + audioFormat.getSampleSizeInBits();
@@ -98,29 +113,19 @@ public class Server implements Startable {
         return stringBuilder.toString();
     }
 
-    synchronized void removeUser(int id) {
-        users.remove(id);
-    }
-
     public synchronized ServerController getController(int who) {
-//        System.out.println(users);
         ServerUser serverUser = users.get(who);
-        if (serverUser != null) return serverUser.getController();
+        if (serverUser != null) {
+            return serverUser.getController();
+        }
         return null;
     }
 
     synchronized void sendUpdateUsers() {
         final String users = getUsers(-1);//-1 isn't possible value so should be everyone
-        this.users.values().forEach(serverUser -> {
-//                serverUser.getController().getWriter().writeUsers(serverUser.getId(), getUsers(serverUser.getId()));
-            executor.execute(() -> {
-                try {
-                    serverUser.getController().getWriter().writeUsers(serverUser.getId(), users.replaceFirst(serverUser.toString() + "\n", ""));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
+        this.users.values().forEach(serverUser -> executor.execute(() ->
+                serverUser.getController().getWriter().writeUsers(serverUser.getId(),
+                        users.replaceFirst(serverUser.toString() + "\n", ""))));
     }
 
 }

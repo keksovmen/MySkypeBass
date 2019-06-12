@@ -1,63 +1,85 @@
 package Bin.Audio;
 
-import Bin.Expendable;
-import Bin.Networking.Writers.ClientWriter;
+import Bin.Main;
+import Bin.Networking.DataParser.DataPackageHeader;
+import Bin.Networking.Utility.ErrorHandler;
 import com.sun.istack.internal.NotNull;
 
 import javax.sound.sampled.*;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
 
-public class AudioClient implements Expendable {
+/**
+ * SingleTone class
+ * Integer gets from the server as unique id for each person in a conversation
+ * AudioFormat gets from the server
+ * TargetDataLine obtains as conversation started along with sourceDataLine
+ * After receiving audioFormat check if client can obtain such lines
+ */
 
-    /*
-     * SingleTone class
-     * Integer gets from the server as unique id for each person in a conversation
-     * AudioFormat gets from the server
-     * TargetDataLine obtains as conversation started along with sourceDataLine
-     * After receiving audioFormat check if client can obtain such lines
-     */
-
-    static final int CAPTURE_SIZE = 16384;      //16 kB
-    static final Path sounds = Paths.get("src\\main\\resources\\sound\\");  //root for sounds
-
-    private static volatile AudioClient audioClient;
+public class AudioClient implements ErrorHandler {
 
 
-    private AudioFormat audioFormat;
+    private static volatile AudioClient audioClient;  //Instance
+
+    static final int CAPTURE_SIZE = 8192;      //8 kB for sound notification and util sounds
+
+    private int CAPTURE_SIZE_MAIN;      //for capture and play equals sample rate / 2 * sample size
+
+    private AudioFormat audioFormat;    //receive from a server
 
     private Map<Integer, SourceDataLine> mainAudio;
     private TargetDataLine targetDataLine;
 
-    /*
+    private byte[] micCaptureData;
+
+    /**
      * Defines ability to use it
      */
+
     private boolean mic;
     private boolean speaker;
 
     private AudioCapture capture;
 
     private Random random;
-    private List<Path> soundNotifications;
+    private List<String> soundNotifications;
 
     private AudioClient() {
         mainAudio = new HashMap<>();
         capture = new AudioCapture();
         random = new Random();
-        try {
-            soundNotifications = Files.list(sounds.resolve(Paths.get("messageNotification"))).collect(Collectors.toList());
-        } catch (IOException e) {
-            e.printStackTrace();
-            soundNotifications = new ArrayList<>(1);
-        }
+        soundNotifications = new ArrayList<>();
+        fillSoundNames();
+    }
+
+    /**
+     * Fills the array with resources locations
+     * Files.list doesn't work with resources!!!!!!
+     * When add a new sound must specify it here
+     * FIND A WAY HOW TO READ DIRECTORY WITH RESOURCES
+     * AND GET CONTENT SEPARATELY WITHOUT DIRECTLY SPECIFYING NAMES
+     */
+
+    private void fillSoundNames() {
+        soundNotifications.add("/sound/messageNotification/AAAAAAAAAAAAA.WAV");
+        soundNotifications.add("/sound/messageNotification/Artist.WAV");
+        soundNotifications.add("/sound/messageNotification/Ass.WAV");
+        soundNotifications.add("/sound/messageNotification/Club.WAV");
+        soundNotifications.add("/sound/messageNotification/College.WAV");
+        soundNotifications.add("/sound/messageNotification/Comming.WAV");
+        soundNotifications.add("/sound/messageNotification/Fisting.WAV");
+        soundNotifications.add("/sound/messageNotification/Like.WAV");
+        soundNotifications.add("/sound/messageNotification/Penetration 1.WAV");
+        soundNotifications.add("/sound/messageNotification/Penetration 2.WAV");
+        soundNotifications.add("/sound/messageNotification/Power.WAV");
+        soundNotifications.add("/sound/messageNotification/Take.WAV");
+        soundNotifications.add("/sound/messageNotification/WO.WAV");
+        soundNotifications.add("/sound/messageNotification/YEAAA.WAV");
     }
 
     //double checked locking volatile
@@ -83,6 +105,11 @@ public class AudioClient implements Expendable {
 
     public boolean setAudioFormat(AudioFormat audioFormat) {
         this.audioFormat = audioFormat;
+        CAPTURE_SIZE_MAIN = (int) (audioFormat.getSampleRate() / 2) * audioFormat.getSampleSizeInBits() / 8;
+        if (CAPTURE_SIZE_MAIN >= DataPackageHeader.MAX_LENGTH) {
+            int i = DataPackageHeader.MAX_LENGTH % 2;
+            CAPTURE_SIZE_MAIN = DataPackageHeader.MAX_LENGTH - i;
+        }
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
         return speaker & mic;
@@ -93,9 +120,21 @@ public class AudioClient implements Expendable {
 //                AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
 //    }
 
+    /**
+     * For more flexibility but not implemented the way i thought
+     *
+     * @return if mic is able to work
+     */
+
     public boolean isMic() {
         return mic;
     }
+
+    /**
+     * For more flexibility but not implemented the way i thought
+     *
+     * @return if speaker is able to work
+     */
 
     public boolean isSpeaker() {
         return speaker;
@@ -206,17 +245,24 @@ public class AudioClient implements Expendable {
 
     /**
      * Capture sound from mic
+     * Uses a 1 time created byte array for increase performances
+     * You don't need to allocate each time new byte array
+     * just rewrite bytes in it
      *
      * @return null if mic is not supported or byte[CAPTURE_SIZE]
      */
 
     byte[] captureAudio() {
-        byte[] data = null;
-        if (mic) {
-            data = new byte[CAPTURE_SIZE];
-            targetDataLine.read(data, 0, data.length);
+        if (micCaptureData == null && mic) {
+            micCaptureData = new byte[CAPTURE_SIZE_MAIN];
         }
-        return data;
+//        byte[] data = null;
+        if (mic) {
+//            data = new byte[CAPTURE_SIZE_MAIN];
+//            targetDataLine.read(data, 0, data.length);
+            targetDataLine.read(micCaptureData, 0, micCaptureData.length);
+        }
+        return micCaptureData;
     }
 
 
@@ -254,7 +300,7 @@ public class AudioClient implements Expendable {
      * remove and closes all lines
      */
 
-    public void close() {
+    public /*synchronized*/ void close() {
         mainAudio.forEach((integer, sourceDataLine) -> sourceDataLine.close());
         mainAudio.clear();
         capture.close();
@@ -262,6 +308,7 @@ public class AudioClient implements Expendable {
     }
 
     /**
+     * STARTS NEW THREAD
      * Play message notification
      * each time opens new line and select random sound
      * can't be stopped until the end of sound
@@ -271,20 +318,25 @@ public class AudioClient implements Expendable {
         new Thread(() -> {
             try {
                 //obtain a random sound for notification
-                Path path = soundNotifications.get(random.nextInt(soundNotifications.size()));
+                if (soundNotifications == null) return;
+
+                BufferedInputStream inputStream = new BufferedInputStream(
+                        Main.class.getResourceAsStream(soundNotifications.get(
+                                random.nextInt(soundNotifications.size()))));
 
                 //open source data line in default mixer
-                SourceDataLine sourceDataLine = getFromFile(path.toFile());
+                SourceDataLine sourceDataLine = getFromInput(inputStream);
 
                 //start playing sound
-                InputStream audioInputStream = AudioSystem.getAudioInputStream(path.toFile());
+                InputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
 
                 byte[] data = new byte[CAPTURE_SIZE];
                 int amount;
                 int j;
                 while ((amount = audioInputStream.read(data)) != -1) {
+                    //handle odd number in case of sample size = 2 bytes
                     j = amount % sourceDataLine.getFormat().getFrameSize();
-                    if (j != 0){
+                    if (j != 0) {
                         amount -= j;
                     }
                     sourceDataLine.write(data, 0, amount);
@@ -303,9 +355,9 @@ public class AudioClient implements Expendable {
      *
      * @param file contain audio meta inf
      * @return ready to be written audio output
-     * @throws IOException if can't read a file
+     * @throws IOException                   if can't read a file
      * @throws UnsupportedAudioFileException if system can't open that type of line
-     * @throws LineUnavailableException if the line is already in use
+     * @throws LineUnavailableException      if the line is already in use
      */
 
     SourceDataLine getFromFile(@NotNull File file) throws IOException, UnsupportedAudioFileException, LineUnavailableException {
@@ -317,24 +369,72 @@ public class AudioClient implements Expendable {
     }
 
     /**
-     * Start a new thread for capturing audio
-     * Also adds for each user a source line
-     * @param writer to write sound on the server
-     * @param myId from me
-     * @param usersId all users that must be add
+     * Same as above but get it from input stream
+     * input stream must be obtained not from AudioSystem.getAudioInputStream()
+     *
+     * @param inputStream MUST BE BUFFERED CAUSE SUPPORT MART/RESET
+     *                    leading to a sound data
+     * @return ready to be written audio output
+     * @throws IOException                   if file can't be read
+     * @throws UnsupportedAudioFileException if system can't open that type of line
+     * @throws LineUnavailableException      if the line is already in use
      */
 
-    public void startConversation(final ClientWriter writer, final int myId, final int... usersId){
+    SourceDataLine getFromInput(@NotNull BufferedInputStream inputStream) throws IOException, UnsupportedAudioFileException, LineUnavailableException {
+        AudioFileFormat audioFileFormat = AudioSystem.getAudioFileFormat(inputStream);
+        SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFileFormat.getFormat());
+        sourceDataLine.open(audioFileFormat.getFormat());
+        sourceDataLine.start();
+        return sourceDataLine;
+    }
+
+    /**
+     * Start a new thread for capturing audio
+     * Also adds for each user a source line
+     *
+     * @param sendSound to write sound to the server
+     * @param usersId   all users that must be add
+     */
+
+    public void startConversation(final Consumer<byte[]> sendSound, final int... usersId) {
         for (int i : usersId) {
             add(i);
         }
-        capture.start(writer, myId);
+        if (mic) {
+            capture.start(sendSound);
+        }
     }
 
-    public boolean mute(){
+    /**
+     * Wrapper over capture class
+     *
+     * @return actual state of mute
+     */
+
+    public boolean mute() {
         return capture.mute();
     }
 
+    /**
+     * Creates action for changing value of bass boost
+     *
+     * @return ready to use function
+     */
+
+    public Consumer<Double> changeMultiplier(){
+        return capture.changeMultiplier();
+    }
+
+    @Override
+    public void errorCase() {
+        close();
+        iterate();
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return null;
+    }
 
     @Override
     public String toString() {

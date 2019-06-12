@@ -4,12 +4,17 @@ import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.CallDialogActions;
 import Bin.Networking.ClientController;
 import Bin.Networking.Utility.BaseUser;
+import Bin.Networking.Utility.ErrorHandler;
 
 import javax.swing.*;
-import java.awt.event.*;
 import java.util.function.Consumer;
 
-public class CallDialog extends JDialog {
+/**
+ * Handle calls
+ * Gives you an opportunity to cancel, deny and approve calls
+ */
+
+class CallDialog extends JDialog implements ErrorHandler {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -17,10 +22,34 @@ public class CallDialog extends JDialog {
     private JButton denyButton;
     private JLabel conversationInfo;
 
+    /**
+     * Corresponding actions
+     */
+
     private CallDialogActions actions;
 
-    public CallDialog(CallDialogActions actions) {
+    /**
+     * To display in center of it
+     */
+
+    private JComponent relativeTo;
+
+    /**
+     * Single constructor
+     * Init and update actions
+     * register listeners
+     * And don't show the dialog for this purpose here is a method
+     *
+     * @param actions which you have
+     * @param relativeTo to center showing
+     * @throws NotInitialisedException if an action is null
+     */
+
+    CallDialog(CallDialogActions actions, JComponent relativeTo) throws NotInitialisedException {
         this.actions = actions;
+        updateActions();
+
+        this.relativeTo = relativeTo;
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
@@ -54,25 +83,43 @@ public class CallDialog extends JDialog {
         pack();
     }
 
-//    private void onOK(Consumer<String> acceptCall) {
-//        // add your code here
-//        acceptCall.accept(nameTo.getText() + "\n" + conversationInfo.getText());
-//        dispose();
-//    }
-//
-//    private void onCancel(Consumer<String> cancel) {
-//        // add your code here if necessary
-//        cancel.accept(nameTo.getText());
-//        dispose();
-//    }
-//
-//    private void onDeny(Consumer<String> denyCall){
-//        denyCall.accept(nameTo.getText());
-//        dispose();
-//    }
+    /**
+     * Simply adds dispose of this dialog action
+     *
+     * @throws NotInitialisedException if actions.getAction == null
+     */
+
+    private void updateActions() throws NotInitialisedException {
+        actions.updateAcceptCall(onAcceptCall(actions.acceptCall()));
+        actions.updateCancelCall(onSomethingCall(actions.cancelCall()));
+        actions.updateDenyCall(onSomethingCall(actions.denyCall()));
+    }
+
+    private Consumer<BaseUser[]> onAcceptCall(Consumer<BaseUser[]> onAcceptCall){
+        return users -> {
+            onAcceptCall.accept(users);
+            dispose();
+        };
+    }
+
+    private Consumer<BaseUser> onSomethingCall(Consumer<BaseUser> onSomethingCall){
+        return users -> {
+            onSomethingCall.accept(users);
+            dispose();
+        };
+    }
+
+    /**
+     * When you accept an incoming call
+     * firstly see how supposed to look like BaseUser[] array in Main
+     * Just get users from 2 labels
+     * and put them in 1 array
+     * first in it is who called than others
+     *
+     * @param acceptCall action to call when pressed the button
+     */
 
     private void onOK(Consumer<BaseUser[]> acceptCall) {
-        // add your code here
         BaseUser whoCall = BaseUser.parse(nameTo.getText());
         BaseUser[] convUsers = ClientController.parseUsers(conversationInfo.getText());
         BaseUser[] result = new BaseUser[convUsers.length + 1];
@@ -90,12 +137,19 @@ public class CallDialog extends JDialog {
         dispose();
     }
 
-    private void onDeny(Consumer<BaseUser> denyCall){
+    private void onDeny(Consumer<BaseUser> denyCall) {
         denyCall.accept(BaseUser.parse(nameTo.getText()));
         dispose();
     }
 
-    void showOutcoming(String who){
+    /**
+     * Call when you call some one
+     * it make invisible unnecessarily gui elements
+     * and show what you can see
+     * @param who you are calling
+     */
+
+    void showOutcoming(String who) {
         setTitle("Calling");
 
         nameTo.setText(who);
@@ -106,12 +160,20 @@ public class CallDialog extends JDialog {
         denyButton.setVisible(false);
         buttonCancel.setVisible(true);
 
-        setLocationRelativeTo(getRootPane());
+        setLocationRelativeTo(relativeTo);
 
         setVisible(true);
     }
 
-    void showIncoming(String fromWho, String conversationInfo){
+    /**
+     * Call when some one called you
+     * Same purpose as showOutcoming()
+     *
+     * @param fromWho who calls you
+     * @param conversationInfo and conversation with him
+     */
+
+    void showIncoming(String fromWho, String conversationInfo) {
         setTitle("Incoming");
 
         nameTo.setText(fromWho);
@@ -123,9 +185,18 @@ public class CallDialog extends JDialog {
         denyButton.setVisible(true);
         buttonCancel.setVisible(false);
 
-        setLocationRelativeTo(getRootPane());
+        setLocationRelativeTo(relativeTo);
 
         setVisible(true);
     }
 
+    @Override
+    public void errorCase() {
+        dispose();
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return null;
+    }
 }

@@ -11,7 +11,12 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.function.BiConsumer;
 
-public class ThirdSkin {
+/**
+ * Handle messaging part with some one
+ * can send message and close self tab
+ */
+
+class ThirdSkin {
     private JPanel mainPane;
     private JLabel nameWho;
     private JTextArea messageBoard;
@@ -19,11 +24,29 @@ public class ThirdSkin {
     private JButton closeButton;
     private JTextField textField;
 
+    /**
+     * Possible actions
+     */
+
     private ThirdSkinActions actions;
+
+    /**
+     * Id of the user who you write
+     */
+
     private int who;
 
+    /**
+     * Default constructor init
+     * 1 - actions
+     * 2 - who to talk
+     * 3 - register handlers
+     *
+     * @param name    baseUser.toString() with who you talk
+     * @param actions all your actions
+     */
 
-    public ThirdSkin(String name, ThirdSkinActions actions) {
+    ThirdSkin(String name, ThirdSkinActions actions) {
         this.actions = actions;
         who = BaseUser.parse(name).getId();
 
@@ -52,6 +75,14 @@ public class ThirdSkin {
         return mainPane;
     }
 
+    /**
+     * Displays message when you write or receive it
+     * Also include who write and time
+     *
+     * @param message to display
+     * @param me      define who write it
+     */
+
     void showMessage(String message, boolean me) {
         EventQueue.invokeLater(() -> {
             if (message.length() != 0)
@@ -59,13 +90,29 @@ public class ThirdSkin {
         });
     }
 
+    /**
+     * Action for sending message
+     * can't send if there is empty string
+     * also clear textField where was your message
+     *
+     * @param send function to call when need to send
+     */
+
     private void sendMessage(BiConsumer<Integer, String> send) {
         String message = textField.getText();
-        if (message.length() == 0) return;
+        if (message.length() == 0) {
+            return;
+        }
         send.accept(who, message);
         showMessage(message, true);
         textField.setText("");
     }
+
+    /**
+     * Return simple string for time in messages
+     *
+     * @return time in format like 13:41
+     */
 
     private String getTime() {
         Calendar calendar = Calendar.getInstance();

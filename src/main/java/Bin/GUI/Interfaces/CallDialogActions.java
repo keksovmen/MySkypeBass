@@ -7,9 +7,27 @@ import java.util.function.Consumer;
 
 public interface CallDialogActions {
 
+    /**
+     * Action for cancel a call
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
+
     Consumer<BaseUser> cancelCall() throws NotInitialisedException;
 
+    /**
+     * Action for accept a call
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
+
     Consumer<BaseUser[]> acceptCall() throws NotInitialisedException;
+
+    /**
+     * Action for deny a call
+     * @return not null action
+     * @throws NotInitialisedException if return is null
+     */
 
     Consumer<BaseUser> denyCall() throws NotInitialisedException;
 

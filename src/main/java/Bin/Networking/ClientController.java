@@ -5,10 +5,10 @@ import Bin.Networking.DataParser.BaseDataPackage;
 import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Readers.ClientReader;
+import Bin.Networking.Utility.BaseUser;
+import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Writers.BaseWriter;
 import Bin.Networking.Writers.ClientWriter;
-import Bin.Networking.Utility.BaseUser;
-import Bin.Networking.Utility.ClientUser;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -18,29 +18,32 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ClientController {
+public class ClientController implements ErrorHandler {
 
     private Socket socket;
     private ClientWriter writer;
     private ClientReader reader;
     private ClientProcessor processor;
     private BaseUser me;
-//    private Runnable disconnectAction;
+
+    private ErrorHandler mainErrorHandler;
 
     /**
      * Uses only for holder of network stuff
      * and handle networking
      */
 
-    public ClientController() {
+    public ClientController(ErrorHandler mainErrorHandler) {
+        this.mainErrorHandler = mainErrorHandler;
         processor = new ClientProcessor();
     }
 
     /**
      * Try to establish a TCP connection
+     *
      * @param hostName ip address
-     * @param port to connect
-     * @param name your nickname to others
+     * @param port     to connect
+     * @param name     your nickname to others
      * @return true if audio format is supported false otherwise
      * @throws IOException if server doesn't exist
      */
@@ -48,13 +51,14 @@ public class ClientController {
     public boolean connect(final String name, final String hostName, final int port) throws IOException {
         socket = new Socket();
         try {
-            socket.connect(new InetSocketAddress(hostName, port), 5_000);
-            writer = new ClientWriter(socket.getOutputStream());
-//            processor = new ClientProcessor();
-            reader = new ClientReader(socket.getInputStream(), processor);
+            socket.connect(new InetSocketAddress(hostName, port), 7_000);
+            writer = new ClientWriter(socket.getOutputStream(), mainErrorHandler);
+            reader = new ClientReader(socket.getInputStream(), processor, mainErrorHandler);
         } catch (IOException e) {
             e.printStackTrace();
-            disconnect();
+//            mainErrorHandler.errorCase();
+//            return null;
+            socket.close();
             throw e;
         }
         return authenticate(name);
@@ -64,15 +68,17 @@ public class ClientController {
         return connect(name, hostName, Integer.parseInt(port));
     }
 
-        /**
-         * Trying to authenticate first writes your name
-         * second read audio format and checks it if supported
-         * third creates client user with unique id from the server
-         * @param name your nickname
-         * @return true only if audio format accepted in mic and speakers false otherwise
-         */
+    /**
+     * Trying to authenticate first writes your name
+     * second read audio format and checks it if supported
+     * third creates client user with unique id from the server
+     * then starts a new thread for readings from socket
+     *
+     * @param name your nickname
+     * @return true only if audio format accepted in mic and speakers false otherwise
+     */
 
-    private boolean authenticate(String name){
+    private boolean authenticate(String name) {
         try {
             writer.writeName(name);
             BaseDataPackage read = reader.read();
@@ -93,24 +99,21 @@ public class ClientController {
         return true;
     }
 
-    public void disconnect(){
+    public void disconnect() {
+        reader.close();
+        writer.writeDisconnect(me.getId());
         try {
-            writer.writeDisconnect(me.getId());
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            try {
-                socket.close();
-//                processor.
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
+
     }
 
     /**
      * Parse string like this Sample rate = 01...n\nSample size = 01....n
      * retrive from them digits
+     *
      * @param data got from the server
      * @return default audio format
      */
@@ -130,7 +133,7 @@ public class ClientController {
     public static BaseUser[] parseUsers(String data) {
         if (data.length() == 0) return new BaseUser[0];
         String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(ClientUser::parse).toArray(ClientUser[]::new);
+        return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }
 
     public BaseUser getMe() {
@@ -143,5 +146,21 @@ public class ClientController {
 
     public ClientProcessor getProcessor() {
         return processor;
+    }
+
+    @Override
+    public void errorCase() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            iterate();
+        }
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return new ErrorHandler[]{reader};
     }
 }

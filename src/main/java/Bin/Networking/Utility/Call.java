@@ -4,7 +4,7 @@ import Bin.Audio.CallNotificator;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Call {
+public class Call implements ErrorHandler {
 
     private final AtomicBoolean isCalling;
     private BaseUser receiver;
@@ -48,5 +48,17 @@ public class Call {
 
     public void setReceiver(BaseUser receiver) {
         this.receiver = receiver;
+    }
+
+    @Override
+    public void errorCase() {
+        receiver = null;
+        setCalling(false);
+        iterate();
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return null;
     }
 }
