@@ -1,15 +1,5 @@
 import Bin.Main;
 
-import java.io.*;
-import java.nio.CharBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.logging.LogManager;
-import java.util.stream.Stream;
-
 public class Tester {
 
     private int anInt;
@@ -27,7 +17,7 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 //        FileOutputStream fileWriter = new FileOutputStream(new File("D:\\Users\\Roma\\Desktop\\1488.ts"), true);
 //
 //        File file = new File("D:\\Users\\Roma\\Desktop\\Новая папка\\1.ts");

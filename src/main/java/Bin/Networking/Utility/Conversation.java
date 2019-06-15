@@ -1,8 +1,8 @@
 package Bin.Networking.Utility;
 
 
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.ServerController;
 
 import java.io.IOException;
@@ -12,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Conversation {
 
-    private volatile List<ServerUser> users;
+    private final List<ServerUser> users;
 
     public Conversation(ServerUser... user) {
         users = new CopyOnWriteArrayList<>();
@@ -55,7 +55,7 @@ public class Conversation {
     /*
     think of sync that shit
      */
-    public void send(BaseDataPackage dataPackage, int from) {
+    public void send(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from) {
                 ServerController controller = user.getController();
@@ -68,7 +68,7 @@ public class Conversation {
                 }
             }
         }
-        DataPackagePool.returnPackage(dataPackage);
+        AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
     public synchronized void addDude(ServerUser exclusive, ServerUser... user) {

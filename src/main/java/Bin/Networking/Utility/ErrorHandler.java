@@ -9,9 +9,22 @@ package Bin.Networking.Utility;
 
 public interface ErrorHandler {
 
+    /**
+     * Call when everything is broken
+     */
+
     void errorCase();
 
+    /**
+     *
+     * @return null or others who can call errorCase()
+     */
+
     ErrorHandler[] getNext();
+
+    /**
+     * MUST CALL ANY TIME WHEN getNext return not null
+     */
 
     default void iterate(){
         ErrorHandler[] errorHandlers = getNext();

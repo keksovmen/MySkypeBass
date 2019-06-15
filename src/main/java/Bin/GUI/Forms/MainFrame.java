@@ -1,6 +1,5 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.MainFrameActions;
 import Bin.Main;
 import Bin.Networking.Utility.BaseUser;
@@ -85,10 +84,9 @@ public class MainFrame extends JFrame implements ErrorHandler {
      * 5 - icon
      *
      * @param actions all possible actions for GUIs
-     * @throws NotInitialisedException if some of the actions == null
      */
 
-    public MainFrame(MainFrameActions actions) throws NotInitialisedException {
+    public MainFrame(MainFrameActions actions) {
         this.actions = actions;
         updateActions();
 
@@ -119,11 +117,9 @@ public class MainFrame extends JFrame implements ErrorHandler {
 
     /**
      * Upgrade actions simply put some code over already existed
-     *
-     * @throws NotInitialisedException if an action was null
      */
 
-    private void updateActions() throws NotInitialisedException {
+    private void updateActions() {
         actions.updateConnect(connect(actions.connect()));
         actions.updateCreateServer(createServerFunction(actions.createServer()));
         actions.updateDisconnect(disconnect(actions.disconnect()));
@@ -147,16 +143,13 @@ public class MainFrame extends JFrame implements ErrorHandler {
             //release connect button
             firstSkin.releaseConnectButton();
             if (aBoolean == null) {
-                errorCase();
+//                errorCase();
+                showDialog("Server doesn't exist");
             } else if (aBoolean) {
                 remove(firstSkin.getPane());
                 //lazy init
                 if (secondSkin == null) {
-                    try {
-                        secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
-                    } catch (NotInitialisedException e) {
-                        e.printStackTrace();
-                    }
+                    secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
                 }
                 add(secondSkin.getPane());
                 revalidate();

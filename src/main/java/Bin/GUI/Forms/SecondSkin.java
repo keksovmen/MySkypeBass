@@ -1,6 +1,5 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.SecondSkinActions;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
@@ -49,16 +48,16 @@ class SecondSkin implements ErrorHandler {
      * Need for messaging contain entries name - pane
      */
 
-    private Map<String, ThirdSkin> tabs;
+    private final Map<String, ThirdSkin> tabs;
 
-    private CallDialog callDialog;
+    private final CallDialog callDialog;
     private ConferencePane conferencePane;
 
     /**
      * Available actions
      */
 
-    private SecondSkinActions actions;
+    private final SecondSkinActions actions;
 
     /**
      * Default constructor
@@ -70,10 +69,9 @@ class SecondSkin implements ErrorHandler {
      *
      * @param nameAndId your data
      * @param actions   available actions
-     * @throws NotInitialisedException if an action was null when called
      */
 
-    SecondSkin(String nameAndId, SecondSkinActions actions) throws NotInitialisedException {
+    SecondSkin(String nameAndId, SecondSkinActions actions) {
         this.actions = actions;
         updateActions();
 
@@ -82,21 +80,9 @@ class SecondSkin implements ErrorHandler {
 
         labelMe.setText(nameAndId);
 
-        disconnectButton.addActionListener(e -> {
-            try {
-                actions.disconnect().run();
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        disconnectButton.addActionListener(e -> actions.disconnect().run());
 
-        callButton.addActionListener(e -> {
-            try {
-                callOutcomDialog(actions.callSomeOne());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        callButton.addActionListener(e -> callOutcomDialog(actions.callSomeOne()));
 
         callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
 
@@ -106,11 +92,9 @@ class SecondSkin implements ErrorHandler {
 
     /**
      * Upgrades already existed actions
-     *
-     * @throws NotInitialisedException if action was null
      */
 
-    private void updateActions() throws NotInitialisedException {
+    private void updateActions() {
         actions.updateCloseTab(closeTabRun());
         actions.updateDisconnect(disconnect(actions.disconnect()));
         actions.updateEndCall(endCall(actions.endCall()));
@@ -156,13 +140,7 @@ class SecondSkin implements ErrorHandler {
             }
         });
         JMenuItem refresh = new JMenuItem("Refresh");
-        refresh.addActionListener(e -> {
-            try {
-                actions.callForUsers().run();
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        refresh.addActionListener(e -> actions.callForUsers().run());
         popupMenu.add(sendMessageMenu);
         popupMenu.add(refresh);
 

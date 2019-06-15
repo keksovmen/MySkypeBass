@@ -1,8 +1,8 @@
 package Bin.Networking.Readers;
 
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackageHeader;
-import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Processors.Processable;
+import Bin.Networking.Protocol.*;
+import Bin.Networking.Utility.Starting;
 import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.BufferedInputStream;
@@ -10,33 +10,85 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public abstract class BaseReader implements ErrorHandler {
+/**
+ * Base reader for all the readers
+ */
+
+public class BaseReader implements Starting, ErrorHandler {
+
+    /**
+     * Define buffer size of inputStream
+     */
 
     private final static int BUFFER_SIZE = 16384;
 
-    protected DataInputStream inputStream;
+    /**
+     * DataInputStream because it can readFully()
+     */
+
+    protected final DataInputStream inputStream;
+
+    /**
+     * Define live of the thread
+     */
+
     protected volatile boolean work;
+
+    /**
+     * Just put here your dataPackages
+     * It must handle them
+     */
+
+    protected final Processable handler;
+
+    /**
+     * If you use second constructor you can
+     * read data without throwing exception
+     * because if there will be it will handle
+     * shutdown of the system
+     */
 
     protected ErrorHandler mainErrorHandler;
 
-    public BaseReader(InputStream inputStream) {
+    /**
+     * Using this constructor allows usage only of read() method
+     * @param inputStream which you will read
+     */
+
+    public BaseReader(InputStream inputStream, Processable handler) {
         this.inputStream = new DataInputStream(new BufferedInputStream(inputStream, BUFFER_SIZE));
+        this.handler = handler;
         work = true;
     }
 
-    public BaseReader(InputStream inputStream, ErrorHandler mainErrorHandler) {
+    /**
+     * Allow usage of both read() readA() methods
+     * @param inputStream which you will read
+     * @param mainErrorHandler handler calls when exception in networking occurs
+     */
+
+    public BaseReader(InputStream inputStream, Processable handler, ErrorHandler mainErrorHandler) {
         this.inputStream = new DataInputStream(new BufferedInputStream(inputStream, BUFFER_SIZE));
+        this.handler = handler;
         work = true;
         this.mainErrorHandler = mainErrorHandler;
     }
 
-    public BaseDataPackage read() throws IOException {
-        BaseDataPackage aPackage = DataPackagePool.getPackage();
+    /**
+     * Base read method
+     * Firstly read INITIAL_SIZE of the package
+     * then define is there any length
+     * and if so read body of the package
+     * @return package with at least header info
+     * @throws IOException if networking fails
+     */
 
-        byte[] header = new byte[DataPackageHeader.INITIAL_SIZE];
+    public AbstractDataPackage read() throws IOException {
+        AbstractDataPackage aPackage = AbstractDataPackagePool.getPackage();
+
+        byte[] header = new byte[AbstractHeader.getInitialSize()];
         inputStream.readFully(header);
         aPackage.getHeader().init(header);
-
 
         int length = aPackage.getHeader().getLength();
         if (length == 0) {
@@ -50,40 +102,73 @@ public abstract class BaseReader implements ErrorHandler {
         return aPackage;
     }
 
-    public BaseDataPackage readA(){
-        BaseDataPackage aPackage = DataPackagePool.getPackage();
+    /**
+     * Improved version that can immediately handle exception
+     * @return package with at least header info
+     */
+
+    public AbstractDataPackage readA(){
         try {
-
-            byte[] header = new byte[DataPackageHeader.INITIAL_SIZE];
-            inputStream.readFully(header);
-            aPackage.getHeader().init(header);
-
-            int length = aPackage.getHeader().getLength();
-            if (length == 0) {
-                return aPackage;
-            }
-
-            byte[] body = new byte[length];
-            inputStream.readFully(body);
-            aPackage.setData(body);
-
-        }catch (IOException e){
+            return read();
+        } catch (IOException e) {
             e.printStackTrace();
-            if (work) { //control if it wasn't your disconnect action
+            if (work){
                 mainErrorHandler.errorCase();
             }
             return null;
         }
-        return aPackage;
     }
 
+    /**
+     * Your main action in thread
+     * must contain on of the read methods
+     * and then do something with the data
+     * 
+     * Problem! it doesn't throw an Exception
+     * and if you use read() instead
+     * it will be the only place where you can handle it
+     */
+
+    protected void process(){
+        handler.process(readA());
+    }
+
+    /**
+     * STARTS NEW THREAD
+     * That will handle reading
+     * @param threadName name for debugging
+     */
+
+    @Override
+    public void start(String threadName){
+        new Thread(() -> {
+            while (work) {
+                process();
+            }
+        }, threadName).start();
+    }
+
+    /**
+     * Eliminate the thread
+     */
+
+    @Override
     public void close() {
         work = false;
     }
 
+    /**
+     * Basically strops the thread
+     */
+
     @Override
     public void errorCase() {
-        work = false;
+        close();
         iterate();
+    }
+
+    @Override
+    public ErrorHandler[] getNext() {
+        return null;
     }
 }

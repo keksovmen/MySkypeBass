@@ -1,8 +1,6 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.CallDialogActions;
-import Bin.Networking.ClientController;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
 
@@ -26,13 +24,13 @@ class CallDialog extends JDialog implements ErrorHandler {
      * Corresponding actions
      */
 
-    private CallDialogActions actions;
+    private final CallDialogActions actions;
 
     /**
      * To display in center of it
      */
 
-    private JComponent relativeTo;
+    private final JComponent relativeTo;
 
     /**
      * Single constructor
@@ -42,10 +40,9 @@ class CallDialog extends JDialog implements ErrorHandler {
      *
      * @param actions which you have
      * @param relativeTo to center showing
-     * @throws NotInitialisedException if an action is null
      */
 
-    CallDialog(CallDialogActions actions, JComponent relativeTo) throws NotInitialisedException {
+    CallDialog(CallDialogActions actions, JComponent relativeTo) {
         this.actions = actions;
         updateActions();
 
@@ -54,29 +51,11 @@ class CallDialog extends JDialog implements ErrorHandler {
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        buttonOK.addActionListener(e -> {
-            try {
-                onOK(actions.acceptCall());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        buttonOK.addActionListener(e -> onOK(actions.acceptCall()));
 
-        buttonCancel.addActionListener(e -> {
-            try {
-                onCancel(actions.cancelCall());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel(actions.cancelCall()));
 
-        denyButton.addActionListener(e -> {
-            try {
-                onDeny(actions.denyCall());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        denyButton.addActionListener(e -> onDeny(actions.denyCall()));
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
@@ -85,11 +64,9 @@ class CallDialog extends JDialog implements ErrorHandler {
 
     /**
      * Simply adds dispose of this dialog action
-     *
-     * @throws NotInitialisedException if actions.getAction == null
      */
 
-    private void updateActions() throws NotInitialisedException {
+    private void updateActions() {
         actions.updateAcceptCall(onAcceptCall(actions.acceptCall()));
         actions.updateCancelCall(onSomethingCall(actions.cancelCall()));
         actions.updateDenyCall(onSomethingCall(actions.denyCall()));
@@ -121,7 +98,7 @@ class CallDialog extends JDialog implements ErrorHandler {
 
     private void onOK(Consumer<BaseUser[]> acceptCall) {
         BaseUser whoCall = BaseUser.parse(nameTo.getText());
-        BaseUser[] convUsers = ClientController.parseUsers(conversationInfo.getText());
+        BaseUser[] convUsers = BaseUser.parseUsers(conversationInfo.getText());
         BaseUser[] result = new BaseUser[convUsers.length + 1];
 
         System.arraycopy(convUsers, 0, result, 1, convUsers.length);

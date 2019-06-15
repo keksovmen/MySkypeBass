@@ -1,6 +1,5 @@
 package Bin.GUI;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.MainFrameActions;
 import Bin.Networking.Utility.BaseUser;
 
@@ -105,113 +104,113 @@ public class ActionsBox implements MainFrameActions {
 
 
     @Override
-    public Supplier<String> nameAndId() throws NotInitialisedException {
+    public Supplier<String> nameAndId() {
         if (nameAndId == null) {
-            throw new NotInitialisedException("Name and ID is not initialised");
+            throw new IllegalStateException("Name and ID is not initialised");
         }
         return nameAndId;
     }
 
     @Override
-    public Consumer<BaseUser> cancelCall() throws NotInitialisedException {
+    public Consumer<BaseUser> cancelCall() {
         if (cancelCall == null) {
-            throw new NotInitialisedException("Cancel call is not initialised");
+            throw new IllegalStateException("Cancel call is not initialised");
         }
         return cancelCall;
     }
 
     @Override
-    public Consumer<BaseUser[]> acceptCall() throws NotInitialisedException {
+    public Consumer<BaseUser[]> acceptCall() {
         if (acceptCall == null) {
-            throw new NotInitialisedException("Accept call is not initialised");
+            throw new IllegalStateException("Accept call is not initialised");
         }
         return acceptCall;
     }
 
     @Override
-    public Consumer<BaseUser> denyCall() throws NotInitialisedException {
+    public Consumer<BaseUser> denyCall() {
         if (denyCall == null) {
-            throw new NotInitialisedException("Deny call is not initialised");
+            throw new IllegalStateException("Deny call is not initialised");
         }
         return denyCall;
     }
 
     @Override
-    public Runnable endCall() throws NotInitialisedException {
+    public Runnable endCall() {
         if (endCall == null) {
-            throw new NotInitialisedException("End call is not initialised");
+            throw new IllegalStateException("End call is not initialised");
         }
         return endCall;
     }
 
     @Override
-    public Supplier<Boolean> mute() throws NotInitialisedException {
+    public Supplier<Boolean> mute() {
         if (mute == null) {
-            throw new NotInitialisedException("Mute is not initialised");
+            throw new IllegalStateException("Mute is not initialised");
         }
         return mute;
     }
 
     @Override
-    public Function<String[], Boolean> connect() throws NotInitialisedException {
+    public Function<String[], Boolean> connect() {
         if (connect == null) {
-            throw new NotInitialisedException("Connect is not initialised");
+            throw new IllegalStateException("Connect is not initialised");
         }
         return connect;
     }
 
     @Override
-    public Function<String[], Boolean> createServer() throws NotInitialisedException {
+    public Function<String[], Boolean> createServer() {
         if (createServer == null) {
-            throw new NotInitialisedException("Create server is not initialised");
+            throw new IllegalStateException("Create server is not initialised");
         }
         return createServer;
     }
 
     @Override
-    public Runnable disconnect() throws NotInitialisedException {
+    public Runnable disconnect() {
         if (disconnect == null) {
-            throw new NotInitialisedException("Disconnect is not initialised");
+            throw new IllegalStateException("Disconnect is not initialised");
         }
         return disconnect;
     }
 
     @Override
-    public Runnable callForUsers() throws NotInitialisedException {
+    public Runnable callForUsers() {
         if (callForUsers == null) {
-            throw new NotInitialisedException("Call for users is not initialised");
+            throw new IllegalStateException("Call for users is not initialised");
         }
         return callForUsers;
     }
 
     @Override
-    public BiConsumer<Integer, String> sendMessage() throws NotInitialisedException {
+    public BiConsumer<Integer, String> sendMessage() {
         if (sendMessage == null) {
-            throw new NotInitialisedException("Send message is not initialised");
+            throw new IllegalStateException("Send message is not initialised");
         }
         return sendMessage;
     }
 
     @Override
-    public Runnable closeTab() throws NotInitialisedException {
+    public Runnable closeTab() {
         if (closeTab == null) {
-            throw new NotInitialisedException("Close tab is not initialised");
+            throw new IllegalStateException("Close tab is not initialised");
         }
         return closeTab;
     }
 
     @Override
-    public Consumer<BaseUser> callSomeOne() throws NotInitialisedException {
+    public Consumer<BaseUser> callSomeOne() {
         if (callSomeOne == null) {
-            throw new NotInitialisedException("Call some one is not initialised");
+            throw new IllegalStateException("Call some one is not initialised");
         }
         return callSomeOne;
     }
 
     @Override
-    public Consumer<Double> changeMultiplier() throws NotInitialisedException {
+    public Consumer<Double> changeMultiplier() {
         if (changeMultiplier == null) {
-            throw new NotInitialisedException("Change multiplier one is not initialised");
+            throw new IllegalStateException("Change multiplier one is not initialised");
         }
         return changeMultiplier;
     }

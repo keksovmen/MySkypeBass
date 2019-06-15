@@ -1,7 +1,7 @@
 package Bin.Audio;
 
 import Bin.Main;
-import Bin.Networking.DataParser.DataPackageHeader;
+import Bin.Networking.Protocol.AbstractHeader;
 import Bin.Networking.Utility.ErrorHandler;
 import com.sun.istack.internal.NotNull;
 
@@ -32,7 +32,7 @@ public class AudioClient implements ErrorHandler {
 
     private AudioFormat audioFormat;    //receive from a server
 
-    private Map<Integer, SourceDataLine> mainAudio;
+    private final Map<Integer, SourceDataLine> mainAudio;
     private TargetDataLine targetDataLine;
 
     private byte[] micCaptureData;
@@ -44,10 +44,10 @@ public class AudioClient implements ErrorHandler {
     private boolean mic;
     private boolean speaker;
 
-    private AudioCapture capture;
+    private final AudioCapture capture;
 
-    private Random random;
-    private List<String> soundNotifications;
+    private final Random random;
+    private final List<String> soundNotifications;
 
     private AudioClient() {
         mainAudio = new HashMap<>();
@@ -106,9 +106,10 @@ public class AudioClient implements ErrorHandler {
     public boolean setAudioFormat(AudioFormat audioFormat) {
         this.audioFormat = audioFormat;
         CAPTURE_SIZE_MAIN = (int) (audioFormat.getSampleRate() / 2) * audioFormat.getSampleSizeInBits() / 8;
-        if (CAPTURE_SIZE_MAIN >= DataPackageHeader.MAX_LENGTH) {
-            int i = DataPackageHeader.MAX_LENGTH % 2;
-            CAPTURE_SIZE_MAIN = DataPackageHeader.MAX_LENGTH - i;
+        final int maxLength = AbstractHeader.getMaxLength();
+        if (CAPTURE_SIZE_MAIN >= maxLength) {
+            int i = maxLength % 2;
+            CAPTURE_SIZE_MAIN = maxLength - i;
         }
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));

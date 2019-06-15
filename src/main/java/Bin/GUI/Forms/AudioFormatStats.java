@@ -1,6 +1,5 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.AudioFormatStatsActions;
 
 import javax.swing.*;
@@ -33,14 +32,14 @@ class AudioFormatStats extends JDialog {
      * Corresponding set of action
      */
 
-    private AudioFormatStatsActions actions;
+    private final AudioFormatStatsActions actions;
 
     /**
      * Need its parent component to set in middle of it
      * when shown
      */
 
-    private JComponent relativeTo;
+    private final JComponent relativeTo;
 
     /**
      * Firstly load properties set ip sample rate fields
@@ -67,13 +66,8 @@ class AudioFormatStats extends JDialog {
         a48000RadioButton.addActionListener(actionListener);
 
         buttonOK.addActionListener(e -> {
-            try {
                 actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            } finally {
                 onOK();
-            }
         });
 
         buttonCancel.addActionListener(e -> onCancel());

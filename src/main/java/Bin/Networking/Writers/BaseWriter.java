@@ -1,7 +1,7 @@
 package Bin.Networking.Writers;
 
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.BufferedOutputStream;
@@ -11,31 +11,56 @@ import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Optional;
 
+/**
+ * Base writer that only can write AbstractDataPackage or its children
+ */
+
 public abstract class BaseWriter {
 
-    protected DataOutputStream outputStream;
+    /**
+     * Where to write
+     */
+
+    protected final DataOutputStream outputStream;
+
+    /**
+     * Might be null depends on your realisation
+     *
+     * Basically handles cases when network get ruined
+     */
 
     protected ErrorHandler mainErrorHandler;
 
-    public enum CODE {
-        SEND_NAME(1),
-        SEND_ID(2),
-        SEND_AUDIO_FORMAT(3),
-        SEND_USERS(4),
-        SEND_MESSAGE(5),
-        SEND_CALL(6),
-        SEND_APPROVE(7),
-        SEND_DENY(8),
-        SEND_CANCEL(9),
-        SEND_SOUND(10),
-        SEND_DISCONNECT(11),
-        SEND_ADD(12),
-        SEND_REMOVE(13),
-        SEND_CONFIRM(14),
-        SEND_DISCONNECT_FROM_CONV(15),
-        SEND_STOP_CONV(16);
+    /**
+     * Instruction your handlers reaction depends on its values
+     *
+     * Must be numerated
+     * This can't be 2 identical id
+     */
 
-        private int code;
+    public enum CODE {
+        SEND_NAME(1),   //Uses when first time connect to server
+        SEND_ID(2),     //not used
+        SEND_AUDIO_FORMAT(3),//sends audio format
+        SEND_USERS(4),  //send request or response with users on server
+        SEND_MESSAGE(5),//When client send message to another client, or to conference
+        SEND_CALL(6),   //when client call someone
+        SEND_APPROVE(7),//when call accepted
+        SEND_DENY(8),   //when call denied
+        SEND_CANCEL(9), //when caller cancelled the call
+        SEND_SOUND(10), //sends sound data to conference
+        SEND_DISCONNECT(11),    //when disconnecting from the server
+        SEND_ADD(12),   //server send it when some one was added to your conversation
+        SEND_REMOVE(13),//server send it when some one was removed to your conversation
+        SEND_CONFIRM(14),//not used
+        SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
+        SEND_STOP_CONV(16);//when you are last one in conversation server sends it to you
+
+        /**
+         * Unique id
+         */
+
+        private final int code;
 
         CODE(int code) {
             this.code = code;
@@ -45,18 +70,32 @@ public abstract class BaseWriter {
             return code;
         }
 
+        /**
+         * Static factory
+         * @param code unique id
+         * @return CODE for this id or null
+         */
+
         public static CODE parse(int code) {
             Optional<CODE> first = Arrays.stream(CODE.values()).filter(code1 -> code1.getCode() == code).findFirst();
             return first.orElse(null);
         }
     }
 
-    public enum WHO {
-        NO_NAME(0),
-        SERVER(1),
-        CONFERENCE(2);
+    /**
+     * Uses as default representation of main characters
+     */
 
-        private int code;
+    public enum WHO {
+        NO_NAME(0), //your id when first connect to the server
+        SERVER(1), //package for the server
+        CONFERENCE(2);  //package for the conference
+
+        /**
+         * Unique id
+         */
+
+        private final int code;
 
         WHO(int code) {
             this.code = code;
@@ -67,33 +106,60 @@ public abstract class BaseWriter {
         }
     }
 
+    /**
+     * Indicates start of unique users id
+     * Must be greater than max value of WHO enum
+     */
+
+    public static final int START_OF_USERS = 3;
+
+    /**
+     * You can use only write() method
+     * @param outputStream where to write
+     */
+
     public BaseWriter(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
     }
+
+    /**
+     * Can use bot write() and writeA() methods
+     * @param outputStream where to write
+     * @param mainErrorHandler handler in case of error not null
+     */
 
     public BaseWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
         this.mainErrorHandler = mainErrorHandler;
     }
 
+    /**
+     * Thread safe method writes given package
+     * @param dataPackage to be written
+     * @throws IOException if network failing occurs
+     */
 
-    //Check machine code and compare to synchronise in head
-    protected synchronized void write(BaseDataPackage dataPackage) throws IOException {
-        outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
+    protected synchronized void write(AbstractDataPackage dataPackage) throws IOException {
+        outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
         if (dataPackage.getHeader().getLength() != 0)
             outputStream.write(dataPackage.getData());
         outputStream.flush();
 //        System.out.println(dataPackage + " " + Thread.currentThread().getName());
-        DataPackagePool.returnPackage(dataPackage);
+        AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
-    protected synchronized void writeA(BaseDataPackage dataPackage){
+    /**
+     * Thread safe method writes given package
+     * @param dataPackage to be written
+     */
+
+    protected synchronized void writeA(AbstractDataPackage dataPackage){
         try {
-            outputStream.write(dataPackage.getHeader().getRawHeader());// think about cashe header
+            outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
             if (dataPackage.getHeader().getLength() != 0)
                 outputStream.write(dataPackage.getData());
             outputStream.flush();
-            DataPackagePool.returnPackage(dataPackage);
+            AbstractDataPackagePool.returnPackage(dataPackage);
         }catch (IOException e){
             e.printStackTrace();
             mainErrorHandler.errorCase();

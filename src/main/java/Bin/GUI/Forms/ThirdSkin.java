@@ -1,6 +1,5 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.ThirdSkinActions;
 import Bin.Networking.Utility.BaseUser;
 
@@ -28,13 +27,13 @@ class ThirdSkin {
      * Possible actions
      */
 
-    private ThirdSkinActions actions;
+    private final ThirdSkinActions actions;
 
     /**
      * Id of the user who you write
      */
 
-    private int who;
+    private final int who;
 
     /**
      * Default constructor init
@@ -52,23 +51,11 @@ class ThirdSkin {
 
         nameWho.setText(name);
 
-        sendButton.addActionListener(e -> {
-            try {
-                sendMessage(actions.sendMessage());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        sendButton.addActionListener(e -> sendMessage(actions.sendMessage()));
 
         textField.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
-        closeButton.addActionListener(e -> {
-            try {
-                actions.closeTab().run();
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        closeButton.addActionListener(e -> actions.closeTab().run());
     }
 
     JPanel getMainPane() {

@@ -1,7 +1,5 @@
 package Bin.GUI.Interfaces;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
-
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -10,26 +8,26 @@ public interface ConferencePaneActions {
     /**
      * Action for end a call
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Runnable endCall() throws NotInitialisedException;
+    Runnable endCall() throws IllegalStateException;
 
     /**
      * Action for mute the microphone
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Supplier<Boolean> mute() throws NotInitialisedException;
+    Supplier<Boolean> mute() throws IllegalStateException;
 
     /**
      * Action for changing magnitude of bass boost
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Consumer<Double> changeMultiplier() throws NotInitialisedException;
+    Consumer<Double> changeMultiplier() throws IllegalStateException;
 
     void updateEndCall(Runnable endCall);
 

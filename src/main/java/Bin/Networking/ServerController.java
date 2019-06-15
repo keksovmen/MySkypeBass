@@ -1,32 +1,34 @@
 package Bin.Networking;
 
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
-import Bin.Networking.Readers.ServerReader;
+import Bin.Networking.Processors.ServerProcessor;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Utility.ErrorHandler;
+import Bin.Networking.Utility.ServerUser;
 import Bin.Networking.Writers.BaseWriter;
 import Bin.Networking.Writers.ServerWriter;
-import Bin.Networking.Utility.ServerUser;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class ServerController implements ErrorHandler {
 
+    private final Socket socket;
     private ServerWriter writer;
-    private ServerReader reader;
+    private BaseReader reader;
+    private ServerProcessor serverProcessor;
     private ServerUser me;
-    private Socket socket;
-    private Server server;
+    private final Server server;
 
     public ServerController(Socket socket, Server server) throws IOException {
         this.socket = socket;
         this.server = server;
         writer = new ServerWriter(socket.getOutputStream(), this);
-        reader = new ServerReader(socket.getInputStream(), this::getId, this);
+        serverProcessor = new ServerProcessor();
+        reader = new BaseReader(socket.getInputStream(), serverProcessor, this);
     }
 
     /**
@@ -42,36 +44,37 @@ public class ServerController implements ErrorHandler {
         } catch (IOException e) {
             e.printStackTrace();
             errorCase();
-//            disconnect();
         }
     }
 
     private void launch() {
-        reader.addListener(createUsersRequestListener(this));
-        reader.addListener(createConvHandler(this));
-        reader.addListener(createTransferHandler(this));
-        reader.start();
+        serverProcessor.addListener(createUsersRequestListener(this));
+        serverProcessor.addListener(createConvHandler(this));
+        serverProcessor.addListener(createTransferHandler(this));
+        reader.start("Server reader - " + getId());
     }
 
-    private static Consumer<BaseDataPackage> createUsersRequestListener(ServerController controller) {
+    private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
-//                try {
-                controller.writer.writeUsers(controller.me.getId(), controller.server.getUsers(controller.me.getId()));
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    controller.disconnect();
-//                }
+                controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
             }
         };
     }
 
-    private static Consumer<BaseDataPackage> createConvHandler(ServerController controller) {
+    private static Consumer<AbstractDataPackage> createConvHandler(ServerController controller) {
         return dataPackage -> {
 
             switch (dataPackage.getHeader().getCode()) {
                 case SEND_APPROVE: {
                     ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
+                    //case when dude disconnected before approve was received
+                    if (receiver == null){
+                        int id = controller.getId();
+                        controller.writer.writeStopConv(id);
+                        controller.writer.writeUsers(id, controller.server.getUsers(id));
+                        return;
+                    }
                     ServerUser receiverUser = receiver.me;
                     Conversation conversation;
                     Conversation receiverConversation;
@@ -101,7 +104,6 @@ public class ServerController implements ErrorHandler {
                     break;
                 }
                 case SEND_SOUND: {
-//                    System.out.println(controller.me.getString() + " " + Thread.currentThread().getName());
                     if (controller.me.getConversation() != null) {
                         controller.me.getConversation().send(dataPackage, controller.getId());
                     }
@@ -117,23 +119,19 @@ public class ServerController implements ErrorHandler {
         };
     }
 
-    private static Consumer<BaseDataPackage> createTransferHandler(ServerController controller) {
+    private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
         return baseDataPackage -> {
             if ((baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode())
                     && (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.CONFERENCE.getCode())) {        //add to conversation condition
                 ServerController controllerReceiver = controller.server.getController(baseDataPackage.getHeader().getTo());
-                controllerReceiver.writer.transferData(baseDataPackage);//test it
+                if (controllerReceiver != null) {
+                    controllerReceiver.writer.transferData(baseDataPackage);//test it
+                }else {
+                    controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                }
             }
         };
     }
-
-//    private static Consumer<BaseDataPackage> createDisconnectHandler(ServerController serverController) {
-//        return baseDataPackage -> {
-//            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_DISCONNECT)) {
-//
-//            }
-//        };
-//    }
 
     /**
      * Trying to register a new user for the server
@@ -149,23 +147,23 @@ public class ServerController implements ErrorHandler {
      */
 
     private boolean authenticate() throws IOException {
-        BaseDataPackage dataPackage = reader.read();
+        AbstractDataPackage dataPackage = reader.read();
         String name = dataPackage.getDataAsString();
         setUser(name);
 
         final int id = me.getId();
 
         writer.writeAudioFormat(id, server.getAudioFormat());
-        DataPackagePool.returnPackage(dataPackage);
+        AbstractDataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();
         if (dataPackage.getHeader().getCode() != BaseWriter.CODE.SEND_APPROVE) {
             writer.writeDisconnect(id);
             errorCase();
 //            disconnect();
-            DataPackagePool.returnPackage(dataPackage);
+            AbstractDataPackagePool.returnPackage(dataPackage);
             return false;
         }
-        DataPackagePool.returnPackage(dataPackage);
+        AbstractDataPackagePool.returnPackage(dataPackage);
 
         server.addUser(me);
 
@@ -189,7 +187,12 @@ public class ServerController implements ErrorHandler {
         return writer;
     }
 
-    public int getId() {
+    /**
+     * Short cut
+     * @return id
+     */
+
+    private int getId() {
         return me.getId();
     }
 
@@ -200,7 +203,7 @@ public class ServerController implements ErrorHandler {
             me.getConversation().removeDude(me);
 //            me.setConversation(null);
         }
-        server.removeUser(me.getId());
+        server.removeUser(getId());
         try {
             socket.close();
         } catch (IOException e) {

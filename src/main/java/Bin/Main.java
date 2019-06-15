@@ -2,10 +2,11 @@ package Bin;
 
 import Bin.Audio.AudioClient;
 import Bin.GUI.ActionsBox;
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Forms.MainFrame;
 import Bin.Networking.ClientController;
-import Bin.Networking.DataParser.BaseDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Protocol.DataPackagePool;
 import Bin.Networking.Server;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.Call;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
 
 /**
  * My interpretation of the whole system
- * Sure you can make better
+ * Sure you can do better
  */
 
 public class Main implements ErrorHandler {
@@ -32,13 +33,15 @@ public class Main implements ErrorHandler {
 
     private final ActionsBox actionsBox;
     private MainFrame mainFrame;
-    private ClientController controller;
+    private final ClientController controller;
     private Server server;
     private final Map<Integer, BaseUser> users;
     private final AudioClient audioClient;
     private final Call callDialog;
 
     private Main() {
+        AbstractDataPackagePool.init(new DataPackagePool());
+
         audioClient = AudioClient.getInstance();
         users = new HashMap<>();
         callDialog = new Call();
@@ -47,17 +50,17 @@ public class Main implements ErrorHandler {
 
         initialInitForActions();
         EventQueue.invokeLater(() -> {
-            try {
-                mainFrame = new MainFrame(actionsBox);
-            } catch (NotInitialisedException e) {
-                e.printStackTrace();
-            }
-            controller.getProcessor().addTaskListener(usersIncome());
-            controller.getProcessor().addTaskListener(showMessage());
-            controller.getProcessor().addTaskListener(callHandler());
-            controller.getProcessor().addTaskListener(audioHandler());
+            mainFrame = new MainFrame(actionsBox);
+            controller.getProcessor().addListener(usersIncome());
+            controller.getProcessor().addListener(showMessage());
+            controller.getProcessor().addListener(callHandler());
+            controller.getProcessor().addListener(audioHandler());
         });
     }
+
+    /**
+     * Default init of all back end actions
+     */
 
     private void initialInitForActions() {
         actionsBox.updateConnect(connect());
@@ -76,7 +79,7 @@ public class Main implements ErrorHandler {
 
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 //        Main main = new Main();
 //        System.setProperty("java.util.logging.config.file", "src\\main\\resources\\properties\\logging.properties");
 //        LogManager.getLogManager().readConfiguration();
@@ -125,10 +128,12 @@ public class Main implements ErrorHandler {
             try {
                 if (server == null) {
                     server = new Server(strings[0], strings[1], strings[2]);
-                    return server.start();
+                    server.start("Server");
+                    return true;
                 }
                 return false;
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
                 server = null;
                 return null;
@@ -179,10 +184,10 @@ public class Main implements ErrorHandler {
      * @return ready to be established handler
      */
 
-    private Consumer<BaseDataPackage> usersIncome() {
+    private Consumer<AbstractDataPackage> usersIncome() {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
-                BaseUser[] baseUsers = ClientController.parseUsers(baseDataPackage.getDataAsString());
+                BaseUser[] baseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
                 users.clear();
                 Arrays.stream(baseUsers).forEach(baseUser -> users.put(baseUser.getId(), baseUser));
                 mainFrame.updateUsers(baseUsers);
@@ -207,7 +212,7 @@ public class Main implements ErrorHandler {
      * @return ready to be registered handler
      */
 
-    private Consumer<BaseDataPackage> showMessage() {
+    private Consumer<AbstractDataPackage> showMessage() {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_MESSAGE)) {
                 mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), baseDataPackage.getDataAsString());
@@ -292,7 +297,7 @@ public class Main implements ErrorHandler {
      * @return ready to be registered handler
      */
 
-    private Consumer<BaseDataPackage> callHandler() {
+    private Consumer<AbstractDataPackage> callHandler() {
         return baseDataPackage -> {
             switch (baseDataPackage.getHeader().getCode()) {
                 case SEND_CALL: {
@@ -301,20 +306,16 @@ public class Main implements ErrorHandler {
                         //auto accept and cancel
                         BaseUser receiver = callDialog.getReceiver();
                         if (receiver.getId() == from) {
-                            BaseUser[] users = null;
+                            BaseUser[] users;
                             if (baseDataPackage.getHeader().getLength() > 0) {
-                                BaseUser[] parseUsers = ClientController.parseUsers(baseDataPackage.getDataAsString());
+                                BaseUser[] parseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
                                 users = new BaseUser[parseUsers.length + 1];
                                 users[0] = receiver;
                                 System.arraycopy(parseUsers, 0, users, 1, parseUsers.length);
                             } else {
                                 users = new BaseUser[]{receiver};
                             }
-                            try {
-                                actionsBox.acceptCall().accept(users);
-                            } catch (NotInitialisedException e) {
-                                e.printStackTrace();
-                            }
+                            actionsBox.acceptCall().accept(users);
                             //auto accept call handle here
 //                            mainFrame.closeCall("Call was accepted");
                             mainFrame.showDialog("Call was accepted");
@@ -400,7 +401,7 @@ public class Main implements ErrorHandler {
         BaseUser caller = users.get(from);
         BaseUser[] result;
         if (convUsers.length() > 0) {
-            BaseUser[] parseUsers = ClientController.parseUsers(convUsers);
+            BaseUser[] parseUsers = BaseUser.parseUsers(convUsers);
             result = new BaseUser[parseUsers.length + 1];
             result[0] = caller;
             System.arraycopy(parseUsers, 0, result, 1, parseUsers.length);
@@ -417,7 +418,7 @@ public class Main implements ErrorHandler {
      * @param baseDataPackage incoming package
      */
 
-    private void startConv(BaseDataPackage baseDataPackage) {
+    private void startConv(AbstractDataPackage baseDataPackage) {
         startConv(baseDataPackage.getHeader().getFrom(), baseDataPackage.getDataAsString());
     }
 
@@ -457,10 +458,12 @@ public class Main implements ErrorHandler {
      * It adds new sound lines and remove already existed
      * and stop a conversation
      *
+     * Also clears all existed packages
+     *
      * @return ready to be registered handler
      */
 
-    private Consumer<BaseDataPackage> audioHandler() {
+    private Consumer<AbstractDataPackage> audioHandler() {
         return dataPackage -> {
             switch (dataPackage.getHeader().getCode()) {
                 case SEND_SOUND: {
@@ -481,6 +484,7 @@ public class Main implements ErrorHandler {
                 case SEND_STOP_CONV: {
                     audioClient.close();
                     mainFrame.closeConversation();
+                    AbstractDataPackagePool.clearStorage();
                     break;
                 }
             }
@@ -489,6 +493,7 @@ public class Main implements ErrorHandler {
 
     /**
      * Creates action for disconnecting or leaving conversation
+     * Also clear all existed packages
      *
      * @return ready to use action
      */
@@ -497,6 +502,7 @@ public class Main implements ErrorHandler {
         return () -> {
             audioClient.close();
             controller.getWriter().writeDisconnectFromConv(controller.getMe().getId());
+            AbstractDataPackagePool.clearStorage();
         };
     }
 
@@ -513,6 +519,7 @@ public class Main implements ErrorHandler {
     @Override
     public void errorCase() {
         users.clear();
+        AbstractDataPackagePool.clearStorage();
         iterate();
     }
 

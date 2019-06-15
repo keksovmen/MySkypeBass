@@ -1,6 +1,5 @@
 package Bin.GUI.Interfaces;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.Networking.Utility.BaseUser;
 
 import java.util.function.Consumer;
@@ -10,26 +9,26 @@ public interface CallDialogActions {
     /**
      * Action for cancel a call
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Consumer<BaseUser> cancelCall() throws NotInitialisedException;
+    Consumer<BaseUser> cancelCall() throws IllegalStateException;
 
     /**
      * Action for accept a call
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Consumer<BaseUser[]> acceptCall() throws NotInitialisedException;
+    Consumer<BaseUser[]> acceptCall() throws IllegalStateException;
 
     /**
      * Action for deny a call
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Consumer<BaseUser> denyCall() throws NotInitialisedException;
+    Consumer<BaseUser> denyCall() throws IllegalStateException;
 
     void updateCancelCall(Consumer<BaseUser> cancelCall);
 

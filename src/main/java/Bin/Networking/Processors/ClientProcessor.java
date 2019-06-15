@@ -1,41 +1,46 @@
 package Bin.Networking.Processors;
 
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
-public class ClientProcessor {
+/**
+ * Main purpose is to have registered listeners
+ * and feed them with dataPackages
+ * Also return to home the packages
+ */
 
-    private Executor executor;
-    private List<Consumer<BaseDataPackage>> listeners;
+public class ClientProcessor extends BaseProcessor{
+
+    /**
+     * Instead of its own thread you have
+     * SINGLE THREAD EXECUTOR for not prone purposes
+     */
+
+    private final Executor executor;
 
     public ClientProcessor() {
-        listeners = new ArrayList<>();
+        super();
         executor = Executors.newSingleThreadExecutor();
     }
 
-    public void doJob(final BaseDataPackage dataPackage) {
-        if (dataPackage == null){
+    /**
+     * Call when you have a package to act on it
+     * Simply put in executor queue
+     *
+     * @param dataPackage valid package
+     */
+
+    @Override
+    public void process(AbstractDataPackage dataPackage) {
+        if (dataPackage == null) {
             return;
         }
         executor.execute(() -> {
             listeners.forEach(baseDataPackageConsumer -> baseDataPackageConsumer.accept(dataPackage));
-            DataPackagePool.returnPackage(dataPackage);
+            AbstractDataPackagePool.returnPackage(dataPackage);
         });
     }
-
-    public void addTaskListener(Consumer<BaseDataPackage> consumer){
-        listeners.add(consumer);
-    }
-
-    public void removeTaskListener(Consumer<BaseDataPackage> consumer){
-        listeners.remove(consumer);
-    }
-
-
 }

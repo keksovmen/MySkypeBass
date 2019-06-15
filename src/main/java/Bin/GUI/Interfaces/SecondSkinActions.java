@@ -1,9 +1,7 @@
 package Bin.GUI.Interfaces;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.Networking.Utility.BaseUser;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public interface SecondSkinActions extends CallDialogActions, ConferencePaneActions, ThirdSkinActions {
@@ -11,18 +9,18 @@ public interface SecondSkinActions extends CallDialogActions, ConferencePaneActi
     /**
      * Action for disconnecting
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Runnable disconnect() throws NotInitialisedException;
+    Runnable disconnect() throws IllegalStateException;
 
     /**
      * Action for refresh call of users
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Runnable callForUsers() throws NotInitialisedException;
+    Runnable callForUsers() throws IllegalStateException;
 
 
 
@@ -31,10 +29,10 @@ public interface SecondSkinActions extends CallDialogActions, ConferencePaneActi
     /**
      * Action for call some one
      * @return not null action
-     * @throws NotInitialisedException if return is null
+     * @throws IllegalStateException if return is null
      */
 
-    Consumer<BaseUser> callSomeOne() throws NotInitialisedException;
+    Consumer<BaseUser> callSomeOne() throws IllegalStateException;
 
     void updateDisconnect(Runnable disconnect);
 

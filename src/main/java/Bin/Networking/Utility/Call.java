@@ -4,16 +4,42 @@ import Bin.Audio.CallNotificator;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * Need on client side
+ * Purpose is to be a flag that can hold some data
+ * Access only from one thread at a time
+ */
+
 public class Call implements ErrorHandler {
 
+    /**
+     * The flag showing if you are currently calling or get called someone
+     */
+
     private final AtomicBoolean isCalling;
+
+    /**
+     * Who called or you call
+     */
+
     private BaseUser receiver;
+
+    /**
+     * Handle sound notifications
+     */
+
     private CallNotificator sound;
 
     public Call() {
         isCalling = new AtomicBoolean();
         sound = new CallNotificator();
     }
+
+    /**
+     * Not used version
+     *
+     * @param receiver who called or you call
+     */
 
     public Call(BaseUser receiver) {
         isCalling = new AtomicBoolean();
@@ -32,6 +58,13 @@ public class Call implements ErrorHandler {
         sound.stop();
         isCalling.set(value);
     }
+
+    /**
+     * Define what sound to play depends on isIncoming
+     *
+     * @param value      calling state
+     * @param isIncoming mean you called or not
+     */
 
     public void setCalling(boolean value, boolean isIncoming) {
         if (value) {

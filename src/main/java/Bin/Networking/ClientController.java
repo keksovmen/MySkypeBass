@@ -1,10 +1,11 @@
 package Bin.Networking;
 
 import Bin.Audio.AudioClient;
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
 import Bin.Networking.Processors.ClientProcessor;
-import Bin.Networking.Readers.ClientReader;
+import Bin.Networking.Processors.Processable;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Writers.BaseWriter;
@@ -14,7 +15,6 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,8 +22,8 @@ public class ClientController implements ErrorHandler {
 
     private Socket socket;
     private ClientWriter writer;
-    private ClientReader reader;
-    private ClientProcessor processor;
+    private BaseReader reader;
+    private Processable processor;
     private BaseUser me;
 
     private ErrorHandler mainErrorHandler;
@@ -53,7 +53,7 @@ public class ClientController implements ErrorHandler {
         try {
             socket.connect(new InetSocketAddress(hostName, port), 7_000);
             writer = new ClientWriter(socket.getOutputStream(), mainErrorHandler);
-            reader = new ClientReader(socket.getInputStream(), processor, mainErrorHandler);
+            reader = new BaseReader(socket.getInputStream(), processor, mainErrorHandler);
         } catch (IOException e) {
             e.printStackTrace();
 //            mainErrorHandler.errorCase();
@@ -81,7 +81,7 @@ public class ClientController implements ErrorHandler {
     private boolean authenticate(String name) {
         try {
             writer.writeName(name);
-            BaseDataPackage read = reader.read();
+            AbstractDataPackage read = reader.read();
             AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
             //sets audio format and return true only if mic and speaker is set
             if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
@@ -90,14 +90,18 @@ public class ClientController implements ErrorHandler {
             }
             writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
             me = new BaseUser(name, read.getHeader().getTo());
-            DataPackagePool.returnPackage(read);
+            AbstractDataPackagePool.returnPackage(read);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
-        reader.start();
+        reader.start("Client reader");
         return true;
     }
+
+    /**
+     * Default action for disconnecting the user
+     */
 
     public void disconnect() {
         reader.close();
@@ -130,11 +134,6 @@ public class ClientController implements ErrorHandler {
         return new AudioFormat(sampleRate, sampleSize, 1, true, true);
     }
 
-    public static BaseUser[] parseUsers(String data) {
-        if (data.length() == 0) return new BaseUser[0];
-        String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
-    }
 
     public BaseUser getMe() {
         return me;
@@ -144,7 +143,7 @@ public class ClientController implements ErrorHandler {
         return writer;
     }
 
-    public ClientProcessor getProcessor() {
+    public Processable getProcessor() {
         return processor;
     }
 

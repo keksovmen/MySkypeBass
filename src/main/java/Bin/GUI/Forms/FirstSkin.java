@@ -1,10 +1,8 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.FirstSkinActions;
 
 import javax.swing.*;
-import java.text.ParseException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -34,7 +32,7 @@ class FirstSkin {
      * Available actions
      */
 
-    private FirstSkinActions actions;
+    private final FirstSkinActions actions;
 
     /**
      * Firstly load properties such as
@@ -54,13 +52,7 @@ class FirstSkin {
          */
 //        audioFormatStats = new AudioFormatStats(actions, mainPane);
 
-        connectButton.addActionListener(e -> {
-            try {
-                actions.connect().apply(new String[]{getMyName(), getIp(), getPort()});
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        connectButton.addActionListener(e -> actions.connect().apply(new String[]{getMyName(), getIp(), getPort()}));
 
         createButton.addActionListener(e -> createServer());
 
@@ -158,14 +150,14 @@ class FirstSkin {
             public JFormattedTextField.AbstractFormatter getFormatter(JFormattedTextField tf) {
                 return new JFormattedTextField.AbstractFormatter() {
                     @Override
-                    public Object stringToValue(String text) throws ParseException {
+                    public Object stringToValue(String text) {
                         String result = text.trim();
                         result = result.replaceAll("\\D", "");
                         return result.equals("") ? "" : Integer.parseInt(result);
                     }
 
                     @Override
-                    public String valueToString(Object value) throws ParseException {
+                    public String valueToString(Object value) {
                         return String.valueOf(value);
                     }
                 };

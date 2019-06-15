@@ -1,6 +1,5 @@
 package Bin.GUI.Forms;
 
-import Bin.GUI.Forms.Exceptions.NotInitialisedException;
 import Bin.GUI.Interfaces.ConferencePaneActions;
 import Bin.Networking.Utility.ErrorHandler;
 
@@ -28,13 +27,13 @@ class ConferencePane implements ErrorHandler {
      * need for add and removal of users
      */
 
-    private Map<String, UserSettings> conferenceMembers;
+    private final Map<String, UserSettings> conferenceMembers;
 
     /**
      * All possible actions
      */
 
-    private ConferencePaneActions actions;
+    private final ConferencePaneActions actions;
 
 
     /**
@@ -52,29 +51,11 @@ class ConferencePane implements ErrorHandler {
 
         conferenceMembers = new HashMap<>();
 
-        endCallButton.addActionListener(e -> {
-            try {
-                actions.endCall().run();
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        endCallButton.addActionListener(e -> actions.endCall().run());
 
-        muteButton.addActionListener(e -> {
-            try {
-                reactToMute(actions.mute().get());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        muteButton.addActionListener(e -> reactToMute(actions.mute().get()));
 
-        volume.addChangeListener(e -> {
-            try {
-                actions.changeMultiplier().accept((Double) volume.getValue());
-            } catch (NotInitialisedException e1) {
-                e1.printStackTrace();
-            }
-        });
+        volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
     }
 
     JPanel getMainPane() {

@@ -2,10 +2,23 @@ package Bin.Networking.Utility;
 
 import Bin.Networking.ServerController;
 
+/**
+ * Server version of a user
+ */
+
 public class ServerUser extends BaseUser {
 
-    private ServerController controller;
-    private volatile Conversation conversation;
+    /**
+     * Who created you
+     */
+
+    private final ServerController controller;
+
+    /**
+     * Shows in conversation you are or not
+     */
+
+    private Conversation conversation;
 
     public ServerUser(String name, int id, ServerController controller) {
         super(name, id);
@@ -24,16 +37,19 @@ public class ServerUser extends BaseUser {
         this.conversation = conversation;
     }
 
-    public boolean inConv(){
+    public synchronized boolean inConv() {
         return conversation != null;
     }
 
-    public String getString() {
-        return "ServerUser{" +
-                "controller=" + controller +
-                ", conversation=" + conversation +
-                '}';
-    }
+    /*
+    For debug only
+     */
+//    public String getString() {
+//        return "ServerUser{" +
+//                "controller=" + controller +
+//                ", conversation=" + conversation +
+//                '}';
+//    }
 
 
 }

@@ -1,26 +1,12 @@
-import Bin.Audio.AudioClient;
-import Bin.Main;
-import Bin.Networking.ClientController;
-import Bin.Networking.DataParser.BaseDataPackage;
-import Bin.Networking.DataParser.DataPackagePool;
-import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Server;
-import Bin.Networking.Writers.BaseWriter;
 
-import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 public class Test {
 
-    public static void main(String[] args) throws IOException, UnsupportedAudioFileException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         Server server = new Server(8188, 20_000, 16);
-        server.start();
+        server.start("Server");
 
 //        Main.main(args);
 
