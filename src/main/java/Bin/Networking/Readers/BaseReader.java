@@ -2,6 +2,7 @@ package Bin.Networking.Readers;
 
 import Bin.Networking.Processors.Processable;
 import Bin.Networking.Protocol.*;
+import Bin.Networking.Server;
 import Bin.Networking.Utility.Starting;
 import Bin.Networking.Utility.ErrorHandler;
 
@@ -9,6 +10,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 
 /**
  * Base reader for all the readers
@@ -20,7 +22,12 @@ public class BaseReader implements Starting, ErrorHandler {
      * Define buffer size of inputStream
      */
 
-    private final static int BUFFER_SIZE = 16384;
+    private final static int BUFFER_SIZE;
+
+    static {
+        Integer size = Integer.valueOf(Server.serverProp.getProperty("bufferSize"));
+        BUFFER_SIZE = size * 1024;
+    }
 
     /**
      * DataInputStream because it can readFully()

@@ -10,9 +10,25 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Handles all conversation actions
+ * Transfer sound, soon messages, adds and removes dudes
+ */
+
 public class Conversation {
 
+    /**
+     * Must be concurrent
+     * CopyOnWriteArrayList works well
+     */
+
     private final List<ServerUser> users;
+
+    /**
+     * Create conversation for users that don't have a conversation already
+     *
+     * @param user should be 2+ users
+     */
 
     public Conversation(ServerUser... user) {
         users = new CopyOnWriteArrayList<>();
@@ -23,27 +39,25 @@ public class Conversation {
 
     }
 
+    /**
+     * For those who already in conversation
+     *
+     * @param rightSide dude that in conversation and his boys, caller or receiver
+     * @param leftSide  dude that in conversation and his boys, caller or receiver
+     */
+
     public Conversation(ServerUser[] rightSide, ServerUser[] leftSide) {
         users = new CopyOnWriteArrayList<>();
         for (ServerUser right : rightSide) {
             right.setConversation(this);
             for (ServerUser left : leftSide) {
-//                try {
                 right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-                //handle some how
-//                }
             }
         }
         for (ServerUser left : leftSide) {
             left.setConversation(this);
             for (ServerUser right : rightSide) {
-//                try {
                 left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
             }
         }
 
@@ -52,9 +66,13 @@ public class Conversation {
 
     }
 
-    /*
-    think of sync that shit
+    /**
+     * Default method for sending sound data for multiple targets
+     *
+     * @param dataPackage contains sound
+     * @param from        who called this method
      */
+
     public void send(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from) {
@@ -64,29 +82,37 @@ public class Conversation {
                 } catch (IOException e) {
                     e.printStackTrace();
                     removeDude(user);
-//                    System.out.println("removed");
                 }
             }
         }
-        AbstractDataPackagePool.returnPackage(dataPackage);
     }
+
+    /**
+     * Add new user(s) to this conference
+     *
+     * @param exclusive who called this method
+     * @param user      to be added
+     */
 
     public synchronized void addDude(ServerUser exclusive, ServerUser... user) {
         for (ServerUser serverUserExist : users) {
             if (!serverUserExist.equals(exclusive)) {
-//                try {
                 for (ServerUser serverUserToAdd : user) {
                     serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
                     serverUserToAdd.setConversation(this);
                 }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                    removeDude(serverUserExist);
-//                }
             }
         }
         users.addAll(Arrays.asList(user));
     }
+
+    /**
+     * Remove user(s) from this conference
+     * Also when there is last dude, it tells him that conversation is ended
+     * and terminate all links
+     *
+     * @param user to be removed
+     */
 
     public synchronized void removeDude(ServerUser user) {
         user.setConversation(null);
@@ -94,32 +120,45 @@ public class Conversation {
             return;
         }
         for (ServerUser serverUser : users) {
-//            try {
             serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                removeDude(serverUser);
-//            }
         }
         if (users.size() == 1) {
             ServerUser lastUser = users.get(0);
-//            try {
             lastUser.getController().getWriter().writeStopConv(lastUser.getId());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
             lastUser.setConversation(null);
             users.clear();
         }
     }
 
+    /**
+     * Not used
+     * For checking is there a dude
+     *
+     * @param user to be checked
+     * @return if he is in
+     */
+
     public synchronized boolean contains(ServerUser user) {
         return users.contains(user);
     }
 
+    /**
+     * Collect info about users
+     *
+     * @return all users that is in the conversation
+     */
+
     public synchronized ServerUser[] getAll() {
         return users.toArray(new ServerUser[0]);
     }
+
+    /**
+     * Sae as previous but
+     * Gets all as string except you
+     *
+     * @param exclusive who called this method
+     * @return all except you
+     */
 
     public synchronized String getAllToString(ServerUser exclusive) {
         StringBuilder result = new StringBuilder();

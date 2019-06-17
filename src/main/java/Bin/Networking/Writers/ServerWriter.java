@@ -3,6 +3,7 @@ package Bin.Networking.Writers;
 import Bin.Main;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Server;
 import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.IOException;
@@ -41,18 +42,7 @@ public class ServerWriter extends BaseWriter {
      */
 
     static {
-        Properties defaultProp = new Properties();
-        defaultProp.setProperty("lock_time", "300");
-        Properties loadedProp = new Properties(defaultProp);
-        InputStream resourceAsStream = Main.class.getResourceAsStream("properties/Server.properties.properties");
-        if (resourceAsStream != null) {
-            try {
-                loadedProp.load(resourceAsStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        LOCK_TIME = Integer.parseInt(loadedProp.getProperty("lock_time"));
+        LOCK_TIME = Integer.parseInt(Server.serverProp.getProperty("lock_time"));
     }
 
     public ServerWriter(OutputStream outputStream) {
@@ -81,16 +71,19 @@ public class ServerWriter extends BaseWriter {
     /**
      * Method for transferring data from one user to another one
      *
+     * Don't return package back to the pool
+     *
      * @param dataPackage to be transferred
      */
 
     public synchronized void transferData(AbstractDataPackage dataPackage) {
         try {
             outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header, when you read it
-            if (dataPackage.getHeader().getLength() != 0)
+            if (dataPackage.getHeader().getLength() != 0) {
                 outputStream.write(dataPackage.getData());
+            }
             outputStream.flush();
-            AbstractDataPackagePool.returnPackage(dataPackage);
+//            AbstractDataPackagePool.returnPackage(dataPackage);
         } catch (IOException e) {
             e.printStackTrace();
             mainErrorHandler.errorCase();
@@ -100,6 +93,8 @@ public class ServerWriter extends BaseWriter {
     /**
      * Method for writing data in conversation mode
      * It tries to get lock if can't just pass this dude
+     *
+     * Don't return package back to the pool
      *
      * @param dataPackage to be sanded
      * @throws IOException if networking fails

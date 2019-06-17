@@ -105,15 +105,41 @@ public class AudioClient implements ErrorHandler {
 
     public boolean setAudioFormat(AudioFormat audioFormat) {
         this.audioFormat = audioFormat;
-        CAPTURE_SIZE_MAIN = (int) (audioFormat.getSampleRate() / 2) * audioFormat.getSampleSizeInBits() / 8;
-        final int maxLength = AbstractHeader.getMaxLength();
-        if (CAPTURE_SIZE_MAIN >= maxLength) {
-            int i = maxLength % 2;
-            CAPTURE_SIZE_MAIN = maxLength - i;
-        }
+        defineCaptureSizeMain((int) audioFormat.getSampleRate(), audioFormat.getSampleSizeInBits(), AbstractHeader.getMaxLength());
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
         return speaker & mic;
+    }
+
+    /**
+     * Defines value for capturing size on mic
+     * You can use default calculated or specify your own
+     *
+     * @param sampleRate       of audio format
+     * @param sampleSizeInButs of audio format
+     * @param maxPossible      defined by AbstractHeader
+     */
+
+    protected void defineCaptureSizeMain(int sampleRate, int sampleSizeInButs, final int maxPossible) {
+        Properties properties = new Properties();
+        InputStream resourceAsStream = Main.class.getResourceAsStream("properties/Audio.properties");
+        int value = (sampleRate / 2) * (sampleSizeInButs / 8);
+        if (resourceAsStream != null) {
+            try {
+                properties.load(resourceAsStream);
+                String bufferSize = properties.getProperty("bufferSize");
+                if (bufferSize != null && bufferSize.length() != 0) {
+                    value = Integer.valueOf(bufferSize);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if (value >= maxPossible) {
+            int i = maxPossible % 2;
+            value = maxPossible - i;
+        }
+        CAPTURE_SIZE_MAIN = value;
     }
 
 //    public static boolean isFormatSupported(AudioFormat audioFormat){
@@ -422,7 +448,7 @@ public class AudioClient implements ErrorHandler {
      * @return ready to use function
      */
 
-    public Consumer<Double> changeMultiplier(){
+    public Consumer<Double> changeMultiplier() {
         return capture.changeMultiplier();
     }
 

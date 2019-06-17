@@ -156,8 +156,9 @@ public abstract class BaseWriter {
     protected synchronized void writeA(AbstractDataPackage dataPackage){
         try {
             outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
-            if (dataPackage.getHeader().getLength() != 0)
+            if (dataPackage.getHeader().getLength() != 0) {
                 outputStream.write(dataPackage.getData());
+            }
             outputStream.flush();
             AbstractDataPackagePool.returnPackage(dataPackage);
         }catch (IOException e){
