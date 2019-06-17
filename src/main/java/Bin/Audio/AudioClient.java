@@ -122,7 +122,7 @@ public class AudioClient implements ErrorHandler {
 
     protected void defineCaptureSizeMain(int sampleRate, int sampleSizeInButs, final int maxPossible) {
         Properties properties = new Properties();
-        InputStream resourceAsStream = Main.class.getResourceAsStream("properties/Audio.properties");
+        InputStream resourceAsStream = Main.class.getResourceAsStream("/properties/Audio.properties");
         int value = (sampleRate / 2) * (sampleSizeInButs / 8);
         if (resourceAsStream != null) {
             try {
@@ -140,6 +140,7 @@ public class AudioClient implements ErrorHandler {
             value = maxPossible - i;
         }
         CAPTURE_SIZE_MAIN = value;
+        System.out.println(CAPTURE_SIZE_MAIN);
     }
 
 //    public static boolean isFormatSupported(AudioFormat audioFormat){

@@ -33,7 +33,7 @@ public class Server implements Starting {
         defaultProp.setProperty("lock_time", "300");
         defaultProp.setProperty("bufferSize", "32");
         serverProp = new Properties(defaultProp);
-        InputStream resourceAsStream = Server.class.getResourceAsStream("properties/Server.properties.properties");
+        InputStream resourceAsStream = Server.class.getResourceAsStream("/properties/Server.properties.properties");
         if (resourceAsStream != null){
             try {
                 serverProp.load(resourceAsStream);
