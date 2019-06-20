@@ -150,6 +150,8 @@ public class MainFrame extends JFrame implements ErrorHandler {
                 //lazy init
                 if (secondSkin == null) {
                     secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
+                }else{
+                    secondSkin.setNameAndId(actions.nameAndId().get());
                 }
                 add(secondSkin.getPane());
                 revalidate();

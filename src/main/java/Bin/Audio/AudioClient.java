@@ -140,7 +140,6 @@ public class AudioClient implements ErrorHandler {
             value = maxPossible - i;
         }
         CAPTURE_SIZE_MAIN = value;
-        System.out.println(CAPTURE_SIZE_MAIN);
     }
 
 //    public static boolean isFormatSupported(AudioFormat audioFormat){

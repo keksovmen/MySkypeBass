@@ -227,7 +227,7 @@ class SecondSkin implements ErrorHandler {
     }
 
     /**
-     * Pain a tab which has received a message and not in focus
+     * Paint a tab which has received a message and not in focus
      * it red
      *
      * @param indexOfTab wich to paint
@@ -350,6 +350,10 @@ class SecondSkin implements ErrorHandler {
         }
         tabs.clear();
         model.removeAllElements();
+    }
+
+    void setNameAndId(String nameAndId){
+        labelMe.setText(nameAndId);
     }
 
     @Override
