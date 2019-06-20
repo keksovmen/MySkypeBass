@@ -80,6 +80,26 @@ public class AudioClient implements ErrorHandler {
         soundNotifications.add("/sound/messageNotification/Take.WAV");
         soundNotifications.add("/sound/messageNotification/WO.WAV");
         soundNotifications.add("/sound/messageNotification/YEAAA.WAV");
+        soundNotifications.add("/sound/messageNotification/Cum.WAV");
+        soundNotifications.add("/sound/messageNotification/Atention.WAV");
+        soundNotifications.add("/sound/messageNotification/Beat.WAV");
+        soundNotifications.add("/sound/messageNotification/LetsGo.WAV");
+        soundNotifications.add("/sound/messageNotification/Dicks.WAV");
+        soundNotifications.add("/sound/messageNotification/Penetration3.WAV");
+        soundNotifications.add("/sound/messageNotification/Shut.WAV");
+        soundNotifications.add("/sound/messageNotification/Rip.WAV");
+        soundNotifications.add("/sound/messageNotification/Sorry.WAV");
+        soundNotifications.add("/sound/messageNotification/Sun.WAV");
+        soundNotifications.add("/sound/messageNotification/Amazing.WAV");
+        soundNotifications.add("/sound/messageNotification/Reach.WAV");
+        soundNotifications.add("/sound/messageNotification/Point.WAV");
+        soundNotifications.add("/sound/messageNotification/Two.WAV");
+        soundNotifications.add("/sound/messageNotification/PullUp.WAV");
+        soundNotifications.add("/sound/messageNotification/Doing.WAV");
+        soundNotifications.add("/sound/messageNotification/Fucked.WAV");
+        soundNotifications.add("/sound/messageNotification/Tool.WAV");
+        soundNotifications.add("/sound/messageNotification/Challenges.WAV");
+        soundNotifications.add("/sound/messageNotification/Pants.WAV");
     }
 
     //double checked locking volatile
