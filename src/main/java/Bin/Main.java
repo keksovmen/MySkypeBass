@@ -18,10 +18,14 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * My interpretation of the whole system
@@ -39,6 +43,14 @@ public class Main implements ErrorHandler {
     private final AudioClient audioClient;
     private final Call callDialog;
 
+    /**
+     * Needs for single purpose
+     * May fix glitches in sound
+     * But need tests
+     */
+
+    private final Executor executor;
+
     private Main() {
         AbstractDataPackagePool.init(new DataPackagePool());
 
@@ -47,6 +59,7 @@ public class Main implements ErrorHandler {
         callDialog = new Call();
         actionsBox = new ActionsBox();
         controller = new ClientController(this);
+        executor = Executors.newSingleThreadExecutor();
 
         initialInitForActions();
         EventQueue.invokeLater(() -> {
@@ -132,8 +145,7 @@ public class Main implements ErrorHandler {
                     return true;
                 }
                 return false;
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
                 server = null;
                 return null;
@@ -215,10 +227,35 @@ public class Main implements ErrorHandler {
     private Consumer<AbstractDataPackage> showMessage() {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_MESSAGE)) {
-                mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), baseDataPackage.getDataAsString());
-                audioClient.playMessageSound();
+                String message = baseDataPackage.getDataAsString();
+                int index = retrieveMessageMeta(message);
+                if (index != -1) {
+                    audioClient.playIndexedMessageSound(index);
+                } else {
+                    audioClient.playRandomMessageSound();
+                }
+                mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), message);
             }
         };
+    }
+
+    /**
+     * Parse incoming message string
+     * Tries to find <$[0-9]+?>
+     * And get those digits for the index
+     *
+     * @param message to parse
+     * @return -1 in case if there is no such thing otherwise appropriate value
+     */
+
+    private static int retrieveMessageMeta(String message) {
+        Pattern pattern = Pattern.compile("<\\$\\d+?>");
+        Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            String rawData = matcher.group();
+            return Integer.valueOf(rawData.replaceAll("(<\\$)|(>)", ""));
+        }
+        return -1;
     }
 
     /**
@@ -424,32 +461,18 @@ public class Main implements ErrorHandler {
 
     /**
      * Uses only for AudioCapture class
-     * Calls sleep for only 1 purpose
-     * when server get ruined it start errorCase() on client reader and writer
-     * so it provoke double errorCase on client side
-     * but if you will wait writer then will know that the program had
-     * finished properly
      *
      * @return action for writing sound data
      */
 
     private Consumer<byte[]> sendSoundAction() {
-        return bytes -> {
+        return bytes -> executor.execute(() -> {
             try {
                 controller.getWriter().writeSound(controller.getMe().getId(), bytes);
             } catch (IOException e) {
                 e.printStackTrace();
-                try {
-                    /*
-                    Make thread with audio capture stop because
-                    if the server ruins reader will handle ruins
-                     */
-                    Thread.sleep(1000);
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                }
             }
-        };
+        });
     }
 
     /**
@@ -457,7 +480,7 @@ public class Main implements ErrorHandler {
      * Handles all events corresponding to sound
      * It adds new sound lines and remove already existed
      * and stop a conversation
-     *
+     * <p>
      * Also clears all existed packages
      *
      * @return ready to be registered handler

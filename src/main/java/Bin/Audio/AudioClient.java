@@ -35,8 +35,6 @@ public class AudioClient implements ErrorHandler {
     private final Map<Integer, SourceDataLine> mainAudio;
     private TargetDataLine targetDataLine;
 
-    private byte[] micCaptureData;
-
     /**
      * Defines ability to use it
      */
@@ -300,16 +298,12 @@ public class AudioClient implements ErrorHandler {
      */
 
     byte[] captureAudio() {
-        if (micCaptureData == null && mic) {
-            micCaptureData = new byte[CAPTURE_SIZE_MAIN];
-        }
-//        byte[] data = null;
+        byte[] data = null;
         if (mic) {
-//            data = new byte[CAPTURE_SIZE_MAIN];
-//            targetDataLine.read(data, 0, data.length);
-            targetDataLine.read(micCaptureData, 0, micCaptureData.length);
+            data = new byte[CAPTURE_SIZE_MAIN];
+            targetDataLine.read(data, 0, data.length);
         }
-        return micCaptureData;
+        return data;
     }
 
 
@@ -356,12 +350,42 @@ public class AudioClient implements ErrorHandler {
 
     /**
      * STARTS NEW THREAD
-     * Play message notification
+     * Plays random message notification
      * each time opens new line and select random sound
      * can't be stopped until the end of sound
      */
 
-    public void playMessageSound() {
+    public void playRandomMessageSound() {
+        playMessageSound(random.nextInt(soundNotifications.size()));
+    }
+
+    /**
+     * STARTS NEW THREAD
+     * Plays particular message notification
+     * each time opens new line and select random sound
+     * can't be stopped until the end of sound
+     *
+     * @param indexOfTrack track id in soundNotifications
+     */
+
+    public void playIndexedMessageSound(int indexOfTrack) {
+        if (indexOfTrack < 0 || indexOfTrack > soundNotifications.size()) {
+            playRandomMessageSound();
+        } else {
+            playMessageSound(indexOfTrack);
+        }
+    }
+
+    /**
+     * STARTS NEW THREAD
+     * Play message notification
+     * each time opens new line and select random sound
+     * can't be stopped until the end of sound
+     *
+     * @param idOfTrack track id in soundNotifications
+     */
+
+    protected void playMessageSound(int idOfTrack) {
         new Thread(() -> {
             try {
                 //obtain a random sound for notification
@@ -369,7 +393,7 @@ public class AudioClient implements ErrorHandler {
 
                 BufferedInputStream inputStream = new BufferedInputStream(
                         Main.class.getResourceAsStream(soundNotifications.get(
-                                random.nextInt(soundNotifications.size()))));
+                                idOfTrack)));
 
                 //open source data line in default mixer
                 SourceDataLine sourceDataLine = getFromInput(inputStream);

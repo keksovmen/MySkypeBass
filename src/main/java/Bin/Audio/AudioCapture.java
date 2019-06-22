@@ -1,5 +1,6 @@
 package Bin.Audio;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 /**
@@ -34,6 +35,19 @@ class AudioCapture {
     private volatile double multiplier = 1d;
 
     /**
+     * Action for what to do with the sound
+     * just send to a server
+     */
+
+    private Consumer<byte[]> sendSound;
+
+    /**
+     * For cache purposes
+     */
+
+    private AudioClient audioClient;
+
+    /**
      * Changes mute state to an opposite
      * notify thread in case of it was stopped before
      *
@@ -49,13 +63,11 @@ class AudioCapture {
     /**
      * All data processing with data must be here
      *
-     * @param sendSound action for what to do with the sound
-     *                  just send to a server
      * @return false if can't capture audio, true otherwise
      */
 
-    private boolean process(final Consumer<byte[]> sendSound) {
-        byte[] audio = AudioClient.getInstance().captureAudio();
+    private boolean process() {
+        byte[] audio = audioClient.captureAudio();
         if (audio == null) {
             return false;
         }
@@ -81,6 +93,8 @@ class AudioCapture {
         if (started) {
             return;
         }
+        audioClient =  AudioClient.getInstance();
+        this.sendSound = sendSound;
         started = true;
         work = true;
         mute = false;
@@ -95,7 +109,7 @@ class AudioCapture {
                         }
                     }
                 }
-                if (!process(sendSound)) {
+                if (!process()) {
                     close();
                 }
             }

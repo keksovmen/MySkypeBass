@@ -22,7 +22,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      * will display as random tokens
      */
 
-    private static final Charset charset = StandardCharsets.UTF_16;
+    private static final Charset charset = StandardCharsets.UTF_8;
 
     /**
      * Header with meta info

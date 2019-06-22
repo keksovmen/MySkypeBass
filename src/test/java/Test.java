@@ -1,3 +1,4 @@
+import Bin.Main;
 import Bin.Networking.Server;
 
 import java.io.IOException;
@@ -5,8 +6,8 @@ import java.io.IOException;
 public class Test {
 
     public static void main(String[] args) throws IOException {
-        Server server = new Server(8188, 20_000, 16);
-        server.start("Server");
+//        Server server = new Server(8188, 20_000, 16);
+//        server.start("Server");
 
 //        Main.main(args);
 

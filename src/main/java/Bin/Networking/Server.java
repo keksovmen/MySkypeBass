@@ -109,7 +109,7 @@ public class Server implements Starting {
         audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
         id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = Executors.newFixedThreadPool(3);
+        executor = Executors.newFixedThreadPool(2);
     }
 
     /**
@@ -125,7 +125,7 @@ public class Server implements Starting {
         audioFormat = new AudioFormat(Integer.parseInt(sampleRate), Integer.parseInt(sampleSizeInBits), 1, true, true);
         id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = Executors.newFixedThreadPool(3);
+        executor = Executors.newFixedThreadPool(2);
 
     }
 

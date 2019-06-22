@@ -47,7 +47,7 @@ class ConferencePane implements ErrorHandler {
 
     ConferencePane(ConferencePaneActions actions) {
         this.actions = actions;
-        volume.setModel(new SpinnerNumberModel(1d, 1d, 10d, 0.05d));
+        volume.setModel(new SpinnerNumberModel(1d, 1d, 20d, 0.05d));
 
         conferenceMembers = new HashMap<>();
 
