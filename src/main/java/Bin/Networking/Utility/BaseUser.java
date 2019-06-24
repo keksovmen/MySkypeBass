@@ -44,6 +44,7 @@ public class BaseUser {
     /**
      * DO NOT OVVERIDE
      * MANY FUNCTIONS EXPECT DATA IN THIS FORMAT
+     *
      * @return string representation
      */
 
@@ -69,11 +70,12 @@ public class BaseUser {
 
     /**
      * Static factory from string
+     *
      * @param data in format baseUser.toString()
      * @return new user
      */
 
-    public static BaseUser parse(String data){
+    public static BaseUser parse(String data) {
         Matcher matcher = parser.matcher(data);
         matcher.find();
         String name = matcher.group(1);
@@ -83,6 +85,7 @@ public class BaseUser {
 
     /**
      * Static factory but for more users
+     *
      * @param data same format but with \n after each toString()
      * @return array of new users
      */

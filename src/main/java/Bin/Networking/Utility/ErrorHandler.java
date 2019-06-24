@@ -16,7 +16,6 @@ public interface ErrorHandler {
     void errorCase();
 
     /**
-     *
      * @return null or others who can call errorCase()
      */
 
@@ -26,13 +25,13 @@ public interface ErrorHandler {
      * MUST CALL ANY TIME WHEN getNext return not null
      */
 
-    default void iterate(){
+    default void iterate() {
         ErrorHandler[] errorHandlers = getNext();
-        if (errorHandlers == null){
+        if (errorHandlers == null) {
             return;
         }
         for (ErrorHandler errorHandler : errorHandlers) {
-            if (errorHandler == null){
+            if (errorHandler == null) {
                 continue;
             }
             errorHandler.errorCase();

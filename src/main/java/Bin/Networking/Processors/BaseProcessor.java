@@ -9,19 +9,19 @@ import java.util.function.Consumer;
 /**
  * Base processor
  * Implements simple actions
- *
+ * <p>
  * Not thread safe
  */
 
-public abstract class BaseProcessor implements Processable{
+public abstract class BaseProcessor implements Processable {
 
     /**
      * Where all listeners are live
      */
 
-    protected final List<Consumer<AbstractDataPackage>> listeners;
+    final List<Consumer<AbstractDataPackage>> listeners;
 
-    protected BaseProcessor() {
+    BaseProcessor() {
         listeners = new ArrayList<>();
     }
 

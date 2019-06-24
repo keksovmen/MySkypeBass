@@ -66,8 +66,8 @@ class AudioFormatStats extends JDialog {
         a48000RadioButton.addActionListener(actionListener);
 
         buttonOK.addActionListener(e -> {
-                actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
-                onOK();
+            actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
+            onOK();
         });
 
         buttonCancel.addActionListener(e -> onCancel());

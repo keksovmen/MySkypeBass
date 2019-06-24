@@ -38,7 +38,7 @@ class CallDialog extends JDialog implements ErrorHandler {
      * register listeners
      * And don't show the dialog for this purpose here is a method
      *
-     * @param actions which you have
+     * @param actions    which you have
      * @param relativeTo to center showing
      */
 
@@ -72,14 +72,14 @@ class CallDialog extends JDialog implements ErrorHandler {
         actions.updateDenyCall(onSomethingCall(actions.denyCall()));
     }
 
-    private Consumer<BaseUser[]> onAcceptCall(Consumer<BaseUser[]> onAcceptCall){
+    private Consumer<BaseUser[]> onAcceptCall(Consumer<BaseUser[]> onAcceptCall) {
         return users -> {
             onAcceptCall.accept(users);
             dispose();
         };
     }
 
-    private Consumer<BaseUser> onSomethingCall(Consumer<BaseUser> onSomethingCall){
+    private Consumer<BaseUser> onSomethingCall(Consumer<BaseUser> onSomethingCall) {
         return users -> {
             onSomethingCall.accept(users);
             dispose();
@@ -123,6 +123,7 @@ class CallDialog extends JDialog implements ErrorHandler {
      * Call when you call some one
      * it make invisible unnecessarily gui elements
      * and show what you can see
+     *
      * @param who you are calling
      */
 
@@ -146,7 +147,7 @@ class CallDialog extends JDialog implements ErrorHandler {
      * Call when some one called you
      * Same purpose as showOutcoming()
      *
-     * @param fromWho who calls you
+     * @param fromWho          who calls you
      * @param conversationInfo and conversation with him
      */
 

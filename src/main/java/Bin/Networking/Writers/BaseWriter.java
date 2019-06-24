@@ -21,19 +21,19 @@ public abstract class BaseWriter {
      * Where to write
      */
 
-    protected final DataOutputStream outputStream;
+    final DataOutputStream outputStream;
 
     /**
      * Might be null depends on your realisation
-     *
+     * <p>
      * Basically handles cases when network get ruined
      */
 
-    protected ErrorHandler mainErrorHandler;
+    ErrorHandler mainErrorHandler;
 
     /**
      * Instruction your handlers reaction depends on its values
-     *
+     * <p>
      * Must be numerated
      * This can't be 2 identical id
      */
@@ -72,6 +72,7 @@ public abstract class BaseWriter {
 
         /**
          * Static factory
+         *
          * @param code unique id
          * @return CODE for this id or null
          */
@@ -115,31 +116,34 @@ public abstract class BaseWriter {
 
     /**
      * You can use only write() method
+     *
      * @param outputStream where to write
      */
 
-    public BaseWriter(OutputStream outputStream) {
+    BaseWriter(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
     }
 
     /**
      * Can use bot write() and writeA() methods
-     * @param outputStream where to write
+     *
+     * @param outputStream     where to write
      * @param mainErrorHandler handler in case of error not null
      */
 
-    public BaseWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
+    BaseWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
         this.mainErrorHandler = mainErrorHandler;
     }
 
     /**
      * Thread safe method writes given package
+     *
      * @param dataPackage to be written
      * @throws IOException if network failing occurs
      */
 
-    protected synchronized void write(AbstractDataPackage dataPackage) throws IOException {
+    synchronized void write(AbstractDataPackage dataPackage) throws IOException {
         outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
         if (dataPackage.getHeader().getLength() != 0) {
             outputStream.write(dataPackage.getData());
@@ -151,10 +155,11 @@ public abstract class BaseWriter {
 
     /**
      * Thread safe method writes given package
+     *
      * @param dataPackage to be written
      */
 
-    protected synchronized void writeA(AbstractDataPackage dataPackage){
+    synchronized void writeA(AbstractDataPackage dataPackage) {
         try {
             outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
             if (dataPackage.getHeader().getLength() != 0) {
@@ -162,7 +167,7 @@ public abstract class BaseWriter {
             }
             outputStream.flush();
             AbstractDataPackagePool.returnPackage(dataPackage);
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             mainErrorHandler.errorCase();
         }

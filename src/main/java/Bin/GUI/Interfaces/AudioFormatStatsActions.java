@@ -7,6 +7,7 @@ public interface AudioFormatStatsActions {
     /**
      * Function for creating a server
      * String[0..] values @see serer create methods
+     *
      * @return not null action
      * @throws IllegalStateException if it is null
      */

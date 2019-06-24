@@ -8,6 +8,7 @@ public interface SecondSkinActions extends CallDialogActions, ConferencePaneActi
 
     /**
      * Action for disconnecting
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */
@@ -16,6 +17,7 @@ public interface SecondSkinActions extends CallDialogActions, ConferencePaneActi
 
     /**
      * Action for refresh call of users
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */
@@ -23,11 +25,11 @@ public interface SecondSkinActions extends CallDialogActions, ConferencePaneActi
     Runnable callForUsers() throws IllegalStateException;
 
 
-
 //    BiConsumer<Integer, String> sendMessage() throws NotInitialisedException;
 
     /**
      * Action for call some one
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */

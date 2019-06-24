@@ -1,15 +1,12 @@
 package Bin.Networking.Writers;
 
-import Bin.Main;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Server;
 import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;

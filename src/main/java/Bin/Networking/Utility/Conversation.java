@@ -2,7 +2,6 @@ package Bin.Networking.Utility;
 
 
 import Bin.Networking.Protocol.AbstractDataPackage;
-import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.ServerController;
 
 import java.io.IOException;
@@ -91,10 +90,10 @@ public class Conversation {
      * Default method for sending a message to every one in this conf
      *
      * @param dataPackage contains message data
-     * @param from who sent it
+     * @param from        who sent it
      */
 
-    public void sendMessage(AbstractDataPackage dataPackage, int from){
+    public void sendMessage(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from) {
                 ServerController controller = user.getController();

@@ -1,16 +1,17 @@
 package Bin.Networking.Readers;
 
 import Bin.Networking.Processors.Processable;
-import Bin.Networking.Protocol.*;
+import Bin.Networking.Protocol.AbstractDataPackage;
+import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Protocol.AbstractHeader;
 import Bin.Networking.Server;
-import Bin.Networking.Utility.Starting;
 import Bin.Networking.Utility.ErrorHandler;
+import Bin.Networking.Utility.Starting;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
 
 /**
  * Base reader for all the readers
@@ -33,20 +34,20 @@ public class BaseReader implements Starting, ErrorHandler {
      * DataInputStream because it can readFully()
      */
 
-    protected final DataInputStream inputStream;
+    final DataInputStream inputStream;
 
     /**
      * Define live of the thread
      */
 
-    protected volatile boolean work;
+    volatile boolean work;
 
     /**
      * Just put here your dataPackages
      * It must handle them
      */
 
-    protected final Processable handler;
+    final Processable handler;
 
     /**
      * If you use second constructor you can
@@ -55,10 +56,11 @@ public class BaseReader implements Starting, ErrorHandler {
      * shutdown of the system
      */
 
-    protected ErrorHandler mainErrorHandler;
+    ErrorHandler mainErrorHandler;
 
     /**
      * Using this constructor allows usage only of read() method
+     *
      * @param inputStream which you will read
      */
 
@@ -70,7 +72,8 @@ public class BaseReader implements Starting, ErrorHandler {
 
     /**
      * Allow usage of both read() readA() methods
-     * @param inputStream which you will read
+     *
+     * @param inputStream      which you will read
      * @param mainErrorHandler handler calls when exception in networking occurs
      */
 
@@ -86,6 +89,7 @@ public class BaseReader implements Starting, ErrorHandler {
      * Firstly read INITIAL_SIZE of the package
      * then define is there any length
      * and if so read body of the package
+     *
      * @return package with at least header info
      * @throws IOException if networking fails
      */
@@ -111,15 +115,16 @@ public class BaseReader implements Starting, ErrorHandler {
 
     /**
      * Improved version that can immediately handle exception
+     *
      * @return package with at least header info
      */
 
-    public AbstractDataPackage readA(){
+    public AbstractDataPackage readA() {
         try {
             return read();
         } catch (IOException e) {
             e.printStackTrace();
-            if (work){
+            if (work) {
                 mainErrorHandler.errorCase();
             }
             return null;
@@ -130,24 +135,25 @@ public class BaseReader implements Starting, ErrorHandler {
      * Your main action in thread
      * must contain on of the read methods
      * and then do something with the data
-     * 
+     * <p>
      * Problem! it doesn't throw an Exception
      * and if you use read() instead
      * it will be the only place where you can handle it
      */
 
-    protected void process(){
+    void process() {
         handler.process(readA());
     }
 
     /**
      * STARTS NEW THREAD
      * That will handle reading
+     *
      * @param threadName name for debugging
      */
 
     @Override
-    public void start(String threadName){
+    public void start(String threadName) {
         new Thread(() -> {
             while (work) {
                 process();

@@ -35,7 +35,7 @@ class ThirdSkin {
 
     private final int who;
 
-    private static SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
 
     /**
      * Default constructor init

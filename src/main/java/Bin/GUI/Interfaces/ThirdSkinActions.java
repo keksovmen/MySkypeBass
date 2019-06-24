@@ -6,6 +6,7 @@ public interface ThirdSkinActions {
 
     /**
      * Action for sending message, Integer is ID to write who
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */
@@ -14,6 +15,7 @@ public interface ThirdSkinActions {
 
     /**
      * Action for closing a tab with who you talk
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */

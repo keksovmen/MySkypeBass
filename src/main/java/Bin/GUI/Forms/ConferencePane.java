@@ -134,11 +134,11 @@ class ConferencePane implements ErrorHandler {
         }
     }
 
-    void showMessage(String message, String from){
+    void showMessage(String message, String from) {
         displayPlace.append(from + " (" + ThirdSkin.getTime() + "): " + message + "\n");
     }
 
-    private void sendMessage(String message){
+    private void sendMessage(String message) {
         if (message.length() == 0) {
             return;
         }
@@ -146,7 +146,7 @@ class ConferencePane implements ErrorHandler {
         actions.sendMessageToConference().accept(message);
     }
 
-    private String getMessage(){
+    private String getMessage() {
         String text = sender.getText();
         sender.setText("");
         return text;

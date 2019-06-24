@@ -12,21 +12,21 @@ public abstract class AbstractHeader {
      * ATTENTION
      * when extend your own header must in static {}
      * define it's value
-     *
+     * <p>
      * Size of header in bytes
      */
 
-    protected static int INITIAL_SIZE;
+    static int INITIAL_SIZE;
 
     /**
      * ATTENTION
      * when extend your own header must in static {}
      * define it's value
-     *
+     * <p>
      * Max possible length for data
      */
 
-    protected static int MAX_LENGTH;
+    static int MAX_LENGTH;
 
     AbstractHeader() {
     }

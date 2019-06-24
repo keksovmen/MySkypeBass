@@ -147,7 +147,7 @@ public class AudioClient implements ErrorHandler {
                 String bufferSize = properties.getProperty("bufferSize");
                 if (bufferSize != null && bufferSize.length() != 0) {
                     int propValue = Integer.valueOf(bufferSize);
-                    if (propValue < sampleRate * sampleSizeInButs / 8){
+                    if (propValue < sampleRate * sampleSizeInButs / 8) {
                         value = propValue;
                     }
                 }
@@ -161,11 +161,6 @@ public class AudioClient implements ErrorHandler {
         }
         CAPTURE_SIZE_MAIN = value;
     }
-
-//    public static boolean isFormatSupported(AudioFormat audioFormat){
-//        return AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat)) &
-//                AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
-//    }
 
     /**
      * For more flexibility but not implemented the way i thought
@@ -252,8 +247,12 @@ public class AudioClient implements ErrorHandler {
      */
 
     private boolean obtainTargetLine() {
-        if (!mic) return false;
-        if (targetDataLine != null && targetDataLine.isOpen()) return true;
+        if (!mic) {
+            return false;
+        }
+        if (targetDataLine != null && targetDataLine.isOpen()) {
+            return true;
+        }
         try {
             targetDataLine = (TargetDataLine) obtainAndOpen(TargetDataLine.class);
         } catch (LineUnavailableException e) {
@@ -312,13 +311,14 @@ public class AudioClient implements ErrorHandler {
 
     /**
      * Gets volume control
+     *
      * @param id for who
-     * @return volume control
+     * @return volume control null if speaker can't be used
      */
 
     public FloatControl getSettings(int id) {
         SourceDataLine sourceDataLine = mainAudio.get(id);
-        if (sourceDataLine == null){
+        if (sourceDataLine == null) {
             return null;
         }
         return (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
@@ -395,15 +395,21 @@ public class AudioClient implements ErrorHandler {
      * @param idOfTrack track id in soundNotifications
      */
 
-     void playMessageSound(int idOfTrack) {
+    void playMessageSound(int idOfTrack) {
         new Thread(() -> {
             try {
                 //obtain a random sound for notification
                 if (soundNotifications == null) return;
 
-                BufferedInputStream inputStream = new BufferedInputStream(
-                        Main.class.getResourceAsStream(soundNotifications.get(
-                                idOfTrack)));
+                InputStream resourceAsStream = Main.class.getResourceAsStream(soundNotifications.get(idOfTrack));
+                /* Drop all computation if there is no such resource
+                 * Needs when messed up with a name
+                 */
+                if (resourceAsStream == null) {
+                    return;
+                }
+                BufferedInputStream inputStream = new BufferedInputStream(resourceAsStream);
+
 
                 //open source data line in default mixer
                 SourceDataLine sourceDataLine = getFromInput(inputStream);

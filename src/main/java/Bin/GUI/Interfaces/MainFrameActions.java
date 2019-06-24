@@ -6,6 +6,7 @@ public interface MainFrameActions extends FirstSkinActions, SecondSkinActions {
 
     /**
      * Action for getting your name and id, mean baseUser.toString()
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */

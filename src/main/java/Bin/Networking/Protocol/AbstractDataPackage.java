@@ -11,10 +11,7 @@ import Bin.Networking.Writers.BaseWriter;
 public abstract class AbstractDataPackage {
 
 
-
-
 //    protected AbstractHeader header;
-
 
 
 //    protected byte[] data;

@@ -27,8 +27,9 @@ public class ClientWriter extends BaseWriter {
 
     /**
      * Might accept to as WHO.CONFERENCE.getId()
-     * @param from who writes
-     * @param to who gonna receive it
+     *
+     * @param from    who writes
+     * @param to      who gonna receive it
      * @param message what you typed
      */
 

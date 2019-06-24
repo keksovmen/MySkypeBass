@@ -34,12 +34,12 @@ public class Main implements ErrorHandler {
 
 
     private final ActionsBox actionsBox;
-    private MainFrame mainFrame;
     private final ClientController controller;
-    private Server server;
     private final Map<Integer, BaseUser> users;
     private final AudioClient audioClient;
     private final Call callDialog;
+    private MainFrame mainFrame;
+    private Server server;
 
     private Main() {
         AbstractDataPackagePool.init(new DataPackagePool());
@@ -58,6 +58,31 @@ public class Main implements ErrorHandler {
             controller.getProcessor().addListener(callHandler());
             controller.getProcessor().addListener(audioHandler());
         });
+    }
+
+    public static void main(String[] args) {
+//        System.setProperty("java.util.logging.config.file", "src\\main\\resources\\properties\\logging.properties");
+//        LogManager.getLogManager().readConfiguration();
+        new Main();
+    }
+
+    /**
+     * Parse incoming message string
+     * Tries to find <$[0-9]+?>
+     * And get those digits for the index
+     *
+     * @param message to parse
+     * @return -1 in case if there is no such thing otherwise appropriate value
+     */
+
+    private static int retrieveMessageMeta(String message) {
+        Pattern pattern = Pattern.compile("<\\$\\d+?>");
+        Matcher matcher = pattern.matcher(message);
+        if (matcher.find()) {
+            String rawData = matcher.group();
+            return Integer.valueOf(rawData.replaceAll("(<\\$)|(>)", ""));
+        }
+        return -1;
     }
 
     /**
@@ -82,12 +107,6 @@ public class Main implements ErrorHandler {
 
     }
 
-    public static void main(String[] args) {
-//        System.setProperty("java.util.logging.config.file", "src\\main\\resources\\properties\\logging.properties");
-//        LogManager.getLogManager().readConfiguration();
-        new Main();
-    }
-
     /**
      * Tries to connect uses on First skin
      * String[0] name
@@ -103,15 +122,15 @@ public class Main implements ErrorHandler {
     private Function<String[], Boolean> connect() {
         return strings -> {
             boolean connect = controller.connect(strings[0], strings[1], strings[2]);
-            if (connect){
+            if (connect) {
                 boolean speaker = audioClient.isSpeaker();
                 boolean mic = audioClient.isMic();
                 if (!(speaker && mic)) {
                     String s = "";
-                    if (!speaker){
+                    if (!speaker) {
                         s += "Speaker can't read the format\n";
                     }
-                    if (!mic){
+                    if (!mic) {
                         s += "Mic can't capture the format\n";
                     }
                     s += audioClient.getAudioFormat().toString();
@@ -241,25 +260,6 @@ public class Main implements ErrorHandler {
                 }
             }
         };
-    }
-
-    /**
-     * Parse incoming message string
-     * Tries to find <$[0-9]+?>
-     * And get those digits for the index
-     *
-     * @param message to parse
-     * @return -1 in case if there is no such thing otherwise appropriate value
-     */
-
-    private static int retrieveMessageMeta(String message) {
-        Pattern pattern = Pattern.compile("<\\$\\d+?>");
-        Matcher matcher = pattern.matcher(message);
-        if (matcher.find()) {
-            String rawData = matcher.group();
-            return Integer.valueOf(rawData.replaceAll("(<\\$)|(>)", ""));
-        }
-        return -1;
     }
 
     /**

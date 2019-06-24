@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
  * Also return to home the packages
  */
 
-public class ClientProcessor extends BaseProcessor{
+public class ClientProcessor extends BaseProcessor {
 
     /**
      * Instead of its own thread you have

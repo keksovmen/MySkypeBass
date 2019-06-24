@@ -174,7 +174,7 @@ public class Server implements Starting {
      * @return unique id for a user
      */
 
-    protected int getIdAndIncrement() {
+    int getIdAndIncrement() {
         return id.getAndIncrement();
     }
 
@@ -185,7 +185,7 @@ public class Server implements Starting {
      * @param serverUser to add
      */
 
-    protected synchronized void addUser(ServerUser serverUser) {
+    synchronized void addUser(ServerUser serverUser) {
         users.put(serverUser.getId(), serverUser);
 //        logger.fine("Added - " + serverUser + "\nCONTAINS " + users.toString());
         sendUpdateUsers();
@@ -199,7 +199,7 @@ public class Server implements Starting {
      * @param id of user to remove
      */
 
-    protected synchronized void removeUser(int id) {
+    synchronized void removeUser(int id) {
         users.remove(id);
 //        logger.fine("Removed - " + id + "\nCONTAINS " + users.toString());
         sendUpdateUsers();
@@ -253,7 +253,7 @@ public class Server implements Starting {
      * Update each user with new users
      */
 
-    synchronized void sendUpdateUsers() {
+    private synchronized void sendUpdateUsers() {
         final String users = getUsers(-1);//-1 isn't possible value so should be everyone
         this.users.values().forEach(serverUser -> executor.execute(() ->
                 serverUser.getController().getWriter().writeUsers(serverUser.getId(),

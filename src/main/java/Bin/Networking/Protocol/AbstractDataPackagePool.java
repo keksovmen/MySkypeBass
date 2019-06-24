@@ -4,7 +4,7 @@ package Bin.Networking.Protocol;
  * Basic object pool
  * For increase performance only
  * And just wanted to try it
- *
+ * <p>
  * Use only static methods
  * Firstly must be initialised
  */
@@ -19,11 +19,12 @@ public abstract class AbstractDataPackagePool {
 
     /**
      * Must call it before start working with it
+     *
      * @param poolToSet instance which will define methods
      */
 
-    public static void init(AbstractDataPackagePool poolToSet){
-        if (pool != null){
+    public static void init(AbstractDataPackagePool poolToSet) {
+        if (pool != null) {
             throw new IllegalStateException("Already initialised with " + pool);
         }
         pool = poolToSet;
@@ -31,19 +32,21 @@ public abstract class AbstractDataPackagePool {
 
     /**
      * Use this method when you need a package
+     *
      * @return ready to use data package
      */
 
-    public static AbstractDataPackage getPackage(){
+    public static AbstractDataPackage getPackage() {
         return pool.getPackageInst();
     }
 
     /**
      * Call when you need to return package to the home
+     *
      * @param dataPackage to be returned
      */
 
-    public static void returnPackage(AbstractDataPackage dataPackage){
+    public static void returnPackage(AbstractDataPackage dataPackage) {
         pool.returnPackageInst(dataPackage);
     }
 
@@ -51,12 +54,13 @@ public abstract class AbstractDataPackagePool {
      * Call when you have many instance of package in storage
      */
 
-    public static void clearStorage(){
+    public static void clearStorage() {
         pool.clearInst();
     }
 
     /**
      * Ovveride it on your implementation
+     *
      * @return package ready to use
      */
 
@@ -64,6 +68,7 @@ public abstract class AbstractDataPackagePool {
 
     /**
      * Ovveride it on your implementation
+     *
      * @param dataPackage to be returned
      */
 

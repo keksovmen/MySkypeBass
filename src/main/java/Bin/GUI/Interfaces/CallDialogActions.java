@@ -8,6 +8,7 @@ public interface CallDialogActions {
 
     /**
      * Action for cancel a call
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */
@@ -16,6 +17,7 @@ public interface CallDialogActions {
 
     /**
      * Action for accept a call
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */
@@ -24,6 +26,7 @@ public interface CallDialogActions {
 
     /**
      * Action for deny a call
+     *
      * @return not null action
      * @throws IllegalStateException if return is null
      */

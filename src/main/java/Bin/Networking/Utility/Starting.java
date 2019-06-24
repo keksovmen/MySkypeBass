@@ -8,6 +8,7 @@ public interface Starting {
 
     /**
      * Starts a new thread
+     *
      * @param name with given name
      */
     void start(String name);

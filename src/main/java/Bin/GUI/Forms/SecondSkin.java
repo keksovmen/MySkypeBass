@@ -352,7 +352,7 @@ class SecondSkin implements ErrorHandler {
         model.removeAllElements();
     }
 
-    void setNameAndId(String nameAndId){
+    void setNameAndId(String nameAndId) {
         labelMe.setText(nameAndId);
     }
 
@@ -360,10 +360,10 @@ class SecondSkin implements ErrorHandler {
      * Method for displaying message from conference
      *
      * @param message plain text
-     * @param from BaseUser.toString()
+     * @param from    BaseUser.toString()
      */
 
-    void showConferenceMessage(String message, String from){
+    void showConferenceMessage(String message, String from) {
         conferencePane.showMessage(message, from);
         colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
     }

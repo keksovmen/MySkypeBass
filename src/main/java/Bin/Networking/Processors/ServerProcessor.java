@@ -16,7 +16,7 @@ public class ServerProcessor extends BaseProcessor {
 
     @Override
     public void process(AbstractDataPackage dataPackage) {
-        if (dataPackage != null){
+        if (dataPackage != null) {
             listeners.forEach(abstractDataPackageConsumer -> abstractDataPackageConsumer.accept(dataPackage));
             AbstractDataPackagePool.returnPackage(dataPackage);
         }

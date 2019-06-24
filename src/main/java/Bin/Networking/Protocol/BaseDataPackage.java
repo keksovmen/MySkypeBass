@@ -28,7 +28,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      * Header with meta info
      */
 
-    private AbstractHeader header;
+    private final AbstractHeader header;
 
     /**
      * Body with data might be null
@@ -145,6 +145,7 @@ public class BaseDataPackage extends AbstractDataPackage {
 
     @Override
     public String getDataAsString() {
+
         return data == null ? "" : new String(data, charset);
     }
 
