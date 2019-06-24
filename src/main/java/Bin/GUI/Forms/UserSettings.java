@@ -16,11 +16,14 @@ class UserSettings {
     UserSettings(String name, FloatControl control) {
         this.name.setText(name);
 
-        volumeLevel.setMaximum((int) control.getMaximum());
-        volumeLevel.setMinimum((int) control.getMinimum());
-        volumeLevel.setPaintTicks(true);
+        /*Checks if speaker is able to give you a volume setting*/
+        if (control != null) {
+            volumeLevel.setMaximum((int) control.getMaximum());
+            volumeLevel.setMinimum((int) control.getMinimum());
+            volumeLevel.setPaintTicks(true);
 
-        volumeLevel.addChangeListener(e -> control.setValue(volumeLevel.getValue()));
+            volumeLevel.addChangeListener(e -> control.setValue(volumeLevel.getValue()));
+        }
 
     }
 

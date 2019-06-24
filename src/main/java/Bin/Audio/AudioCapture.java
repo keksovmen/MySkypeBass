@@ -158,6 +158,7 @@ class AudioCapture {
         started = false;
         service.shutdownNow();
         service = null;
+        multiplier = 1d;
     }
 
     /**

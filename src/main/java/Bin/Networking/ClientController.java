@@ -45,58 +45,53 @@ public class ClientController implements ErrorHandler {
      * @param port     to connect
      * @param name     your nickname to others
      * @return true if audio format is supported false otherwise
-     * @throws IOException if server doesn't exist
      */
 
-    public boolean connect(final String name, final String hostName, final int port) throws IOException {
+    public boolean connect(final String name, final String hostName, final int port) {
         socket = new Socket();
         try {
             socket.connect(new InetSocketAddress(hostName, port), 7_000);
             writer = new ClientWriter(socket.getOutputStream(), mainErrorHandler);
             reader = new BaseReader(socket.getInputStream(), processor, mainErrorHandler);
+            authenticate(name);
         } catch (IOException e) {
             e.printStackTrace();
-//            mainErrorHandler.errorCase();
-//            return null;
-            socket.close();
-            throw e;
+            try {
+                socket.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            return false;
         }
-        return authenticate(name);
+        return true;
     }
 
-    public boolean connect(final String name, final String hostName, final String port) throws IOException {
+    public boolean connect(final String name, final String hostName, final String port) {
         return connect(name, hostName, Integer.parseInt(port));
     }
 
     /**
      * Trying to authenticate first writes your name
      * second read audio format and checks it if supported
+     * send can use speaker or not
      * third creates client user with unique id from the server
      * then starts a new thread for readings from socket
      *
      * @param name your nickname
-     * @return true only if audio format accepted in mic and speakers false otherwise
      */
 
-    private boolean authenticate(String name) {
-        try {
-            writer.writeName(name);
-            AbstractDataPackage read = reader.read();
-            AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
-            //sets audio format and return true only if mic and speaker is set
-            if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
-                writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
-                return false;
-            }
-            writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
-            me = new BaseUser(name, read.getHeader().getTo());
-            AbstractDataPackagePool.returnPackage(read);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+    private void authenticate(String name) throws IOException {
+        writer.writeName(name);
+        AbstractDataPackage read = reader.read();
+        AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
+        //sets audio format and tell the server can speaker play format or not
+        if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
+            writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
         }
+        writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
+        me = new BaseUser(name, read.getHeader().getTo());
+        AbstractDataPackagePool.returnPackage(read);
         reader.start("Client reader");
-        return true;
     }
 
     /**

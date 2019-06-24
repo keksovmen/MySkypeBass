@@ -20,9 +20,17 @@ public class ServerUser extends BaseUser {
 
     private Conversation conversation;
 
+    /**
+     * Need for indicating a possibility to play audio
+     * basically AudioClient speaker field
+     */
+
+    private boolean canHear;
+
     public ServerUser(String name, int id, ServerController controller) {
         super(name, id);
         this.controller = controller;
+        canHear = false;
     }
 
     public ServerController getController() {
@@ -39,6 +47,14 @@ public class ServerUser extends BaseUser {
 
     public synchronized boolean inConv() {
         return conversation != null;
+    }
+
+    public boolean isCanHear() {
+        return canHear;
+    }
+
+    public void setCanHear(boolean canHear) {
+        this.canHear = canHear;
     }
 
     /*

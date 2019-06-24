@@ -43,8 +43,8 @@ public class ServerController implements ErrorHandler {
 
     void start() {
         try {
-            if (authenticate())
-                launch();
+            authenticate();
+            launch();
         } catch (IOException e) {
             e.printStackTrace();
             errorCase();
@@ -60,11 +60,10 @@ public class ServerController implements ErrorHandler {
      * after write all users on server to him
      * and notify all other users
      *
-     * @return true if only audio format is accepted
      * @throws IOException if connection get ruined or disconnected
      */
 
-    private boolean authenticate() throws IOException {
+    private void authenticate() throws IOException {
         AbstractDataPackage dataPackage = reader.read();
         String name = dataPackage.getDataAsString();
         setUser(name);
@@ -74,18 +73,12 @@ public class ServerController implements ErrorHandler {
         writer.writeAudioFormat(id, server.getAudioFormat());
         AbstractDataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();
-        if (dataPackage.getHeader().getCode() != BaseWriter.CODE.SEND_APPROVE) {
-            writer.writeDisconnect(id);
-            errorCase();
-//            disconnect();
-            AbstractDataPackagePool.returnPackage(dataPackage);
-            return false;
+        if (dataPackage.getHeader().getCode() == BaseWriter.CODE.SEND_APPROVE) {
+            me.setCanHear(true);
         }
         AbstractDataPackagePool.returnPackage(dataPackage);
 
         server.addUser(me);
-
-        return true;
     }
 
     private void launch() {

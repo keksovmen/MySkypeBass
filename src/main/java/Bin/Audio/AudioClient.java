@@ -117,7 +117,7 @@ public class AudioClient implements ErrorHandler {
      * Set audio format
      *
      * @param audioFormat to be set
-     * @return true only if mic and speaker are accepted it
+     * @return true only if speaker can play that sound
      */
 
     public boolean setAudioFormat(AudioFormat audioFormat) {
@@ -125,7 +125,7 @@ public class AudioClient implements ErrorHandler {
         defineCaptureSizeMain((int) audioFormat.getSampleRate(), audioFormat.getSampleSizeInBits(), AbstractHeader.getMaxLength());
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
-        return speaker & mic;
+        return speaker;
     }
 
     /**
@@ -137,7 +137,7 @@ public class AudioClient implements ErrorHandler {
      * @param maxPossible      defined by AbstractHeader
      */
 
-    protected void defineCaptureSizeMain(int sampleRate, int sampleSizeInButs, final int maxPossible) {
+    void defineCaptureSizeMain(int sampleRate, int sampleSizeInButs, final int maxPossible) {
         Properties properties = new Properties();
         InputStream resourceAsStream = Main.class.getResourceAsStream("/properties/Audio.properties");
         int value = (sampleRate / 2) * (sampleSizeInButs / 8);
@@ -146,7 +146,10 @@ public class AudioClient implements ErrorHandler {
                 properties.load(resourceAsStream);
                 String bufferSize = properties.getProperty("bufferSize");
                 if (bufferSize != null && bufferSize.length() != 0) {
-                    value = Integer.valueOf(bufferSize);
+                    int propValue = Integer.valueOf(bufferSize);
+                    if (propValue < sampleRate * sampleSizeInButs / 8){
+                        value = propValue;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -307,9 +310,17 @@ public class AudioClient implements ErrorHandler {
     }
 
 
-    // Handle the exception
+    /**
+     * Gets volume control
+     * @param id for who
+     * @return volume control
+     */
+
     public FloatControl getSettings(int id) {
         SourceDataLine sourceDataLine = mainAudio.get(id);
+        if (sourceDataLine == null){
+            return null;
+        }
         return (FloatControl) sourceDataLine.getControl(FloatControl.Type.MASTER_GAIN);
     }
 
@@ -322,7 +333,6 @@ public class AudioClient implements ErrorHandler {
      */
 
     public boolean add(int id) {
-        obtainTargetLine();
         return obtainSourceLine(id);
     }
 
@@ -385,7 +395,7 @@ public class AudioClient implements ErrorHandler {
      * @param idOfTrack track id in soundNotifications
      */
 
-    protected void playMessageSound(int idOfTrack) {
+     void playMessageSound(int idOfTrack) {
         new Thread(() -> {
             try {
                 //obtain a random sound for notification
@@ -443,7 +453,7 @@ public class AudioClient implements ErrorHandler {
      * Same as above but get it from input stream
      * input stream must be obtained not from AudioSystem.getAudioInputStream()
      *
-     * @param inputStream MUST BE BUFFERED CAUSE SUPPORT MART/RESET
+     * @param inputStream MUST BE BUFFERED CAUSE SUPPORT MARC/RESET
      *                    leading to a sound data
      * @return ready to be written audio output
      * @throws IOException                   if file can't be read
@@ -462,16 +472,20 @@ public class AudioClient implements ErrorHandler {
     /**
      * Start a new thread for capturing audio
      * Also adds for each user a source line
+     * Only if you system can capture or play audio
      *
      * @param sendSound to write sound to the server
      * @param usersId   all users that must be add
      */
 
     public void startConversation(final Consumer<byte[]> sendSound, final int... usersId) {
-        for (int i : usersId) {
-            add(i);
+        if (speaker) {
+            for (int i : usersId) {
+                add(i);
+            }
         }
         if (mic) {
+            obtainTargetLine();
             capture.start(sendSound, this::captureAudio);
         }
     }
@@ -494,6 +508,10 @@ public class AudioClient implements ErrorHandler {
 
     public Consumer<Double> changeMultiplier() {
         return capture.changeMultiplier();
+    }
+
+    public AudioFormat getAudioFormat() {
+        return audioFormat;
     }
 
     @Override

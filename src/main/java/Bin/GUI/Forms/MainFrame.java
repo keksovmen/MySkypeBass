@@ -142,22 +142,20 @@ public class MainFrame extends JFrame implements ErrorHandler {
             Boolean aBoolean = connect.apply(strings);
             //release connect button
             firstSkin.releaseConnectButton();
-            if (aBoolean == null) {
-//                errorCase();
-                showDialog("Server doesn't exist");
-            } else if (aBoolean) {
+
+            if (aBoolean) {
                 remove(firstSkin.getPane());
                 //lazy init
                 if (secondSkin == null) {
                     secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
-                }else{
+                } else {
                     secondSkin.setNameAndId(actions.nameAndId().get());
                 }
                 add(secondSkin.getPane());
                 revalidate();
                 repaint();
             } else {
-                showDialog("Audio format is not acceptable");
+                showDialog("Server doesn't exist");
             }
             return aBoolean;
         };
@@ -307,10 +305,10 @@ public class MainFrame extends JFrame implements ErrorHandler {
      * Shows a message from conference
      *
      * @param message to show
-     * @param from from who
+     * @param from    from who
      */
 
-    public void showConferenceMessage(String message, String from){
+    public void showConferenceMessage(String message, String from) {
         EventQueue.invokeLater(() -> secondSkin.showConferenceMessage(message, from));
     }
 

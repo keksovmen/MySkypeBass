@@ -73,7 +73,7 @@ class ConferencePane implements ErrorHandler {
      * they don't want to go beneath each other but from left to right
      *
      * @param name         of user to add
-     * @param soundControl his sound volume controller
+     * @param soundControl his sound volume controller might be null if speaker doesn't work
      */
 
     void addUser(String name, FloatControl soundControl) {
@@ -117,6 +117,7 @@ class ConferencePane implements ErrorHandler {
         muteButton.setText("Mute");
         displayPlace.setText("");
         sender.setText("");
+        volume.setValue(1d);
     }
 
     /**

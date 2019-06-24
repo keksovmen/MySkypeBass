@@ -102,12 +102,23 @@ public class Main implements ErrorHandler {
 
     private Function<String[], Boolean> connect() {
         return strings -> {
-            try {
-                return controller.connect(strings[0], strings[1], strings[2]);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+            boolean connect = controller.connect(strings[0], strings[1], strings[2]);
+            if (connect){
+                boolean speaker = audioClient.isSpeaker();
+                boolean mic = audioClient.isMic();
+                if (!(speaker && mic)) {
+                    String s = "";
+                    if (!speaker){
+                        s += "Speaker can't read the format\n";
+                    }
+                    if (!mic){
+                        s += "Mic can't capture the format\n";
+                    }
+                    s += audioClient.getAudioFormat().toString();
+                    mainFrame.showDialog(s);
+                }
             }
+            return connect;
         };
     }
 
