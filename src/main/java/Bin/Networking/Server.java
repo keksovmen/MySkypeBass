@@ -13,8 +13,10 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -34,7 +36,7 @@ public class Server implements Starting {
         defaultProp.setProperty("bufferSize", "32");
         serverProp = new Properties(defaultProp);
         InputStream resourceAsStream = Server.class.getResourceAsStream("/properties/Server.properties.properties");
-        if (resourceAsStream != null){
+        if (resourceAsStream != null) {
             try {
                 serverProp.load(resourceAsStream);
             } catch (IOException e) {
@@ -79,7 +81,7 @@ public class Server implements Starting {
      * For utility purposes
      */
 
-    private final Executor executor;
+    private final ExecutorService executor;
 
 //    private static final Logger logger = Logger.getLogger("MyLogger");
 
@@ -98,8 +100,9 @@ public class Server implements Starting {
 
     /**
      * Creates server from integers
-     * @param port for the server
-     * @param sampleRate any acceptable one
+     *
+     * @param port             for the server
+     * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
      * @throws IOException if port already in use
      */
@@ -109,13 +112,14 @@ public class Server implements Starting {
         audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
         id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = Executors.newFixedThreadPool(2);
+        executor = new ThreadPoolExecutor(0, 2, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
     /**
      * Creates server from strings
-     * @param port for the server
-     * @param sampleRate any acceptable one
+     *
+     * @param port             for the server
+     * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
      * @throws IOException if port already in use
      */
@@ -125,19 +129,19 @@ public class Server implements Starting {
         audioFormat = new AudioFormat(Integer.parseInt(sampleRate), Integer.parseInt(sampleSizeInBits), 1, true, true);
         id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = Executors.newFixedThreadPool(2);
-
+        executor = new ThreadPoolExecutor(0, 2, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
     /**
      * Starts a new thread
      * that will accept new connections
+     *
      * @param name with given name
      */
 
     @Override
     public void start(String name) {
-        if (work){
+        if (work) {
             throw new IllegalStateException("Already started");
         }
         work = true;
@@ -166,6 +170,7 @@ public class Server implements Starting {
 
     /**
      * For ServerController usages
+     *
      * @return unique id for a user
      */
 
@@ -176,6 +181,7 @@ public class Server implements Starting {
     /**
      * Put new user for all observation
      * and updates others with new dude on
+     *
      * @param serverUser to add
      */
 
@@ -189,6 +195,7 @@ public class Server implements Starting {
      * Remove a user from server
      * and sendSound others update on it
      * clear any existed data packages from pool
+     *
      * @param id of user to remove
      */
 
@@ -201,6 +208,7 @@ public class Server implements Starting {
 
     /**
      * Format for transferring audio data
+     *
      * @return data enough to represent audio format for client
      */
 
@@ -211,6 +219,7 @@ public class Server implements Starting {
 
     /**
      * Method for obtaining all except you users
+     *
      * @param exclusiveId you
      * @return all others users
      */
@@ -227,6 +236,7 @@ public class Server implements Starting {
 
     /**
      * Get controller for other usages
+     *
      * @param who to get
      * @return null if there is no such dude
      */
