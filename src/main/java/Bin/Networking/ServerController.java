@@ -115,7 +115,7 @@ public class ServerController implements ErrorHandler {
      * <p>
      * MAIN PROBLEM THAT I HAVEN'T TESTED:
      * When auto accept occurs what will happen?
-     * Both clients send approve that triers create conversation handler
+     * Both clients sendSound approve that triers create conversation handler
      * Maybe change Conversation to static synchronised factory method
      *
      * @param controller basically this if it wasn't static
@@ -166,13 +166,6 @@ public class ServerController implements ErrorHandler {
                     }
                     break;
                 }
-                case SEND_SOUND: {
-                    Conversation myConv = controller.me.getConversation();
-                    if (myConv != null) {
-                        myConv.send(dataPackage, controller.getId());
-                    }
-                    break;
-                }
                 case SEND_CALL: {
                     Conversation myConv = controller.me.getConversation();
                     if (myConv != null) {
@@ -186,21 +179,39 @@ public class ServerController implements ErrorHandler {
 
     /**
      * Handles all staff that is not for conversation and not for server
-     * Just send messages and some control instructions
+     * Just sendSound messages and some control instructions
      *
      * @param controller basically this if it wasn't static
      * @return ready to work handler
      */
 
     private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
-        return baseDataPackage -> {
-            if ((baseDataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode())
-                    && (baseDataPackage.getHeader().getTo() != BaseWriter.WHO.CONFERENCE.getCode())) {        //add to conversation condition
-                ServerController controllerReceiver = controller.server.getController(baseDataPackage.getHeader().getTo());
-                if (controllerReceiver != null) {
-                    controllerReceiver.writer.transferData(baseDataPackage);//test it
+        return dataPackage -> {
+            if (dataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()) {
+                /*All that belong to conversation*/
+                if (dataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
+                    Conversation myConv = controller.me.getConversation();
+                    if (myConv == null) {
+                        return;
+                    }
+                    switch (dataPackage.getHeader().getCode()) {
+                        case SEND_SOUND: {
+                            myConv.sendSound(dataPackage, controller.getId());
+                            break;
+                        }
+                        case SEND_MESSAGE: {
+                            myConv.sendMessage(dataPackage, controller.getId());
+                            break;
+                        }
+                    }
                 } else {
-                    controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                    /*All that belong to direct transition*/
+                    ServerController controllerReceiver = controller.server.getController(dataPackage.getHeader().getTo());
+                    if (controllerReceiver != null) {
+                        controllerReceiver.writer.transferData(dataPackage);//test it
+                    } else {
+                        controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                    }
                 }
             }
         };

@@ -70,7 +70,7 @@ public class ServerWriter extends BaseWriter {
 
     /**
      * Method for transferring data from one user to another one
-     *
+     * <p>
      * Don't return package back to the pool
      *
      * @param dataPackage to be transferred
@@ -93,7 +93,7 @@ public class ServerWriter extends BaseWriter {
     /**
      * Method for writing data in conversation mode
      * It tries to get lock if can't just pass this dude
-     *
+     * <p>
      * Don't return package back to the pool
      *
      * @param dataPackage to be sanded
@@ -116,6 +116,22 @@ public class ServerWriter extends BaseWriter {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Transfer a message from conference
+     * Doesn't return package back to the pool
+     *
+     * @param dataPackage contains the message
+     * @throws IOException if networking fails
+     */
+
+    public synchronized void transferMessage(AbstractDataPackage dataPackage) throws IOException {
+        outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header, when you read it
+        if (dataPackage.getHeader().getLength() != 0) {
+            outputStream.write(dataPackage.getData());
+        }
+        outputStream.flush();
     }
 
     public void writeAddToConv(int whoToAdd, int to) {

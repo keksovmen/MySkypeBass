@@ -187,7 +187,7 @@ public class Server implements Starting {
 
     /**
      * Remove a user from server
-     * and send others update on it
+     * and sendSound others update on it
      * clear any existed data packages from pool
      * @param id of user to remove
      */

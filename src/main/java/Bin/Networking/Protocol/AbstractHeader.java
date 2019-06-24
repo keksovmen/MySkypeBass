@@ -96,7 +96,7 @@ public abstract class AbstractHeader {
     public abstract int getLength();
 
     /**
-     * @return who send it
+     * @return who sendSound it
      */
 
     public abstract int getFrom();

@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 /**
@@ -28,7 +29,7 @@ public class AudioClient implements ErrorHandler {
 
     static final int CAPTURE_SIZE = 8192;      //8 kB for sound notification and util sounds
 
-    private int CAPTURE_SIZE_MAIN;      //for capture and play equals sample rate / 2 * sample size
+    private int CAPTURE_SIZE_MAIN;      //for capture and play equals sample rate / 2 * sample size or get from the property
 
     private AudioFormat audioFormat;    //receive from a server
 
@@ -44,13 +45,11 @@ public class AudioClient implements ErrorHandler {
 
     private final AudioCapture capture;
 
-    private final Random random;
     private final List<String> soundNotifications;
 
     private AudioClient() {
         mainAudio = new HashMap<>();
         capture = new AudioCapture();
-        random = new Random();
         soundNotifications = new ArrayList<>();
         fillSoundNames();
     }
@@ -100,7 +99,7 @@ public class AudioClient implements ErrorHandler {
         soundNotifications.add("/sound/messageNotification/Pants.WAV");
     }
 
-    //double checked locking volatile
+    //    double checked locking volatile
     public static AudioClient getInstance() {
         AudioClient local = audioClient;
         if (local == null) {
@@ -195,8 +194,9 @@ public class AudioClient implements ErrorHandler {
      */
 
     private boolean obtainSourceLine(int IDofUser) {
-        if (!speaker)
+        if (!speaker) {
             return false;     //should remove it, because logic is you can't use without mic and speaker but must change it
+        }
         try {
             if (!mainAudio.containsKey(IDofUser)) {
                 mainAudio.put(IDofUser, (SourceDataLine) obtainAndOpen(SourceDataLine.class));
@@ -356,7 +356,7 @@ public class AudioClient implements ErrorHandler {
      */
 
     public void playRandomMessageSound() {
-        playMessageSound(random.nextInt(soundNotifications.size()));
+        playMessageSound(ThreadLocalRandom.current().nextInt(soundNotifications.size()));
     }
 
     /**
@@ -472,7 +472,7 @@ public class AudioClient implements ErrorHandler {
             add(i);
         }
         if (mic) {
-            capture.start(sendSound);
+            capture.start(sendSound, this::captureAudio);
         }
     }
 

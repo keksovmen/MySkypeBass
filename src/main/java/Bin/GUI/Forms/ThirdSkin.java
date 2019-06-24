@@ -12,7 +12,7 @@ import java.util.function.BiConsumer;
 
 /**
  * Handle messaging part with some one
- * can send message and close self tab
+ * can sendSound message and close self tab
  */
 
 class ThirdSkin {
@@ -34,6 +34,8 @@ class ThirdSkin {
      */
 
     private final int who;
+
+    private static SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
 
     /**
      * Default constructor init
@@ -79,10 +81,10 @@ class ThirdSkin {
 
     /**
      * Action for sending message
-     * can't send if there is empty string
+     * can't sendSound if there is empty string
      * also clear textField where was your message
      *
-     * @param send function to call when need to send
+     * @param send function to call when need to sendSound
      */
 
     private void sendMessage(BiConsumer<Integer, String> send) {
@@ -101,9 +103,8 @@ class ThirdSkin {
      * @return time in format like 13:41
      */
 
-    private String getTime() {
+    static String getTime() {
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
         return dateFormat.format(calendar.getTime());
     }
 }

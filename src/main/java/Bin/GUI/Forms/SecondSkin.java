@@ -255,7 +255,7 @@ class SecondSkin implements ErrorHandler {
      * Call a selected user
      * show CallDialog with appropriate actions
      *
-     * @param call action that send call to some one
+     * @param call action that sendSound call to some one
      */
 
     private void callOutcomDialog(Consumer<BaseUser> call) {
@@ -354,6 +354,18 @@ class SecondSkin implements ErrorHandler {
 
     void setNameAndId(String nameAndId){
         labelMe.setText(nameAndId);
+    }
+
+    /**
+     * Method for displaying message from conference
+     *
+     * @param message plain text
+     * @param from BaseUser.toString()
+     */
+
+    void showConferenceMessage(String message, String from){
+        conferencePane.showMessage(message, from);
+        colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
     }
 
     @Override

@@ -303,6 +303,17 @@ public class MainFrame extends JFrame implements ErrorHandler {
         EventQueue.invokeLater(() -> secondSkin.stopConversation());
     }
 
+    /**
+     * Shows a message from conference
+     *
+     * @param message to show
+     * @param from from who
+     */
+
+    public void showConferenceMessage(String message, String from){
+        EventQueue.invokeLater(() -> secondSkin.showConferenceMessage(message, from));
+    }
+
     @Override
     public void errorCase() {
         EventQueue.invokeLater(() -> {

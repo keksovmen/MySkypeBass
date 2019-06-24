@@ -102,6 +102,11 @@ public class ActionsBox implements MainFrameActions {
 
     private Consumer<Double> changeMultiplier;
 
+    /**
+     * Uses on ConferencePane
+     */
+
+    private Consumer<String> sendMessageToConference;
 
     @Override
     public Supplier<String> nameAndId() {
@@ -210,9 +215,17 @@ public class ActionsBox implements MainFrameActions {
     @Override
     public Consumer<Double> changeMultiplier() {
         if (changeMultiplier == null) {
-            throw new IllegalStateException("Change multiplier one is not initialised");
+            throw new IllegalStateException("Change multiplier is not initialised");
         }
         return changeMultiplier;
+    }
+
+    @Override
+    public Consumer<String> sendMessageToConference() throws IllegalStateException {
+        if (sendMessageToConference == null) {
+            throw new IllegalStateException("Send message to conference is not initialised");
+        }
+        return sendMessageToConference;
     }
 
     @Override
@@ -283,6 +296,11 @@ public class ActionsBox implements MainFrameActions {
     @Override
     public void updateChangeMultiplier(Consumer<Double> changeMultiplier) {
         this.changeMultiplier = changeMultiplier;
+    }
+
+    @Override
+    public void updateSendMessageToConference(Consumer<String> sendMessageToConference) {
+        this.sendMessageToConference = sendMessageToConference;
     }
 
     /**

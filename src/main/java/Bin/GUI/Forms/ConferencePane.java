@@ -21,6 +21,8 @@ class ConferencePane implements ErrorHandler {
     private JPanel centerPane;
     private JButton endCallButton;
     private JPanel mainPane;
+    private JTextArea displayPlace;
+    private JTextField sender;
 
     /**
      * Contains baseUser.toString() - UserSettings
@@ -56,6 +58,8 @@ class ConferencePane implements ErrorHandler {
         muteButton.addActionListener(e -> reactToMute(actions.mute().get()));
 
         volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
+
+        sender.addActionListener(e -> sendMessage(getMessage()));
     }
 
     JPanel getMainPane() {
@@ -111,6 +115,8 @@ class ConferencePane implements ErrorHandler {
         centerPane.removeAll();
         conferenceMembers.clear();
         muteButton.setText("Mute");
+        displayPlace.setText("");
+        sender.setText("");
     }
 
     /**
@@ -125,6 +131,24 @@ class ConferencePane implements ErrorHandler {
         } else {
             muteButton.setText("Mute");
         }
+    }
+
+    void showMessage(String message, String from){
+        displayPlace.append(from + " (" + ThirdSkin.getTime() + "): " + message + "\n");
+    }
+
+    private void sendMessage(String message){
+        if (message.length() == 0) {
+            return;
+        }
+        showMessage(message, "Me");
+        actions.sendMessageToConference().accept(message);
+    }
+
+    private String getMessage(){
+        String text = sender.getText();
+        sender.setText("");
+        return text;
     }
 
     @Override

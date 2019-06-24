@@ -41,7 +41,7 @@ public abstract class AbstractDataPackage {
 
     /**
      * For sending byte array of data could be anything
-     * Has 1 main purpose is to send sound
+     * Has 1 main purpose is to sendSound sound
      *
      * @param code instruction to do
      * @param from who sent it

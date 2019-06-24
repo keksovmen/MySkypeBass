@@ -1,14 +1,40 @@
 import Bin.Main;
 import Bin.Networking.Server;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Test {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException {
 //        Server server = new Server(8188, 20_000, 16);
 //        server.start("Server");
+//        long before = System.currentTimeMillis();
+//        for (int k = 0; k < 1_000_000; k++) {
+//            int i = k + 1;
+//        }
+//        long after = System.currentTimeMillis();
+//        System.out.println(after - before);
 
+
+//        URL resource = Test.class.getResource("/sound/messageNotification");
+//        Stream<Path> list = Files.list(Paths.get(resource.toURI()));
+//        ArrayList<Path> collect = list.collect(Collectors.toCollection(ArrayList::new));
+//        InputStream inputStream = new FileInputStream(collect.get(0).toFile());
+////        InputStream resourceAsStream = Test.class.getResourceAsStream(collect.get(0).toString());
+//        System.out.println(inputStream);
 //        Main.main(args);
 
 //        AudioClient.getInstance().playMessageSound();

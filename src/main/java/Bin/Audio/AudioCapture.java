@@ -1,7 +1,11 @@
 package Bin.Audio;
 
-import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Uses as wrapper for microphone actions
@@ -36,16 +40,33 @@ class AudioCapture {
 
     /**
      * Action for what to do with the sound
-     * just send to a server
+     * just sendSound to a server
      */
 
     private Consumer<byte[]> sendSound;
 
     /**
-     * For cache purposes
+     * How you get audio to be send
      */
 
-    private AudioClient audioClient;
+    private Supplier<byte[]> getAudioFromMic;
+
+    /**
+     * For running a sendSound action in different thread
+     */
+
+    private ExecutorService service;
+
+    /**
+     * Defines how much audio portion you can put in
+     * sendSound action.
+     * If networking is slow it will affect like teared audio
+     * Needs for one purpose if networking work slow
+     * sound is captured from the mic will not grow
+     * more than QUEUE_SIZE * AudioClient.CAPTURE_SIZE_MAIN bytes
+     */
+
+    private static final int QUEUE_SIZE = 15;
 
     /**
      * Changes mute state to an opposite
@@ -53,6 +74,7 @@ class AudioCapture {
      *
      * @return actual value
      */
+
 
     synchronized boolean mute() {
         mute = !mute;
@@ -62,12 +84,13 @@ class AudioCapture {
 
     /**
      * All data processing with data must be here
+     * Send sound in different thread for removing glitches in audio
      *
      * @return false if can't capture audio, true otherwise
      */
 
     private boolean process() {
-        byte[] audio = audioClient.captureAudio();
+        byte[] audio = getAudioFromMic.get();
         if (audio == null) {
             return false;
         }
@@ -77,7 +100,7 @@ class AudioCapture {
                 audio[i] = (byte) (audio[i] * -multiplier);
             }
         }
-        sendSound.accept(audio);
+        service.execute(() -> sendSound.accept(audio));
         return true;
     }
 
@@ -89,15 +112,13 @@ class AudioCapture {
      * @param sendSound actions for delivering data
      */
 
-    void start(final Consumer<byte[]> sendSound) {
+    void start(final Consumer<byte[]> sendSound, final Supplier<byte[]> getSound) {
         if (started) {
             return;
         }
-        audioClient =  AudioClient.getInstance();
         this.sendSound = sendSound;
-        started = true;
-        work = true;
-        mute = false;
+        getAudioFromMic = getSound;
+        onStartCapturing();
         new Thread(() -> {
             while (work) {
                 synchronized (this) {
@@ -113,8 +134,30 @@ class AudioCapture {
                     close();
                 }
             }
-            started = false;
+            onStopCapturing();
         }, "Client capture").start();
+    }
+
+    /**
+     * Sets all required fields for proper audio capturing
+     */
+
+    private void onStartCapturing() {
+        started = true;
+        work = true;
+        mute = false;
+        service = new ThreadPoolExecutor(0, 1, 10,
+                TimeUnit.SECONDS, new ArrayBlockingQueue<>(QUEUE_SIZE));
+    }
+
+    /**
+     * Sets all necessary fields for stopping the capturing
+     */
+
+    private void onStopCapturing() {
+        started = false;
+        service.shutdownNow();
+        service = null;
     }
 
     /**

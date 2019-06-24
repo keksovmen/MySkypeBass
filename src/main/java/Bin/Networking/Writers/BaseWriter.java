@@ -42,16 +42,16 @@ public abstract class BaseWriter {
         SEND_NAME(1),   //Uses when first time connect to server
         SEND_ID(2),     //not used
         SEND_AUDIO_FORMAT(3),//sends audio format
-        SEND_USERS(4),  //send request or response with users on server
-        SEND_MESSAGE(5),//When client send message to another client, or to conference
+        SEND_USERS(4),  //sendSound request or response with users on server
+        SEND_MESSAGE(5),//When client sendSound message to another client, or to conference
         SEND_CALL(6),   //when client call someone
         SEND_APPROVE(7),//when call accepted
         SEND_DENY(8),   //when call denied
         SEND_CANCEL(9), //when caller cancelled the call
         SEND_SOUND(10), //sends sound data to conference
         SEND_DISCONNECT(11),    //when disconnecting from the server
-        SEND_ADD(12),   //server send it when some one was added to your conversation
-        SEND_REMOVE(13),//server send it when some one was removed to your conversation
+        SEND_ADD(12),   //server sendSound it when some one was added to your conversation
+        SEND_REMOVE(13),//server sendSound it when some one was removed to your conversation
         SEND_CONFIRM(14),//not used
         SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
         SEND_STOP_CONV(16);//when you are last one in conversation server sends it to you
@@ -141,8 +141,9 @@ public abstract class BaseWriter {
 
     protected synchronized void write(AbstractDataPackage dataPackage) throws IOException {
         outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
-        if (dataPackage.getHeader().getLength() != 0)
+        if (dataPackage.getHeader().getLength() != 0) {
             outputStream.write(dataPackage.getData());
+        }
         outputStream.flush();
 //        System.out.println(dataPackage + " " + Thread.currentThread().getName());
         AbstractDataPackagePool.returnPackage(dataPackage);

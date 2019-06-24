@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -43,14 +41,6 @@ public class Main implements ErrorHandler {
     private final AudioClient audioClient;
     private final Call callDialog;
 
-    /**
-     * Needs for single purpose
-     * May fix glitches in sound
-     * But need tests
-     */
-
-    private final Executor executor;
-
     private Main() {
         AbstractDataPackagePool.init(new DataPackagePool());
 
@@ -59,7 +49,6 @@ public class Main implements ErrorHandler {
         callDialog = new Call();
         actionsBox = new ActionsBox();
         controller = new ClientController(this);
-        executor = Executors.newSingleThreadExecutor();
 
         initialInitForActions();
         EventQueue.invokeLater(() -> {
@@ -89,16 +78,14 @@ public class Main implements ErrorHandler {
         actionsBox.updateMute(muteAction());
         actionsBox.updateEndCall(endConversation());
         actionsBox.updateChangeMultiplier(audioClient.changeMultiplier());
+        actionsBox.updateSendMessageToConference(sendMessageToConference());
 
     }
 
     public static void main(String[] args) {
-//        Main main = new Main();
 //        System.setProperty("java.util.logging.config.file", "src\\main\\resources\\properties\\logging.properties");
 //        LogManager.getLogManager().readConfiguration();
         new Main();
-//        new Main();
-
     }
 
     /**
@@ -208,7 +195,7 @@ public class Main implements ErrorHandler {
     }
 
     /**
-     * Creates a function that send a message to someone
+     * Creates a function that sendSound a message to someone
      *
      * @return ready to use function
      */
@@ -227,6 +214,7 @@ public class Main implements ErrorHandler {
     private Consumer<AbstractDataPackage> showMessage() {
         return baseDataPackage -> {
             if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_MESSAGE)) {
+
                 String message = baseDataPackage.getDataAsString();
                 int index = retrieveMessageMeta(message);
                 if (index != -1) {
@@ -234,7 +222,12 @@ public class Main implements ErrorHandler {
                 } else {
                     audioClient.playRandomMessageSound();
                 }
-                mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), message);
+
+                if (baseDataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
+                    mainFrame.showConferenceMessage(message, users.get(baseDataPackage.getHeader().getFrom()).toString());
+                } else {
+                    mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), message);
+                }
             }
         };
     }
@@ -466,13 +459,14 @@ public class Main implements ErrorHandler {
      */
 
     private Consumer<byte[]> sendSoundAction() {
-        return bytes -> executor.execute(() -> {
+        return bytes -> {
             try {
                 controller.getWriter().writeSound(controller.getMe().getId(), bytes);
             } catch (IOException e) {
                 e.printStackTrace();
+                //simple ignore it base reader will handle connection failure
             }
-        });
+        };
     }
 
     /**
@@ -537,6 +531,16 @@ public class Main implements ErrorHandler {
 
     private Supplier<Boolean> muteAction() {
         return audioClient::mute;
+    }
+
+    /**
+     * Send a message to your conference
+     *
+     * @return ready to use action
+     */
+
+    private Consumer<String> sendMessageToConference() {
+        return s -> controller.getWriter().writeMessage(controller.getMe().getId(), BaseWriter.WHO.CONFERENCE.getCode(), s);
     }
 
     @Override

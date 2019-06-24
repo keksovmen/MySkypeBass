@@ -36,15 +36,13 @@ public class CallNotificator {
                         Main.class.getResourceAsStream("/sound/callNotification/" + incomingFileName + ".WAV"))) {
                     speaker = AudioClient.getInstance().getFromInput(inputStream);
                     byte[] data = new byte[AudioClient.CAPTURE_SIZE];
-                    int i;
-                    int j;
                     while (work) {
-                        i = inputStream.read(data);
+                        int i = inputStream.read(data);
                         if (i == -1) {
                             break;
                         }
                         //handle odd number in case of sample size = 2 bytes
-                        j = i % speaker.getFormat().getFrameSize();
+                        int j = i % speaker.getFormat().getFrameSize();
                         if (j != 0) {
                             i -= j;
                         }

@@ -73,12 +73,33 @@ public class Conversation {
      * @param from        who called this method
      */
 
-    public void send(AbstractDataPackage dataPackage, int from) {
+    public void sendSound(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from) {
                 ServerController controller = user.getController();
                 try {
                     controller.getWriter().transferAudio(dataPackage);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    removeDude(user);
+                }
+            }
+        }
+    }
+
+    /**
+     * Default method for sending a message to every one in this conf
+     *
+     * @param dataPackage contains message data
+     * @param from who sent it
+     */
+
+    public void sendMessage(AbstractDataPackage dataPackage, int from){
+        for (ServerUser user : users) {
+            if (user.getId() != from) {
+                ServerController controller = user.getController();
+                try {
+                    controller.getWriter().transferMessage(dataPackage);
                 } catch (IOException e) {
                     e.printStackTrace();
                     removeDude(user);
