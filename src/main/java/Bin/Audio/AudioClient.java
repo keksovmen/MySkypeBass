@@ -379,7 +379,7 @@ public class AudioClient implements ErrorHandler {
      */
 
     public void playIndexedMessageSound(int indexOfTrack) {
-        if (indexOfTrack < 0 || indexOfTrack > soundNotifications.size()) {
+        if (indexOfTrack < 0 || indexOfTrack >= soundNotifications.size()) {
             playRandomMessageSound();
         } else {
             playMessageSound(indexOfTrack);
