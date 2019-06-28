@@ -3,6 +3,7 @@ package Bin.Audio;
 import Bin.Main;
 import Bin.Networking.Protocol.AbstractHeader;
 import Bin.Networking.Utility.ErrorHandler;
+import Bin.Util.XMLWorker;
 import com.sun.istack.internal.NotNull;
 
 import javax.sound.sampled.*;
@@ -58,45 +59,17 @@ public class AudioClient implements ErrorHandler {
      * Fills the array with resources locations
      * Files.list doesn't work with resources!!!!!!
      * When add a new sound must specify it here
+     * <p>
      * FIND A WAY HOW TO READ DIRECTORY WITH RESOURCES
      * AND GET CONTENT SEPARATELY WITHOUT DIRECTLY SPECIFYING NAMES
+     * <p>
+     * Update: find not what I wanted but still good enough
+     * don't need to recompile each time when add a new sound
      */
 
     private void fillSoundNames() {
-        soundNotifications.add("/sound/messageNotification/AAAAAAAAAAAAA.WAV");
-        soundNotifications.add("/sound/messageNotification/Artist.WAV");
-        soundNotifications.add("/sound/messageNotification/Ass.WAV");
-        soundNotifications.add("/sound/messageNotification/Club.WAV");
-        soundNotifications.add("/sound/messageNotification/College.WAV");
-        soundNotifications.add("/sound/messageNotification/Comming.WAV");
-        soundNotifications.add("/sound/messageNotification/Fisting.WAV");
-        soundNotifications.add("/sound/messageNotification/Like.WAV");
-        soundNotifications.add("/sound/messageNotification/Penetration 1.WAV");
-        soundNotifications.add("/sound/messageNotification/Penetration 2.WAV");
-        soundNotifications.add("/sound/messageNotification/Power.WAV");
-        soundNotifications.add("/sound/messageNotification/Take.WAV");
-        soundNotifications.add("/sound/messageNotification/WO.WAV");
-        soundNotifications.add("/sound/messageNotification/YEAAA.WAV");
-        soundNotifications.add("/sound/messageNotification/Cum.WAV");
-        soundNotifications.add("/sound/messageNotification/Atention.WAV");
-        soundNotifications.add("/sound/messageNotification/Beat.WAV");
-        soundNotifications.add("/sound/messageNotification/LetsGo.WAV");
-        soundNotifications.add("/sound/messageNotification/Dicks.WAV");
-        soundNotifications.add("/sound/messageNotification/Penetration3.WAV");
-        soundNotifications.add("/sound/messageNotification/Shut.WAV");
-        soundNotifications.add("/sound/messageNotification/Rip.WAV");
-        soundNotifications.add("/sound/messageNotification/Sorry.WAV");
-        soundNotifications.add("/sound/messageNotification/Sun.WAV");
-        soundNotifications.add("/sound/messageNotification/Amazing.WAV");
-        soundNotifications.add("/sound/messageNotification/Reach.WAV");
-        soundNotifications.add("/sound/messageNotification/Point.WAV");
-        soundNotifications.add("/sound/messageNotification/Two.WAV");
-        soundNotifications.add("/sound/messageNotification/PullUp.WAV");
-        soundNotifications.add("/sound/messageNotification/Doing.WAV");
-        soundNotifications.add("/sound/messageNotification/Fucked.WAV");
-        soundNotifications.add("/sound/messageNotification/Tool.WAV");
-        soundNotifications.add("/sound/messageNotification/Challenges.WAV");
-        soundNotifications.add("/sound/messageNotification/Pants.WAV");
+        List<String> strings = XMLWorker.retrieveNames("sound/messageNotification/Notifications.xml");
+        strings.forEach(s -> soundNotifications.add("/sound/messageNotification/" + s));
     }
 
     //    double checked locking volatile
