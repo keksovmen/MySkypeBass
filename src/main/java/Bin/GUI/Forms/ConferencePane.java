@@ -152,6 +152,10 @@ class ConferencePane implements ErrorHandler {
         return text;
     }
 
+    boolean containPerson(String user){
+        return conferenceMembers.containsKey(user);
+    }
+
     @Override
     public void errorCase() {
         clear();

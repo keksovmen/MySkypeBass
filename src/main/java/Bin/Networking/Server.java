@@ -259,5 +259,4 @@ public class Server implements Starting {
                 serverUser.getController().getWriter().writeUsers(serverUser.getId(),
                         users.replaceFirst(serverUser.toString() + "\n", ""))));
     }
-
 }

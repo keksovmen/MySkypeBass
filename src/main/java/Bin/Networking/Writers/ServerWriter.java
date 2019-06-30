@@ -131,12 +131,12 @@ public class ServerWriter extends BaseWriter {
         outputStream.flush();
     }
 
-    public void writeAddToConv(int whoToAdd, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_ADD, whoToAdd, to));
+    public void writeAddToConv(int whoToAdd, int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().init(CODE.SEND_ADD, whoToAdd, to));
     }
 
-    public void writeRemoveFromConv(int whoToRemove, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_REMOVE, whoToRemove, to));
+    public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().init(CODE.SEND_REMOVE, whoToRemove, to));
     }
 
     public void writeStopConv(int to) {

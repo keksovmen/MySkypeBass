@@ -24,18 +24,25 @@ public class Conversation {
     private final List<ServerUser> users;
 
     /**
-     * Create conversation for users that don't have a conversation already
-     *
-     * @param user should be 2+ users
+     * Private constructor
+     * For sync purposes
      */
 
-    public Conversation(ServerUser... user) {
+    private Conversation() {
         users = new CopyOnWriteArrayList<>();
-        for (ServerUser serverUser : user) {
-            serverUser.setConversation(this);
-        }
-        users.addAll(Arrays.asList(user));
+    }
 
+    /**
+     * Create a conversation and register it on users
+     * that don't have a conversation already
+     *
+     * @param users should be 2+ users
+     */
+
+    public static void registerSimpleConversation(ServerUser... users) {
+        Conversation conversation = new Conversation();
+        conversation.users.addAll(Arrays.asList(users));
+        conversation.users.forEach(serverUser -> serverUser.setConversation(conversation));
     }
 
     /**
@@ -45,24 +52,31 @@ public class Conversation {
      * @param leftSide  dude that in conversation and his boys, caller or receiver
      */
 
-    public Conversation(ServerUser[] rightSide, ServerUser[] leftSide) {
-        users = new CopyOnWriteArrayList<>();
+    public static void registerComplexConversation(ServerUser[] rightSide, ServerUser[] leftSide) {
+        Conversation conversation = new Conversation();
         for (ServerUser right : rightSide) {
-            right.setConversation(this);
+            right.setConversation(conversation);
             for (ServerUser left : leftSide) {
-                right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
+                try {
+                    right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
+                } catch (IOException e) {
+                    /*Simply ignore it's thread will handle exception*/
+                }
             }
         }
         for (ServerUser left : leftSide) {
-            left.setConversation(this);
+            left.setConversation(conversation);
             for (ServerUser right : rightSide) {
-                left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
+                try {
+                    left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
+                } catch (IOException e) {
+                    /*Simply ignore it's thread will handle exception*/
+                }
             }
         }
 
-        users.addAll(Arrays.asList(rightSide));
-        users.addAll(Arrays.asList(leftSide));
-
+        conversation.users.addAll(Arrays.asList(rightSide));
+        conversation.users.addAll(Arrays.asList(leftSide));
     }
 
     /**
@@ -79,8 +93,9 @@ public class Conversation {
                 try {
                     controller.getWriter().transferAudio(dataPackage);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    removeDude(user);
+                    /*Simply ignore it's thread will handle the exception*/
+//                    e.printStackTrace();
+//                    removeDude(user);
                 }
             }
         }
@@ -100,8 +115,9 @@ public class Conversation {
                 try {
                     controller.getWriter().transferMessage(dataPackage);
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    removeDude(user);
+                    /*Simply ignore it's thread will handle the exception*/
+//                    e.printStackTrace();
+//                    removeDude(user);
                 }
             }
         }
@@ -118,7 +134,11 @@ public class Conversation {
         for (ServerUser serverUserExist : users) {
             if (!serverUserExist.equals(exclusive)) {
                 for (ServerUser serverUserToAdd : user) {
-                    serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
+                    try {
+                        serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
+                    } catch (IOException e) {
+                        /*Simply ignore it's thread will handle the exception*/
+                    }
                     serverUserToAdd.setConversation(this);
                 }
             }
@@ -140,7 +160,11 @@ public class Conversation {
             return;
         }
         for (ServerUser serverUser : users) {
-            serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
+            try {
+                serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
+            } catch (IOException e) {
+                /*Simply ignore it's thread will handle the exception*/
+            }
         }
         if (users.size() == 1) {
             ServerUser lastUser = users.get(0);

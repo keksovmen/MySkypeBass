@@ -263,9 +263,11 @@ class SecondSkin implements ErrorHandler {
             return;
         }
         BaseUser selected = getSelected();
-        call.accept(selected);
+        if (conferencePane == null || !conferencePane.containPerson(selected.toString())) {
+            call.accept(selected);
 
-        callDialog.showOutcoming(selected.toString());
+            callDialog.showOutcoming(selected.toString());
+        }
     }
 
     /**

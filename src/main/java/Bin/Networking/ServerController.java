@@ -111,6 +111,8 @@ public class ServerController implements ErrorHandler {
      * Both clients sendSound approve that triers create conversation handler
      * Maybe change Conversation to static synchronised factory method
      *
+     * Tried to make it handle auto accept by locking on this class
+     *
      * @param controller basically this if it wasn't static
      * @return ready to work listener
      */
@@ -128,26 +130,37 @@ public class ServerController implements ErrorHandler {
                         controller.writer.writeUsers(id, controller.server.getUsers(id));
                         break;
                     }
+                    ServerUser me = controller.me;
                     ServerUser receiverUser = receiver.me;
                     Conversation conversation;
                     Conversation receiverConversation;
 
-                    if (controller.me.inConv()) {
-                        if (receiverUser.inConv()) {
-                            conversation = controller.me.getConversation();
-                            receiverConversation = receiverUser.getConversation();
-                            new Conversation(conversation.getAll(), receiverConversation.getAll());
+                    /*
+                    Has to be atomic operation for auto accept purposes
+                    The best I can do
+                    Main problem is when you try get intrinsic lock on any server user
+                    you will end up with dead lock
+                    So you need something that can be a bridge between two threads
+                    Initially though to use server executor, but it is not single thread
+                     */
+                    synchronized (ServerController.class) {
+                        if (me.inConv()) {
+                            if (receiverUser.inConv()) {
+                                conversation = me.getConversation();
+                                receiverConversation = receiverUser.getConversation();
+                                Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
+                            } else {
+                                conversation = me.getConversation();
+                                dataPackage.setData(conversation.getAllToString(me));
+                                conversation.addDude(me, receiverUser);
+                            }
                         } else {
-                            conversation = controller.me.getConversation();
-                            dataPackage.setData(conversation.getAllToString(controller.me));
-                            conversation.addDude(controller.me, receiverUser);
-                        }
-                    } else {
-                        if (receiverUser.inConv()) {
-                            conversation = receiverUser.getConversation();
-                            conversation.addDude(receiverUser, controller.me);
-                        } else {
-                            new Conversation(controller.me, receiverUser);
+                            if (receiverUser.inConv()) {
+                                conversation = receiverUser.getConversation();
+                                conversation.addDude(receiverUser, me);
+                            } else {
+                                Conversation.registerSimpleConversation(me, receiverUser);
+                            }
                         }
                     }
                     break;
@@ -201,7 +214,7 @@ public class ServerController implements ErrorHandler {
                     /*All that belong to direct transition*/
                     ServerController controllerReceiver = controller.server.getController(dataPackage.getHeader().getTo());
                     if (controllerReceiver != null) {
-                        controllerReceiver.writer.transferData(dataPackage);//test it
+                        controllerReceiver.writer.transferData(dataPackage);
                     } else {
                         controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
                     }
