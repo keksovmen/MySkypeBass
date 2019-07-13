@@ -68,7 +68,7 @@ public class AudioClient implements ErrorHandler {
      */
 
     private void fillSoundNames() {
-        List<String> strings = XMLWorker.retrieveNames("sound/messageNotification/Notifications.xml");
+        List<String> strings = XMLWorker.retrieveNames("sound/Notifications.xml");
         strings.forEach(s -> soundNotifications.add("/sound/messageNotification/" + s));
     }
 

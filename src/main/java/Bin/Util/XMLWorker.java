@@ -24,6 +24,7 @@ public class XMLWorker {
 
     /**
      * Tries to get a document from the given name of resource
+     * Also if a document has DTD will check for it
      *
      * @param resource name absolute reference
      * @return loaded document
@@ -32,12 +33,15 @@ public class XMLWorker {
      * @throws SAXException                 format is broken
      */
 
-    static Document getDocument(String resource) throws ParserConfigurationException, IOException, SAXException {
+    private static Document getDocument(String resource) throws ParserConfigurationException, IOException, SAXException {
         InputStream stream = XMLWorker.class.getClassLoader().getResourceAsStream(resource);
         if (stream == null) {
             throw new NoSuchElementException("File can't be found");
         }
-        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory.setValidating(true);
+        documentBuilderFactory.setIgnoringElementContentWhitespace(true);
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
         return documentBuilder.parse(stream);
     }
 
@@ -53,33 +57,15 @@ public class XMLWorker {
 
     public static List<String> retrieveNames(String resourceName) {
         Document document;
-        List<String> result;
         try {
             document = getDocument(resourceName);
         } catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
             return new ArrayList<>(0);
         }
-        result = new ArrayList<>();
         Element root = document.getDocumentElement();//<list>
-        /*How it looks like but in details*/
-//        NodeList rootChildNodes = root.getChildNodes();//<file>
-//        for (int i = 0; i < rootChildNodes.getLength(); i++) {
-//            Node item = rootChildNodes.item(i);//<file>
-//            if (item instanceof Element){
-//                NodeList childNodes = item.getChildNodes();//<name> and others
-//                for (int j = 0; j < childNodes.getLength(); j++) {
-//                    Node k = childNodes.item(j);//<name> and others
-//                    if (k instanceof Element){
-//                        if (((Element) k).getTagName().equals("name")){//only <name>
-//                            result.add(k.getTextContent().trim());//remove whitespaces
-//                        }
-//                    }
-//                }
-//            }
-//        }
-        iterate(root, "name", result);
-        return result;
+
+        return getFromProperDocument(root);
     }
 
     /**
@@ -103,5 +89,28 @@ public class XMLWorker {
                 }
             }
         }
+    }
+
+    /**
+     * Gets file names from a XML file with DTD
+     * More clear version of iterate()
+     * Also check if file is enabled
+     *
+     * @param root should be root element like <list></list>
+     * @return List filled with sound names
+     */
+
+    private static List<String> getFromProperDocument(Element root){
+        NodeList childNodes = root.getChildNodes();
+        List<String> result = new ArrayList<>(childNodes.getLength());
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Element file = (Element) childNodes.item(i);
+            if (file.getAttribute("enabled").equals("false")) {
+                continue;
+            }
+            Element name = (Element) file.getFirstChild();
+            result.add(name.getTextContent());
+        }
+        return result;
     }
 }

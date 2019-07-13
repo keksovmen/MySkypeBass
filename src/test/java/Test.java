@@ -2,6 +2,14 @@ public class Test {
 
     public static void main(String[] args) {
 
+        //Test string pool
+//        Integer a = 128;
+//        Integer b = 128;
+        String a = "12345678901234567890123456789012345678901234567890";
+        String b = "12345678901234567890123456789012345678901234567890";
+        System.out.println(a == b);
+        System.out.println(a.equals(b));
+
 //        Server server = new Server(8188, 20_000, 16);
 //        server.start("Server");
 //        long before = System.currentTimeMillis();

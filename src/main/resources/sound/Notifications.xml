@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE list [
+        <!ELEMENT list (file)*>
+        <!ELEMENT file (name)>
+        <!ATTLIST file enabled (true|false) "true">
+        <!ELEMENT name (#PCDATA)>
+        ]>
 <list>
     <file>
         <name>AAAAAAAAAAAAA.WAV</name>
