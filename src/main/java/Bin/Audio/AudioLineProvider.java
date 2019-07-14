@@ -23,6 +23,7 @@ class AudioLineProvider {
     static SourceDataLine obtainAndOpenSource(AudioFormat audioFormat) throws LineUnavailableException {
         SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFormat);
         sourceDataLine.open(audioFormat, (int) audioFormat.getFrameRate());
+        sourceDataLine.start();
         return sourceDataLine;
     }
 
@@ -37,6 +38,7 @@ class AudioLineProvider {
     static TargetDataLine obtainAndOpenTarget(AudioFormat audioFormat) throws LineUnavailableException {
         TargetDataLine targetDataLine = AudioSystem.getTargetDataLine(audioFormat);
         targetDataLine.open(audioFormat, (int) audioFormat.getFrameRate());
+        targetDataLine.start();
         return targetDataLine;
     }
 

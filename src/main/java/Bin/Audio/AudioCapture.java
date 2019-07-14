@@ -96,7 +96,7 @@ class AudioCapture {
         // really shit bass boost
         if (multiplier != 1d) {
             for (int i = 0; i < audio.length; i++) {
-                audio[i] = (byte) (audio[i] * multiplier);// check why there is minus
+                audio[i] = (byte) (audio[i] * multiplier);
             }
         }
         executor.execute(() -> sendSound.accept(audio));
