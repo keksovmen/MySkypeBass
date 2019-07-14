@@ -1,11 +1,13 @@
 package Bin.Audio;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.TargetDataLine;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * Uses as wrapper for microphone actions
@@ -13,6 +15,12 @@ import java.util.function.Supplier;
  */
 
 class AudioCapture {
+
+    /**
+     * Line from you take audio
+     */
+
+    private TargetDataLine mic;
 
     /**
      * Indicate is a thread already started or not
@@ -45,17 +53,12 @@ class AudioCapture {
 
     private Consumer<byte[]> sendSound;
 
-    /**
-     * How you get audio to be send
-     */
-
-    private Supplier<byte[]> getAudioFromMic;
 
     /**
      * For running a sendSound action in different thread
      */
 
-    private ExecutorService service;
+    private ExecutorService executor;
 
     /**
      * Defines how much audio portion you can put in
@@ -85,23 +88,18 @@ class AudioCapture {
     /**
      * All data processing with data must be here
      * Send sound in different thread for removing glitches in audio
-     *
-     * @return false if can't capture audio, true otherwise
      */
 
-    private boolean process() {
-        byte[] audio = getAudioFromMic.get();
-        if (audio == null) {
-            return false;
-        }
+    private void readAndProcess() {
+        byte[] audio = new byte[AudioClient.getInstance().getMicCaptureSize()];
+        mic.read(audio, 0, audio.length);
         // really shit bass boost
-        if (multiplier != 1f) {
+        if (multiplier != 1d) {
             for (int i = 0; i < audio.length; i++) {
-                audio[i] = (byte) (audio[i] * -multiplier);
+                audio[i] = (byte) (audio[i] * multiplier);// check why there is minus
             }
         }
-        service.execute(() -> sendSound.accept(audio));
-        return true;
+        executor.execute(() -> sendSound.accept(audio));
     }
 
     /**
@@ -112,42 +110,48 @@ class AudioCapture {
      * @param sendSound actions for delivering data
      */
 
-    void start(final Consumer<byte[]> sendSound, final Supplier<byte[]> getSound) {
-        if (started) {
-            return;
+    void start(final Consumer<byte[]> sendSound, AudioFormat audioFormat) {//think about sync
+        synchronized (this) {
+            if (started) {  //cancel if already started
+                return;
+            }
+            started = true;
         }
         this.sendSound = sendSound;
-        getAudioFromMic = getSound;
-        onStartCapturing();
+        try {
+            onStartCapturing(audioFormat);
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+            return;
+        }
         new Thread(() -> {
             while (work) {
                 synchronized (this) {
                     if (mute) {
                         try {
-                            wait();
+                            wait();//could make it with semaphore
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
                 }
-                if (!process()) {
-                    close();
-                }
+                readAndProcess();
             }
             onStopCapturing();
         }, "Client capture").start();
+
     }
 
     /**
      * Sets all required fields for proper audio capturing
      */
 
-    private void onStartCapturing() {
-        started = true;
+    private void onStartCapturing(AudioFormat audioFormat) throws LineUnavailableException {
+        mic = AudioLineProvider.obtainAndOpenTarget(audioFormat);
+        executor = new ThreadPoolExecutor(0, 1, 10,
+                TimeUnit.SECONDS, new ArrayBlockingQueue<>(QUEUE_SIZE));
         work = true;
         mute = false;
-        service = new ThreadPoolExecutor(0, 1, 10,
-                TimeUnit.SECONDS, new ArrayBlockingQueue<>(QUEUE_SIZE));
     }
 
     /**
@@ -155,10 +159,11 @@ class AudioCapture {
      */
 
     private void onStopCapturing() {
-        started = false;
-        service.shutdownNow();
-        service = null;
+        executor.shutdownNow();
+        executor = null;
         multiplier = 1d;
+        mic.close();
+        started = false;
     }
 
     /**

@@ -1,18 +1,15 @@
 package Bin.Audio;
 
-import Bin.Main;
 import Bin.Networking.Protocol.AbstractHeader;
 import Bin.Networking.Utility.ErrorHandler;
-import Bin.Util.XMLWorker;
-import com.sun.istack.internal.NotNull;
+import Bin.Util.Checker;
 
 import javax.sound.sampled.*;
-import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.function.Consumer;
 
 /**
@@ -30,12 +27,11 @@ public class AudioClient implements ErrorHandler {
 
     static final int CAPTURE_SIZE = 8192;      //8 kB for sound notification and util sounds
 
-    private int CAPTURE_SIZE_MAIN;      //for capture and play equals sample rate / 2 * sample size or get from the property
+    private int micCaptureSize;      //for capture and play equals sample rate / 2 * sample size or get from the property
 
     private AudioFormat audioFormat;    //receive from a server
 
     private final Map<Integer, SourceDataLine> mainAudio;
-    private TargetDataLine targetDataLine;
 
     /**
      * Defines ability to use it
@@ -45,32 +41,14 @@ public class AudioClient implements ErrorHandler {
     private boolean speaker;
 
     private final AudioCapture capture;
-
-    private final List<String> soundNotifications;
+    private final MessageNotification notification;
 
     private AudioClient() {
         mainAudio = new HashMap<>();
         capture = new AudioCapture();
-        soundNotifications = new ArrayList<>();
-        fillSoundNames();
+        notification = new MessageNotification();
     }
 
-    /**
-     * Fills the array with resources locations
-     * Files.list doesn't work with resources!!!!!!
-     * When add a new sound must specify it here
-     * <p>
-     * FIND A WAY HOW TO READ DIRECTORY WITH RESOURCES
-     * AND GET CONTENT SEPARATELY WITHOUT DIRECTLY SPECIFYING NAMES
-     * <p>
-     * Update: find not what I wanted but still good enough
-     * don't need to recompile each time when add a new sound
-     */
-
-    private void fillSoundNames() {
-        List<String> strings = XMLWorker.retrieveNames("sound/Notifications.xml");
-        strings.forEach(s -> soundNotifications.add("/sound/messageNotification/" + s));
-    }
 
     //    double checked locking volatile
     public static AudioClient getInstance() {
@@ -111,28 +89,26 @@ public class AudioClient implements ErrorHandler {
      */
 
     void defineCaptureSizeMain(int sampleRate, int sampleSizeInButs, final int maxPossible) {
-        Properties properties = new Properties();
-        InputStream resourceAsStream = Main.class.getResourceAsStream("/properties/Audio.properties");
         int value = (sampleRate / 2) * (sampleSizeInButs / 8);
-        if (resourceAsStream != null) {
-            try {
-                properties.load(resourceAsStream);
-                String bufferSize = properties.getProperty("bufferSize");
-                if (bufferSize != null && bufferSize.length() != 0) {
-                    int propValue = Integer.valueOf(bufferSize);
-                    if (propValue < sampleRate * sampleSizeInButs / 8) {
-                        value = propValue;
-                    }
+        try {
+            InputStream resourceAsStream = Checker.getCheckedInput("/properties/Audio.properties");
+            Properties properties = new Properties();
+            properties.load(resourceAsStream);
+            String bufferSize = properties.getProperty("bufferSize");
+            if (bufferSize != null && bufferSize.length() != 0) {
+                int propValue = Integer.valueOf(bufferSize);
+                if (propValue < sampleRate * sampleSizeInButs / 8) {
+                    value = propValue;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         if (value >= maxPossible) {
             int i = maxPossible % 2;
             value = maxPossible - i;
         }
-        CAPTURE_SIZE_MAIN = value;
+        micCaptureSize = value;
     }
 
     /**
@@ -156,97 +132,6 @@ public class AudioClient implements ErrorHandler {
     }
 
     /**
-     * Try to get speaker line and put it according to id
-     * the line is ready to be played
-     *
-     * @param IDofUser for whom to open
-     * @return true only if successfully opened the line
-     * false if can't due to hardware
-     */
-
-    private boolean obtainSourceLine(int IDofUser) {
-        if (!speaker) {
-            return false;     //should remove it, because logic is you can't use without mic and speaker but must change it
-        }
-        try {
-            if (!mainAudio.containsKey(IDofUser)) {
-                mainAudio.put(IDofUser, (SourceDataLine) obtainAndOpen(SourceDataLine.class));
-            }
-        } catch (LineUnavailableException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Try to get a default lineType from default mixer
-     *
-     * @param lineType source or target dataLine
-     * @return source or target dataLine ready to be player or captured
-     * @throws LineUnavailableException if the desired line can't be opened due
-     *                                  to resource restriction
-     */
-
-    private DataLine obtainAndOpen(Class<? extends DataLine> lineType) throws LineUnavailableException {
-        DataLine line;
-        if (lineType == SourceDataLine.class) {
-            line = AudioSystem.getSourceDataLine(audioFormat);
-            ((SourceDataLine) line).open(audioFormat, (int) (audioFormat.getFrameRate()));
-        } else {     //target data line expected here
-            line = AudioSystem.getTargetDataLine(audioFormat);
-            ((TargetDataLine) line).open(audioFormat, (int) (audioFormat.getFrameRate()));
-        }
-        line.start();
-
-        return line;
-    }
-
-    /**
-     * Removes and closes a line on end of call
-     *
-     * @param IDofUser whose line to remove
-     */
-    private void clearSourceLine(int IDofUser) {
-        if (mainAudio.containsKey(IDofUser)) {
-            mainAudio.remove(IDofUser).close();
-        }
-    }
-
-    /**
-     * Same meaning as @see obtainSourceLine but for mic
-     *
-     * @return @see upper
-     */
-
-    private boolean obtainTargetLine() {
-        if (!mic) {
-            return false;
-        }
-        if (targetDataLine != null && targetDataLine.isOpen()) {
-            return true;
-        }
-        try {
-            targetDataLine = (TargetDataLine) obtainAndOpen(TargetDataLine.class);
-        } catch (LineUnavailableException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Closes mic line
-     */
-
-    private void closeTargetLine() {
-        if (targetDataLine != null && targetDataLine.isOpen()) {
-            targetDataLine.close();
-            targetDataLine = null;
-        }
-    }
-
-    /**
      * Play sound from source line
      * If line is filled flush it's content
      * due not to busy the thread
@@ -262,25 +147,6 @@ public class AudioClient implements ErrorHandler {
         }
         line.write(sound, 0, sound.length);
     }
-
-    /**
-     * Capture sound from mic
-     * Uses a 1 time created byte array for increase performances
-     * You don't need to allocate each time new byte array
-     * just rewrite bytes in it
-     *
-     * @return null if mic is not supported or byte[CAPTURE_SIZE]
-     */
-
-    byte[] captureAudio() {
-        byte[] data = null;
-        if (mic) {
-            data = new byte[CAPTURE_SIZE_MAIN];
-            targetDataLine.read(data, 0, data.length);
-        }
-        return data;
-    }
-
 
     /**
      * Gets volume control
@@ -299,24 +165,36 @@ public class AudioClient implements ErrorHandler {
 
     /**
      * Call when need to add a user
-     * Obtain lines for ready to use
+     * Try to get speaker line and put it according to id
+     * the line is ready to be played
      *
      * @param id for who to open
-     * @return true if speaker is opened
+     * @return true only if successfully putted the line, false if can't due to hardware
      */
 
     public boolean add(int id) {
-        return obtainSourceLine(id);
+        if (!speaker || mainAudio.containsKey(id)) {
+            return false;
+        }
+        try {
+            mainAudio.put(id, AudioLineProvider.obtainAndOpenSource(audioFormat));
+        } catch (LineUnavailableException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     /**
-     * Remove source line
+     * Removes source line and closes it
      *
      * @param id who to remove
      */
 
     public void remove(int id) {
-        clearSourceLine(id);
+        if (mainAudio.containsKey(id)) {
+            mainAudio.remove(id).close();
+        }
     }
 
     /**
@@ -325,127 +203,27 @@ public class AudioClient implements ErrorHandler {
      */
 
     public /*synchronized*/ void close() {
+        capture.close();
         mainAudio.forEach((integer, sourceDataLine) -> sourceDataLine.close());
         mainAudio.clear();
-        capture.close();
-        closeTargetLine();
     }
 
     /**
-     * STARTS NEW THREAD
      * Plays random message notification
-     * each time opens new line and select random sound
-     * can't be stopped until the end of sound
      */
 
     public void playRandomMessageSound() {
-        playMessageSound(ThreadLocalRandom.current().nextInt(soundNotifications.size()));
+        notification.playRandomMessageSound();
     }
 
     /**
-     * STARTS NEW THREAD
      * Plays particular message notification
-     * each time opens new line and select random sound
-     * can't be stopped until the end of sound
      *
-     * @param indexOfTrack track id in soundNotifications
+     * @param indexOfTrack track id in soundNotifications if out of bounds will play random
      */
 
     public void playIndexedMessageSound(int indexOfTrack) {
-        if (indexOfTrack < 0 || indexOfTrack >= soundNotifications.size()) {
-            playRandomMessageSound();
-        } else {
-            playMessageSound(indexOfTrack);
-        }
-    }
-
-    /**
-     * STARTS NEW THREAD
-     * Play message notification
-     * each time opens new line and select random sound
-     * can't be stopped until the end of sound
-     *
-     * @param idOfTrack track id in soundNotifications
-     */
-
-    void playMessageSound(int idOfTrack) {
-        new Thread(() -> {
-            try {
-                //obtain a random sound for notification
-                if (soundNotifications == null) return;
-
-                InputStream resourceAsStream = Main.class.getResourceAsStream(soundNotifications.get(idOfTrack));
-                /* Drop all computation if there is no such resource
-                 * Needs when messed up with a name
-                 */
-                if (resourceAsStream == null) {
-                    return;
-                }
-                BufferedInputStream inputStream = new BufferedInputStream(resourceAsStream);
-
-
-                //open source data line in default mixer
-                SourceDataLine sourceDataLine = getFromInput(inputStream);
-
-                //start playing sound
-                InputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream);
-
-                byte[] data = new byte[CAPTURE_SIZE];
-                int amount;
-                int j;
-                while ((amount = audioInputStream.read(data)) != -1) {
-                    //handle odd number in case of sample size = 2 bytes
-                    j = amount % sourceDataLine.getFormat().getFrameSize();
-                    if (j != 0) {
-                        amount -= j;
-                    }
-                    sourceDataLine.write(data, 0, amount);
-                }
-                sourceDataLine.drain();
-                sourceDataLine.close();
-
-            } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
-                e.printStackTrace();
-            }
-        }, "Message notifier").start();
-    }
-
-    /**
-     * Obtain and open source data line for notifications
-     *
-     * @param file contain audio meta inf
-     * @return ready to be written audio output
-     * @throws IOException                   if can't read a file
-     * @throws UnsupportedAudioFileException if system can't open that type of line
-     * @throws LineUnavailableException      if the line is already in use
-     */
-
-    SourceDataLine getFromFile(@NotNull File file) throws IOException, UnsupportedAudioFileException, LineUnavailableException {
-        AudioFileFormat audioFileFormat = AudioSystem.getAudioFileFormat(file);
-        SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFileFormat.getFormat());
-        sourceDataLine.open(audioFileFormat.getFormat());
-        sourceDataLine.start();
-        return sourceDataLine;
-    }
-
-    /**
-     * Same as above but get it from input stream
-     * input stream must be obtained not from AudioSystem.getAudioInputStream()
-     *
-     * @param inputStream MUST BE BUFFERED CAUSE SUPPORT MARC/RESET
-     *                    leading to a sound data
-     * @return ready to be written audio output
-     * @throws IOException                   if file can't be read
-     * @throws UnsupportedAudioFileException if system can't open that type of line
-     * @throws LineUnavailableException      if the line is already in use
-     */
-
-    SourceDataLine getFromInput(@NotNull BufferedInputStream inputStream) throws IOException, UnsupportedAudioFileException, LineUnavailableException {
-        AudioFileFormat audioFileFormat = AudioSystem.getAudioFileFormat(inputStream);
-        SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFileFormat.getFormat());
-        sourceDataLine.open(audioFileFormat.getFormat());
-        sourceDataLine.start();
-        return sourceDataLine;
+        notification.playIndexedMessageSound(indexOfTrack);
     }
 
     /**
@@ -464,8 +242,7 @@ public class AudioClient implements ErrorHandler {
             }
         }
         if (mic) {
-            obtainTargetLine();
-            capture.start(sendSound, this::captureAudio);
+            capture.start(sendSound, audioFormat);
         }
     }
 
@@ -493,10 +270,14 @@ public class AudioClient implements ErrorHandler {
         return audioFormat;
     }
 
+    public int getMicCaptureSize() {
+        return micCaptureSize;
+    }
+
     @Override
     public void errorCase() {
-        close();
         iterate();
+        close();
     }
 
     @Override
@@ -509,7 +290,6 @@ public class AudioClient implements ErrorHandler {
         return "AudioClient{" +
                 "\n mainAudio=" + mainAudio +
                 ",\n audioFormat=" + audioFormat +
-                ",\n targetDataLine=" + targetDataLine +
                 ",\n mic=" + mic +
                 ",\n speaker=" + speaker +
                 '}';

@@ -34,10 +34,7 @@ public class XMLWorker {
      */
 
     private static Document getDocument(String resource) throws ParserConfigurationException, IOException, SAXException {
-        InputStream stream = XMLWorker.class.getClassLoader().getResourceAsStream(resource);
-        if (stream == null) {
-            throw new NoSuchElementException("File can't be found");
-        }
+        InputStream stream = Checker.getCheckedInput(resource);
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setValidating(true);
         documentBuilderFactory.setIgnoringElementContentWhitespace(true);

@@ -1,13 +1,12 @@
 package Bin.Audio;
 
-import Bin.Main;
+import Bin.Util.Checker;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Need for playing sound while calling or get called
@@ -15,9 +14,9 @@ import java.io.InputStream;
 
 public class CallNotificator {
 
-    private static final String incomingFileName = "vint";
-    private static final String outComingHeadFileName = "start";
-    private static final String outComingBodyFileName = "body";
+    private static final String incomingFileName = "vint.WAV";
+    private static final String outComingHeadFileName = "start.WAV";
+    private static final String outComingBodyFileName = "body.WAV";
 
     private SourceDataLine speaker;
     private volatile boolean work;
@@ -32,30 +31,7 @@ public class CallNotificator {
         work = true;
         new Thread(() -> {
             while (work) {
-                try (BufferedInputStream inputStream = new BufferedInputStream(
-                        Main.class.getResourceAsStream("/sound/callNotification/" + incomingFileName + ".WAV"))) {
-                    speaker = AudioClient.getInstance().getFromInput(inputStream);
-                    byte[] data = new byte[AudioClient.CAPTURE_SIZE];
-                    while (work) {
-                        int i = inputStream.read(data);
-                        if (i == -1) {
-                            break;
-                        }
-                        //handle odd number in case of sample size = 2 bytes
-                        int j = i % speaker.getFormat().getFrameSize();
-                        if (j != 0) {
-                            i -= j;
-                        }
-                        speaker.write(data, 0, i);
-                    }
-                    speaker.drain();
-                    speaker.close();
-                } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
-                    e.printStackTrace();
-                } finally {
-                    work = false;
-                    speaker.close();
-                }
+                playOneFile("/sound/callNotification/" + incomingFileName);
             }
         }, "Incoming call").start();
     }
@@ -69,54 +45,41 @@ public class CallNotificator {
     public void playOutComing() {
         work = true;
         new Thread(() -> {
-            try (BufferedInputStream inputStream = new BufferedInputStream(
-                    Main.class.getResourceAsStream("/sound/callNotification/" + outComingHeadFileName + ".WAV"))) {
-                speaker = AudioClient.getInstance().getFromInput(inputStream);
-                byte[] data = new byte[AudioClient.CAPTURE_SIZE];
-                int i;
-                int j;
-                //Play intro of the melody
-                while (work) {
-                    i = inputStream.read(data);
-                    if (i == -1) {
-                        break;
-                    }
-                    //handle odd number in case of sample size = 2 bytes
-                    j = i % speaker.getFormat().getFrameSize();
-                    if (j != 0) {
-                        i -= j;
-                    }
-                    speaker.write(data, 0, i);
-                }
-                //Play body of the melody for n time
-                while (work) {
-                    try (InputStream bodyStream = new BufferedInputStream(
-                            Main.class.getResourceAsStream("/sound/callNotification/" + outComingBodyFileName + ".WAV"))) {
-                        while (work) {
-                            i = bodyStream.read(data);
-                            if (i == -1) {
-                                break;
-                            }
-                            j = i % speaker.getFormat().getFrameSize();
-                            if (j != 0) {
-                                i -= j;
-                            }
-                            speaker.write(data, 0, i);
-                        }
-                        speaker.drain();
-                    }
-                }
-            } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
-                e.printStackTrace();
-            } finally {
-                work = false;
-                speaker.close();
+            playOneFile("/sound/callNotification/" + outComingHeadFileName);
+            //Play body of the melody for n time
+            while (work) {
+                playOneFile("/sound/callNotification/" + outComingBodyFileName);
             }
         }, "Out coming call").start();
     }
 
     public void stop() {
         work = false;
+    }
+
+    /**
+     * Play one given file fully
+     * Will close all used resource at the end
+     *
+     * @param name of resource to be played
+     */
+
+    private void playOneFile(String name) {
+        try (BufferedInputStream inputStream = new BufferedInputStream(
+                Checker.getCheckedInput(name))) {
+            speaker = AudioLineProvider.getFromInput(inputStream);
+            while (work) {
+                if (Player.playOnce(inputStream, speaker) == -1) {
+                    break;
+                }
+            }
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
+            e.printStackTrace();
+            work = false;
+        } finally {
+            speaker.drain();
+            speaker.close();
+        }
     }
 
 }
