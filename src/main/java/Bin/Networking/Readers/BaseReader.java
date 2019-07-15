@@ -50,15 +50,6 @@ public class BaseReader implements Starting, ErrorHandler {
     final Processable handler;
 
     /**
-     * If you use second constructor you can
-     * read data without throwing exception
-     * because if there will be it will handle
-     * shutdown of the system
-     */
-
-    ErrorHandler mainErrorHandler;
-
-    /**
      * Using this constructor allows usage only of read() method
      *
      * @param inputStream which you will read
@@ -68,20 +59,6 @@ public class BaseReader implements Starting, ErrorHandler {
         this.inputStream = new DataInputStream(new BufferedInputStream(inputStream, BUFFER_SIZE));
         this.handler = handler;
         work = true;
-    }
-
-    /**
-     * Allow usage of both read() readA() methods
-     *
-     * @param inputStream      which you will read
-     * @param mainErrorHandler handler calls when exception in networking occurs
-     */
-
-    public BaseReader(InputStream inputStream, Processable handler, ErrorHandler mainErrorHandler) {
-        this.inputStream = new DataInputStream(new BufferedInputStream(inputStream, BUFFER_SIZE));
-        this.handler = handler;
-        work = true;
-        this.mainErrorHandler = mainErrorHandler;
     }
 
     /**
@@ -114,24 +91,6 @@ public class BaseReader implements Starting, ErrorHandler {
     }
 
     /**
-     * Improved version that can immediately handle exception
-     *
-     * @return package with at least header info
-     */
-
-    public AbstractDataPackage readA() {
-        try {
-            return read();
-        } catch (IOException e) {
-            e.printStackTrace();
-            if (work) {
-                mainErrorHandler.errorCase();
-            }
-            return null;
-        }
-    }
-
-    /**
      * Your main action in thread
      * must contain on of the read methods
      * and then do something with the data
@@ -141,8 +100,8 @@ public class BaseReader implements Starting, ErrorHandler {
      * it will be the only place where you can handle it
      */
 
-    void process() {
-        handler.process(readA());
+    void process() throws IOException {
+        handler.process(read());
     }
 
     /**
@@ -156,7 +115,12 @@ public class BaseReader implements Starting, ErrorHandler {
     public void start(String threadName) {
         new Thread(() -> {
             while (work) {
-                process();
+                try {
+                    process();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    errorCase();
+                }
             }
         }, threadName).start();
     }

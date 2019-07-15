@@ -4,6 +4,7 @@ import Bin.Networking.Processors.ServerProcessor;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Readers.BaseReader;
+import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Utility.ServerUser;
@@ -22,7 +23,7 @@ public class ServerController implements ErrorHandler {
 
     private final Socket socket;
     private ServerWriter writer;
-    private BaseReader reader;
+    private ReaderWithHandler reader;
     private ServerProcessor serverProcessor;
     private ServerUser me;
     private final Server server;
@@ -32,7 +33,7 @@ public class ServerController implements ErrorHandler {
         this.server = server;
         writer = new ServerWriter(socket.getOutputStream(), this);
         serverProcessor = new ServerProcessor();
-        reader = new BaseReader(socket.getInputStream(), serverProcessor, this);
+        reader = new ReaderWithHandler(socket.getInputStream(), serverProcessor, this);
     }
 
     /**

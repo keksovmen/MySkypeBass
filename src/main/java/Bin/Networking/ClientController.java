@@ -6,6 +6,7 @@ import Bin.Networking.Processors.Processable;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Readers.BaseReader;
+import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Writers.BaseWriter;
@@ -22,7 +23,7 @@ public class ClientController implements ErrorHandler {
 
     private Socket socket;
     private ClientWriter writer;
-    private BaseReader reader;
+    private ReaderWithHandler reader;
     private Processable processor;
     private BaseUser me;
 
@@ -52,7 +53,7 @@ public class ClientController implements ErrorHandler {
         try {
             socket.connect(new InetSocketAddress(hostName, port), 7_000);
             writer = new ClientWriter(socket.getOutputStream(), mainErrorHandler);
-            reader = new BaseReader(socket.getInputStream(), processor, mainErrorHandler);
+            reader = new ReaderWithHandler(socket.getInputStream(), processor, mainErrorHandler);
             authenticate(name);
         } catch (IOException e) {
             e.printStackTrace();
