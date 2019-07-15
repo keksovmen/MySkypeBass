@@ -4,6 +4,10 @@ import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Contains static methods for play audio
+ */
+
 class Player {
 
     private Player() {
@@ -37,6 +41,16 @@ class Player {
         sourceDataLine.close();
     }
 
+    /**
+     * Read part from input stream then plays it
+     * Handle error with sample size
+     *
+     * @param inputStream to read from
+     * @param sourceDataLine where to play
+     * @return amount of bytes read/played
+     * @throws IOException if can't read from file
+     */
+
     static int playOnce(InputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
         byte[] data = new byte[AudioClient.CAPTURE_SIZE];
         int frameSize = sourceDataLine.getFormat().getFrameSize();
@@ -51,7 +65,5 @@ class Player {
         }
         sourceDataLine.write(data, 0, amount);
         return amount;
-//        sourceDataLine.drain();
-//        sourceDataLine.close();
     }
 }
