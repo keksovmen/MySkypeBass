@@ -8,9 +8,9 @@ public interface Processable {
 
     void process(AbstractDataPackage dataPackage);
 
-    <T extends Consumer<AbstractDataPackage>> void addListener(T listener);
+    void addListener(Consumer<AbstractDataPackage> listener);
 
-    <T extends Consumer<AbstractDataPackage>> void removeListener(T listener);
+    void removeListener(Consumer<AbstractDataPackage> listener);
 
     void clear();
 }

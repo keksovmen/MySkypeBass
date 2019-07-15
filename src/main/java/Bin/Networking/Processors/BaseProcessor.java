@@ -32,7 +32,7 @@ public abstract class BaseProcessor implements Processable {
      */
 
     @Override
-    public <T extends Consumer<AbstractDataPackage>> void addListener(T listener) {
+    public void addListener(Consumer<AbstractDataPackage> listener) {
         listeners.add(listener);
     }
 
@@ -43,7 +43,7 @@ public abstract class BaseProcessor implements Processable {
      */
 
     @Override
-    public <T extends Consumer<AbstractDataPackage>> void removeListener(T listener) {
+    public void removeListener(Consumer<AbstractDataPackage> listener) {
         listeners.remove(listener);
     }
 
