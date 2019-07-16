@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Contain not all possible server write actions
  */
 
-public class ServerWriter extends BaseWriter {
+public class ServerWriter extends WriterWithHandler {
 
     /**
      * Need for conference writing
@@ -42,11 +42,6 @@ public class ServerWriter extends BaseWriter {
         LOCK_TIME = Integer.parseInt(Server.serverProp.getProperty("lock_time"));
     }
 
-    public ServerWriter(OutputStream outputStream) {
-        super(outputStream);
-        lock = new ReentrantLock();
-    }
-
     public ServerWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
         super(outputStream, mainErrorHandler);
         lock = new ReentrantLock();
@@ -54,15 +49,15 @@ public class ServerWriter extends BaseWriter {
 
 
     public void writeAudioFormat(int id, String format) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
     }
 
     public void writeUsers(int id, String users) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
     public void writeDisconnect(int id) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
     }
 
     /**
@@ -140,6 +135,6 @@ public class ServerWriter extends BaseWriter {
     }
 
     public void writeStopConv(int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
     }
 }

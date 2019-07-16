@@ -11,18 +11,18 @@ import java.io.OutputStream;
  * Each method basically ask pool for carcase and init it
  */
 
-public class ClientWriter extends BaseWriter {
+public class ClientWriter extends WriterWithHandler {
 
     public ClientWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
         super(outputStream, mainErrorHandler);
     }
 
     public void writeName(String name) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_NAME, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), name));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_NAME, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), name));
     }
 
     public void writeUsersRequest(int from) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_USERS, from, WHO.SERVER.getCode()));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_USERS, from, WHO.SERVER.getCode()));
     }
 
     /**
@@ -34,23 +34,23 @@ public class ClientWriter extends BaseWriter {
      */
 
     public void writeMessage(int from, int to, String message) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_MESSAGE, from, to, message));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_MESSAGE, from, to, message));
     }
 
     public void writeCall(int from, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_CALL, from, to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_CALL, from, to));
     }
 
     public void writeAccept(int from, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_APPROVE, from, to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_APPROVE, from, to));
     }
 
     public void writeDeny(int from, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_DENY, from, to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_DENY, from, to));
     }
 
     public void writeCancel(int from, int to) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_CANCEL, from, to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_CANCEL, from, to));
     }
 
     public void writeSound(int from, byte[] data) throws IOException {
@@ -58,11 +58,11 @@ public class ClientWriter extends BaseWriter {
     }
 
     public void writeDisconnect(int from) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, from, WHO.SERVER.getCode()));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, from, WHO.SERVER.getCode()));
     }
 
     public void writeDisconnectFromConv(int from) {
-        writeA(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT_FROM_CONV, from, WHO.CONFERENCE.getCode()));
+        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT_FROM_CONV, from, WHO.CONFERENCE.getCode()));
     }
 
 }

@@ -110,9 +110,9 @@ public class Server implements Starting {
     public Server(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
         serverSocket = new ServerSocket(port);
         audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
-        id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
+        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = new ThreadPoolExecutor(0, 2, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
     /**
@@ -127,9 +127,9 @@ public class Server implements Starting {
     public Server(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
         serverSocket = new ServerSocket(Integer.parseInt(port));
         audioFormat = new AudioFormat(Integer.parseInt(sampleRate), Integer.parseInt(sampleSizeInBits), 1, true, true);
-        id = new AtomicInteger(BaseWriter.START_OF_USERS);//because 0 1 2 already in use @see BaseWriter enum WHO
+        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because 0 1 2 already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
-        executor = new ThreadPoolExecutor(0, 2, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
     }
 
     /**

@@ -2,7 +2,6 @@ package Bin.Networking.Writers;
 
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
-import Bin.Networking.Utility.ErrorHandler;
 
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
@@ -22,14 +21,6 @@ public abstract class BaseWriter {
      */
 
     final DataOutputStream outputStream;
-
-    /**
-     * Might be null depends on your realisation
-     * <p>
-     * Basically handles cases when network get ruined
-     */
-
-    ErrorHandler mainErrorHandler;
 
     /**
      * Instruction your handlers reaction depends on its values
@@ -105,14 +96,14 @@ public abstract class BaseWriter {
         public int getCode() {
             return code;
         }
+
+        /**
+         * Indicates start of unique users id
+         * Must be greater than max value of WHO enum
+         */
+
+        public static final int SIZE = WHO.values().length;
     }
-
-    /**
-     * Indicates start of unique users id
-     * Must be greater than max value of WHO enum
-     */
-
-    public static final int START_OF_USERS = 3;
 
     /**
      * You can use only write() method
@@ -122,18 +113,6 @@ public abstract class BaseWriter {
 
     BaseWriter(OutputStream outputStream) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
-    }
-
-    /**
-     * Can use bot write() and writeA() methods
-     *
-     * @param outputStream     where to write
-     * @param mainErrorHandler handler in case of error not null
-     */
-
-    BaseWriter(OutputStream outputStream, ErrorHandler mainErrorHandler) {
-        this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
-        this.mainErrorHandler = mainErrorHandler;
     }
 
     /**
@@ -151,26 +130,6 @@ public abstract class BaseWriter {
         outputStream.flush();
 //        System.out.println(dataPackage + " " + Thread.currentThread().getName());
         AbstractDataPackagePool.returnPackage(dataPackage);
-    }
-
-    /**
-     * Thread safe method writes given package
-     *
-     * @param dataPackage to be written
-     */
-
-    synchronized void writeA(AbstractDataPackage dataPackage) {
-        try {
-            outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
-            if (dataPackage.getHeader().getLength() != 0) {
-                outputStream.write(dataPackage.getData());
-            }
-            outputStream.flush();
-            AbstractDataPackagePool.returnPackage(dataPackage);
-        } catch (IOException e) {
-            e.printStackTrace();
-            mainErrorHandler.errorCase();
-        }
     }
 
 }
