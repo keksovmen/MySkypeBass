@@ -46,37 +46,40 @@ public class Call implements ErrorHandler {
         this.receiver = receiver;
     }
 
+    /**
+     * Define what sound to play depends on isIncoming
+     *
+     * @param isIncoming mean you called or not
+     */
+
+    private void setCalling(boolean isIncoming) {
+        if (isIncoming) {
+            sound.playIncoming();
+        } else {
+            sound.playOutComing();
+        }
+        isCalling.set(true);
+    }
+
+    public void incomingCall() {
+        setCalling(true);
+    }
+
+    public void outComingCall() {
+        setCalling(false);
+    }
+
+    public void stopCall() {
+        sound.stop();
+        isCalling.set(false);
+    }
+
     public boolean isCalling() {
         return isCalling.get();
     }
 
     public BaseUser getReceiver() {
         return receiver;
-    }
-
-    public void setCalling(boolean value) {
-        sound.stop();
-        isCalling.set(value);
-    }
-
-    /**
-     * Define what sound to play depends on isIncoming
-     *
-     * @param value      calling state
-     * @param isIncoming mean you called or not
-     */
-
-    public void setCalling(boolean value, boolean isIncoming) {
-        if (value) {
-            if (isIncoming) {
-                sound.playIncoming();
-            } else {
-                sound.playOutComing();
-            }
-        } else {
-            sound.stop();
-        }
-        isCalling.set(value);
     }
 
     public void setReceiver(BaseUser receiver) {
@@ -86,7 +89,7 @@ public class Call implements ErrorHandler {
     @Override
     public void errorCase() {
         receiver = null;
-        setCalling(false);
+        stopCall();
         iterate();
     }
 

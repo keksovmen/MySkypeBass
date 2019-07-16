@@ -271,7 +271,7 @@ public class Main implements ErrorHandler {
 
     private Consumer<BaseUser> callSomeOne() {
         return baseUser -> {
-            callDialog.setCalling(true, false);
+            callDialog.outComingCall();
             callDialog.setReceiver(baseUser);
             controller.getWriter().writeCall(controller.getMe().getId(), baseUser.getId());
         };
@@ -288,7 +288,7 @@ public class Main implements ErrorHandler {
         return baseUser -> {
             controller.getWriter().writeCancel(controller.getMe().getId(), baseUser.getId());
             if (isYou) {
-                callDialog.setCalling(false);
+                callDialog.stopCall();
             }
         };
     }
@@ -309,7 +309,7 @@ public class Main implements ErrorHandler {
 
             controller.getWriter().writeAccept(controller.getMe().getId(), from);
 
-            callDialog.setCalling(false);
+            callDialog.stopCall();
         };
     }
 
@@ -322,7 +322,7 @@ public class Main implements ErrorHandler {
     private Consumer<BaseUser> denyCall() {
         return baseUser -> {
             controller.getWriter().writeDeny(controller.getMe().getId(), baseUser.getId());
-            callDialog.setCalling(false);
+            callDialog.stopCall();
         };
     }
 
@@ -368,7 +368,7 @@ public class Main implements ErrorHandler {
                         }
                     } else {
                         //ordinary 1 side call
-                        callDialog.setCalling(true, true);
+                        callDialog.incomingCall();
                         callDialog.setReceiver(users.get(baseDataPackage.getHeader().getFrom()));
                         mainFrame.showIncomingCall(users.get(baseDataPackage.getHeader().getFrom()).toString(), baseDataPackage.getDataAsString());
                     }
@@ -377,14 +377,14 @@ public class Main implements ErrorHandler {
                 case SEND_CANCEL: {
                     if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
                         mainFrame.closeCall("Call was canceled");
-                        callDialog.setCalling(false);
+                        callDialog.stopCall();
                     }
                     break;
                 }
                 case SEND_APPROVE: {
                     if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
                         mainFrame.closeCall("Call was accepted");
-                        callDialog.setCalling(false);
+                        callDialog.stopCall();
                         startConv(baseDataPackage);
                     }
                     break;
@@ -392,7 +392,7 @@ public class Main implements ErrorHandler {
                 case SEND_DENY: {
                     if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
                         mainFrame.closeCall("Call was denied");
-                        callDialog.setCalling(false);
+                        callDialog.stopCall();
                     }
                     break;
                 }
