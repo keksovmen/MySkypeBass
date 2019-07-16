@@ -4,6 +4,7 @@ import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Utility.ServerUser;
 import Bin.Networking.Utility.Starting;
 import Bin.Networking.Writers.BaseWriter;
+import Bin.Util.Checker;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -30,19 +31,23 @@ public class Server implements Starting {
 
     public static final Properties serverProp;
 
+    /**
+     * Load of default properties for server parts
+     */
+
     static {
         Properties defaultProp = new Properties();
         defaultProp.setProperty("lock_time", "300");
         defaultProp.setProperty("bufferSize", "32");
         serverProp = new Properties(defaultProp);
-        InputStream resourceAsStream = Server.class.getResourceAsStream("/properties/Server.properties.properties");
-        if (resourceAsStream != null) {
-            try {
-                serverProp.load(resourceAsStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            InputStream resourceAsStream = Checker.getCheckedInput("/properties/Server.properties.properties");
+            serverProp.load(resourceAsStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            //Ignore because you already have default one
         }
+
     }
 
     /**
@@ -83,6 +88,8 @@ public class Server implements Starting {
 
     private final ExecutorService executor;
 
+    private static final int AMOUNT_OF_HELPER_THREADS = 10;
+
 //    private static final Logger logger = Logger.getLogger("MyLogger");
 
 //    static {
@@ -90,13 +97,23 @@ public class Server implements Starting {
 //    }
 
 
-//    static {
-    /*
-     * initial value grater than 0 because of problem with transporting negative byte
+    /**
+     * Creates server with give parameters
+     *
+     * @param port             for the server
+     * @param sampleRate       any acceptable one
+     * @param sampleSizeInBits must be dividable by 8
+     * @throws IOException if port already in use
      */
-//        id = new AtomicInteger(3);
-//    }
 
+    private Server(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
+        serverSocket = new ServerSocket(port);
+        audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
+        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
+        users = new HashMap<>();//change to one of concurrent maps
+        executor = new ThreadPoolExecutor(0, AMOUNT_OF_HELPER_THREADS,
+                30, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    }
 
     /**
      * Creates server from integers
@@ -107,12 +124,8 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public Server(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
-        serverSocket = new ServerSocket(port);
-        audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
-        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because 0 1 2 already in use @see BaseWriter enum WHO
-        users = new HashMap<>();//change to one of concurrent maps
-        executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
+        return new Server(port, sampleRate, sampleSizeInBits);
     }
 
     /**
@@ -124,12 +137,8 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public Server(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
-        serverSocket = new ServerSocket(Integer.parseInt(port));
-        audioFormat = new AudioFormat(Integer.parseInt(sampleRate), Integer.parseInt(sampleSizeInBits), 1, true, true);
-        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because 0 1 2 already in use @see BaseWriter enum WHO
-        users = new HashMap<>();//change to one of concurrent maps
-        executor = new ThreadPoolExecutor(0, 10, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
+        return new Server(Integer.valueOf(port), Integer.valueOf(sampleRate), Integer.parseInt(sampleSizeInBits));
     }
 
     /**
@@ -165,7 +174,6 @@ public class Server implements Starting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        serverSocket.close();
     }
 
     /**
@@ -241,7 +249,7 @@ public class Server implements Starting {
      * @return null if there is no such dude
      */
 
-    public synchronized ServerController getController(int who) {
+    synchronized ServerController getController(int who) {
         ServerUser serverUser = users.get(who);
         if (serverUser != null) {
             return serverUser.getController();

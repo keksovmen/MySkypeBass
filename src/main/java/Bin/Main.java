@@ -157,7 +157,7 @@ public class Main implements ErrorHandler {
         return strings -> {
             try {
                 if (server == null) {
-                    server = new Server(strings[0], strings[1], strings[2]);
+                    server = Server.getFromStrings(strings[0], strings[1], strings[2]);
                     server.start("Server");
                     return true;
                 }
