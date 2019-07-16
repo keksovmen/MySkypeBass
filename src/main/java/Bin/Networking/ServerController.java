@@ -3,7 +3,6 @@ package Bin.Networking;
 import Bin.Networking.Processors.ServerProcessor;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
-import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Utility.ErrorHandler;
@@ -66,20 +65,22 @@ public class ServerController implements ErrorHandler {
 
     private void authenticate() throws IOException {
         AbstractDataPackage dataPackage = reader.read();
-        String name = dataPackage.getDataAsString();
-        setUser(name);
 
-        final int id = me.getId();
+        final String name = dataPackage.getDataAsString();
+        final int id = server.getIdAndIncrement();
+        boolean canHear = false;
 
         writer.writeAudioFormat(id, server.getAudioFormat());
         AbstractDataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();
-        if (dataPackage.getHeader().getCode() == BaseWriter.CODE.SEND_APPROVE) {
-            me.setCanHear(true);
-        }
-        AbstractDataPackagePool.returnPackage(dataPackage);
 
+        if (dataPackage.getHeader().getCode() == BaseWriter.CODE.SEND_APPROVE) {
+            canHear = true;
+        }
+        me = new ServerUser(name, id, this,canHear);
         server.addUser(me);
+
+        AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
     private void launch() {
@@ -222,10 +223,6 @@ public class ServerController implements ErrorHandler {
                 }
             }
         };
-    }
-
-    private void setUser(String name) {
-        me = new ServerUser(name, server.getIdAndIncrement(), this);
     }
 
     public ServerWriter getWriter() {

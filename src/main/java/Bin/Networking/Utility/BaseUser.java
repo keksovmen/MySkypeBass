@@ -6,6 +6,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Immutable
+ * <p>
  * Represents a user on any side
  */
 
@@ -42,7 +44,7 @@ public class BaseUser {
 
 
     /**
-     * DO NOT OVVERIDE
+     * DO NOT OVERRIDE
      * MANY FUNCTIONS EXPECT DATA IN THIS FORMAT
      *
      * @return string representation

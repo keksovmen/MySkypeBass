@@ -5,7 +5,6 @@ import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Processors.Processable;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
-import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;

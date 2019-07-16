@@ -25,12 +25,12 @@ public class ServerUser extends BaseUser {
      * basically AudioClient speaker field
      */
 
-    private boolean canHear;
+    private final boolean canHear;
 
-    public ServerUser(String name, int id, ServerController controller) {
+    public ServerUser(String name, int id, ServerController controller, boolean canHear) {
         super(name, id);
         this.controller = controller;
-        canHear = false;
+        this.canHear = canHear;
     }
 
     public ServerController getController() {
@@ -51,10 +51,6 @@ public class ServerUser extends BaseUser {
 
     public boolean isCanHear() {
         return canHear;
-    }
-
-    public void setCanHear(boolean canHear) {
-        this.canHear = canHear;
     }
 
     /*
