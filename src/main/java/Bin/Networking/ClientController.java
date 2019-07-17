@@ -83,7 +83,7 @@ public class ClientController implements ErrorHandler {
     private void authenticate(String name) throws IOException {
         writer.writeName(name);
         AbstractDataPackage read = reader.read();
-        AudioFormat audioFormat = parseAudioFormat(read.getDataAsString());
+        AudioFormat audioFormat = Server.parseAudioFormat(read.getDataAsString());
         //sets audio format and tell the server can speaker play format or not
         if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
             writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
@@ -108,27 +108,6 @@ public class ClientController implements ErrorHandler {
         }
 
     }
-
-    /**
-     * Parse string like this Sample rate = 01...n\nSample size = 01....n
-     * retrive from them digits
-     *
-     * @param data got from the server
-     * @return default audio format
-     */
-
-    private AudioFormat parseAudioFormat(String data) {
-        String[] strings = data.split("\n");
-        Pattern pattern = Pattern.compile("\\d+?\\b");
-        Matcher matcher = pattern.matcher(strings[0]);
-        matcher.find();
-        int sampleRate = Integer.valueOf(matcher.group());
-        matcher = pattern.matcher(strings[1]);
-        matcher.find();
-        int sampleSize = Integer.valueOf(matcher.group());
-        return new AudioFormat(sampleRate, sampleSize, 1, true, true);
-    }
-
 
     public BaseUser getMe() {
         return me;

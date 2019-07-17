@@ -19,6 +19,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Implementation of server with my protocol
@@ -223,6 +225,28 @@ public class Server implements Starting {
     String getAudioFormat() {
         return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
                 "Sample size = " + audioFormat.getSampleSizeInBits();
+    }
+
+    /**
+     * Parse string like this Sample rate = 01...n\nSample size = 01....n
+     * retrieve from them digits
+     * <p>
+     * MUST MATCH getAudioFormat() !
+     *
+     * @param data got from the server
+     * @return default audio format
+     */
+
+    public static AudioFormat parseAudioFormat(String data) {
+        String[] strings = data.split("\n");
+        Pattern pattern = Pattern.compile("\\d+?\\b");
+        Matcher matcher = pattern.matcher(strings[0]);
+        matcher.find();
+        int sampleRate = Integer.valueOf(matcher.group());
+        matcher = pattern.matcher(strings[1]);
+        matcher.find();
+        int sampleSize = Integer.valueOf(matcher.group());
+        return new AudioFormat(sampleRate, sampleSize, 1, true, true);
     }
 
     /**

@@ -5,6 +5,7 @@ import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.ServerController;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -54,29 +55,57 @@ public class Conversation {
 
     public static void registerComplexConversation(ServerUser[] rightSide, ServerUser[] leftSide) {
         Conversation conversation = new Conversation();
-        for (ServerUser right : rightSide) {
+        ServerUser[] clearRight = collectOnlyUnique(rightSide, leftSide);
+        ServerUser[] clearLeft = collectOnlyUnique(leftSide, rightSide);
+        for (ServerUser right : clearRight) {
             right.setConversation(conversation);
-            for (ServerUser left : leftSide) {
+            for (ServerUser left : clearLeft) {
                 try {
                     right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
                 } catch (IOException e) {
-                    /*Simply ignore it's thread will handle exception*/
+                    /*Simply ignore it will be handled later */
                 }
             }
         }
-        for (ServerUser left : leftSide) {
+        for (ServerUser left : clearLeft) {
             left.setConversation(conversation);
-            for (ServerUser right : rightSide) {
+            for (ServerUser right : clearRight) {
                 try {
                     left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
                 } catch (IOException e) {
-                    /*Simply ignore it's thread will handle exception*/
+                    /*Simply ignore it will be handled later */
                 }
             }
         }
 
-        conversation.users.addAll(Arrays.asList(rightSide));
-        conversation.users.addAll(Arrays.asList(leftSide));
+
+        conversation.users.addAll(Arrays.asList(clearRight));
+        conversation.users.addAll(Arrays.asList(clearLeft));
+    }
+
+    /**
+     * Only needed when auto accept occur on dudes with conversations @see Test
+     *
+     * @param left  side
+     * @param right side
+     * @return unique version of 1 side
+     */
+
+    private static ServerUser[] collectOnlyUnique(ServerUser[] left, ServerUser[] right) {
+        List<ServerUser> result = new ArrayList<>();
+        for (ServerUser leftUser : left) {
+            boolean unique = true;
+            for (ServerUser aRight : right) {
+                if (leftUser.equals(aRight)) {
+                    unique = false;
+                    break;
+                }
+            }
+            if (unique) {
+                result.add(leftUser);
+            }
+        }
+        return result.toArray(new ServerUser[0]);
     }
 
     /**
@@ -93,9 +122,7 @@ public class Conversation {
                 try {
                     controller.getWriter().transferAudio(dataPackage);
                 } catch (IOException e) {
-                    /*Simply ignore it's thread will handle the exception*/
-//                    e.printStackTrace();
-//                    removeDude(user);
+                    removeDude(user);
                 }
             }
         }
@@ -115,9 +142,7 @@ public class Conversation {
                 try {
                     controller.getWriter().transferMessage(dataPackage);
                 } catch (IOException e) {
-                    /*Simply ignore it's thread will handle the exception*/
-//                    e.printStackTrace();
-//                    removeDude(user);
+                    removeDude(user);
                 }
             }
         }
@@ -126,24 +151,22 @@ public class Conversation {
     /**
      * Add new user(s) to this conference
      *
-     * @param exclusive who called this method
-     * @param user      to be added
+     * @param exclusive who called this method and know that this dude in
+     * @param userToAdd to be added
      */
 
-    public synchronized void addDude(ServerUser exclusive, ServerUser... user) {
-        for (ServerUser serverUserExist : users) {
-            if (!serverUserExist.equals(exclusive)) {
-                for (ServerUser serverUserToAdd : user) {
-                    try {
-                        serverUserExist.getController().getWriter().writeAddToConv(serverUserToAdd.getId(), serverUserExist.getId());
-                    } catch (IOException e) {
-                        /*Simply ignore it's thread will handle the exception*/
-                    }
-                    serverUserToAdd.setConversation(this);
+    public synchronized void addDude(ServerUser exclusive, ServerUser userToAdd) {
+        for (ServerUser serverUser : users) {
+            if (!serverUser.equals(exclusive)) {
+                try {
+                    serverUser.getController().getWriter().writeAddToConv(userToAdd.getId(), serverUser.getId());
+                } catch (IOException e) {
+                    removeDude(serverUser);
                 }
             }
         }
-        users.addAll(Arrays.asList(user));
+        userToAdd.setConversation(this);
+        users.add(userToAdd);
     }
 
     /**
@@ -163,7 +186,7 @@ public class Conversation {
             try {
                 serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
             } catch (IOException e) {
-                /*Simply ignore it's thread will handle the exception*/
+                removeDude(serverUser);
             }
         }
         if (users.size() == 1) {

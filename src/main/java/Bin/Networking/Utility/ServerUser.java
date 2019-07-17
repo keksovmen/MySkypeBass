@@ -37,15 +37,15 @@ public class ServerUser extends BaseUser {
         return controller;
     }
 
-    public synchronized Conversation getConversation() {
+    public Conversation getConversation() {
         return conversation;
     }
 
-    public synchronized void setConversation(Conversation conversation) {
+    public void setConversation(Conversation conversation) {
         this.conversation = conversation;
     }
 
-    public synchronized boolean inConv() {
+    public boolean inConv() {
         return conversation != null;
     }
 

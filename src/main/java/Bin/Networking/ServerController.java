@@ -1,5 +1,6 @@
 package Bin.Networking;
 
+import Bin.Networking.Processors.Processable;
 import Bin.Networking.Processors.ServerProcessor;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
@@ -23,7 +24,7 @@ public class ServerController implements ErrorHandler {
     private final Socket socket;
     private ServerWriter writer;
     private ReaderWithHandler reader;
-    private ServerProcessor serverProcessor;
+    private Processable serverProcessor;
     private ServerUser me;
     private final Server server;
 
@@ -77,163 +78,22 @@ public class ServerController implements ErrorHandler {
         if (dataPackage.getHeader().getCode() == BaseWriter.CODE.SEND_APPROVE) {
             canHear = true;
         }
-        me = new ServerUser(name, id, this,canHear);
+        me = new ServerUser(name, id, this, canHear);
         server.addUser(me);
 
         AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
     private void launch() {
-        serverProcessor.addListener(createUsersRequestListener(this));
-        serverProcessor.addListener(createConvHandler(this));
-        serverProcessor.addListener(createTransferHandler(this));
+        serverProcessor.addListener(ServerHandlerProvider.createUsersRequestListener(this));
+        serverProcessor.addListener(ServerHandlerProvider.createConvHandler(this));
+        serverProcessor.addListener(ServerHandlerProvider.createTransferHandler(this));
         reader.start("Server reader - " + getId());
-    }
-
-    /**
-     * Sends all <s>nudes</s> users except you to you
-     *
-     * @param controller basically this if it wasn't static
-     * @return ready to work listener
-     */
-
-    private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
-        return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
-                controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
-            }
-        };
-    }
-
-    /**
-     * Handles all conversation actions
-     * <p>
-     * MAIN PROBLEM THAT I HAVEN'T TESTED:
-     * When auto accept occurs what will happen?
-     * Both clients sendSound approve that triers create conversation handler
-     * Maybe change Conversation to static synchronised factory method
-     *
-     * Tried to make it handle auto accept by locking on this class
-     *
-     * @param controller basically this if it wasn't static
-     * @return ready to work listener
-     */
-
-    private static Consumer<AbstractDataPackage> createConvHandler(ServerController controller) {
-        return dataPackage -> {
-
-            switch (dataPackage.getHeader().getCode()) {
-                case SEND_APPROVE: {
-                    ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
-                    //case when dude disconnected before approve was received
-                    if (receiver == null) {
-                        int id = controller.getId();
-                        controller.writer.writeStopConv(id);
-                        controller.writer.writeUsers(id, controller.server.getUsers(id));
-                        break;
-                    }
-                    ServerUser me = controller.me;
-                    ServerUser receiverUser = receiver.me;
-                    Conversation conversation;
-                    Conversation receiverConversation;
-
-                    /*
-                    Has to be atomic operation for auto accept purposes
-                    The best I can do
-                    Main problem is when you try get intrinsic lock on any server user
-                    you will end up with dead lock
-                    So you need something that can be a bridge between two threads
-                    Initially though to use server executor, but it is not single thread
-                     */
-                    synchronized (ServerController.class) {
-                        if (me.inConv()) {
-                            if (receiverUser.inConv()) {
-                                conversation = me.getConversation();
-                                receiverConversation = receiverUser.getConversation();
-                                Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
-                            } else {
-                                conversation = me.getConversation();
-                                dataPackage.setData(conversation.getAllToString(me));
-                                conversation.addDude(me, receiverUser);
-                            }
-                        } else {
-                            if (receiverUser.inConv()) {
-                                conversation = receiverUser.getConversation();
-                                conversation.addDude(receiverUser, me);
-                            } else {
-                                Conversation.registerSimpleConversation(me, receiverUser);
-                            }
-                        }
-                    }
-                    break;
-                }
-                case SEND_DISCONNECT_FROM_CONV: {
-                    Conversation myConv = controller.me.getConversation();
-                    if (myConv != null) {
-                        myConv.removeDude(controller.me);
-                    }
-                    break;
-                }
-                case SEND_CALL: {
-                    Conversation myConv = controller.me.getConversation();
-                    if (myConv != null) {
-                        dataPackage.setData(myConv.getAllToString(controller.me));
-                    }
-                    break;
-                }
-            }
-        };
-    }
-
-    /**
-     * Handles all staff that is not for conversation and not for server
-     * Just sendSound messages and some control instructions
-     *
-     * @param controller basically this if it wasn't static
-     * @return ready to work handler
-     */
-
-    private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
-        return dataPackage -> {
-            if (dataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()) {
-                /*All that belong to conversation*/
-                if (dataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
-                    Conversation myConv = controller.me.getConversation();
-                    if (myConv == null) {
-                        return;
-                    }
-                    switch (dataPackage.getHeader().getCode()) {
-                        case SEND_SOUND: {
-                            myConv.sendSound(dataPackage, controller.getId());
-                            break;
-                        }
-                        case SEND_MESSAGE: {
-                            myConv.sendMessage(dataPackage, controller.getId());
-                            break;
-                        }
-                    }
-                } else {
-                    /*All that belong to direct transition*/
-                    ServerController controllerReceiver = controller.server.getController(dataPackage.getHeader().getTo());
-                    if (controllerReceiver != null) {
-                        controllerReceiver.writer.transferData(dataPackage);
-                    } else {
-                        controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
-                    }
-                }
-            }
-        };
     }
 
     public ServerWriter getWriter() {
         return writer;
     }
-
-    /**
-     * Short cut
-     *
-     * @return id
-     */
 
     private int getId() {
         return me.getId();
@@ -258,6 +118,192 @@ public class ServerController implements ErrorHandler {
     @Override
     public ErrorHandler[] getNext() {
         return new ErrorHandler[]{reader};
+    }
+
+
+    private static class ServerHandlerProvider {
+
+        private ServerHandlerProvider() {
+        }
+
+        /**
+         * Sends all <s>nudes</s> users except you to you
+         *
+         * @param controller basically this if it wasn't static
+         * @return ready to work listener
+         */
+
+        private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
+            return baseDataPackage -> {
+                if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
+                    controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                }
+            };
+        }
+
+        /**
+         * Handles all conversation actions
+         * <p>
+         * MAIN PROBLEM THAT I HAVEN'T TESTED: @see Test
+         * When auto accept occurs what will happen?
+         * Both clients sendSound approve that triers create conversation handler
+         * Maybe change Conversation to static synchronised factory method
+         * <p>
+         * Tried to make it handle auto accept by locking on this class
+         *
+         * @param controller basically this if it wasn't static
+         * @return ready to work listener
+         */
+
+        private static Consumer<AbstractDataPackage> createConvHandler(final ServerController controller) {
+            return dataPackage -> {
+
+                switch (dataPackage.getHeader().getCode()) {
+                    case SEND_APPROVE: {
+
+                        /**
+                         * To reduce code amount
+                         */
+
+                        class Helper {
+
+                            private void registerConversation(ServerUser me, ServerUser receiverUser) {
+                                Conversation conversation;
+                                if (me.inConv()) {
+                                    if (receiverUser.inConv()) {
+                                        conversation = me.getConversation();
+                                        Conversation receiverConversation = receiverUser.getConversation();
+                                        /*
+                                         * Why no just addDude()?
+                                         * Because of some retarded synchronisation when multiple auto accepts occur
+                                         * It happens that two dudes * already in both conferences indicated as --
+                                         * * - * -- * - *
+                                         * |            |
+                                         * *            *
+                                         * But others not, because of that you need to clear both sides when colliding them
+                                         */
+                                        Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
+                                    } else {
+                                        conversation = me.getConversation();
+                                        dataPackage.setData(conversation.getAllToString(me));
+                                        conversation.addDude(me, receiverUser);
+                                    }
+                                } else {
+                                    if (receiverUser.inConv()) {
+                                        conversation = receiverUser.getConversation();
+                                        conversation.addDude(receiverUser, me);
+                                    } else {
+                                        Conversation.registerSimpleConversation(me, receiverUser);
+                                    }
+                                }
+                            }
+                        }
+
+                        final ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
+                        //case when dude disconnected before approve was received
+                        if (receiver == null) {
+                            int id = controller.getId();
+                            controller.writer.writeStopConv(id);
+                            controller.writer.writeUsers(id, controller.server.getUsers(id));
+                            break;
+                        }
+
+                    /*
+                    Has to be atomic operation for auto accept purposes
+                    The best I can do
+                    Main problem is when you try get intrinsic lock on any server user
+                    you will end up with dead lock
+                    So you need something that can be a bridge between two threads
+                    Initially though to use server executor, but it is not single thread
+
+                    Solved thanks to Java Concurrency In Practice 10.1.2 Dynamic Lock Order Deadlocks
+                     */
+                        final int myHash = System.identityHashCode(controller.me);
+                        final int yourHash = System.identityHashCode(receiver.me);
+                        if (myHash > yourHash) {
+                            synchronized (controller.me) {
+                                synchronized (receiver.me) {
+//                                    System.out.println("my > your \t" + Integer.toHexString(myHash).toUpperCase() + "\t"
+//                                            + controller.me + " " + receiver.me + "\t" + Integer.toHexString(yourHash).toUpperCase());
+                                    new Helper().registerConversation(controller.me, receiver.me);
+                                }
+                            }
+                        } else if (myHash < yourHash) {
+                            synchronized (receiver.me) {
+                                synchronized (controller.me) {
+//                                    System.out.println("my < your \t" + Integer.toHexString(myHash).toUpperCase() + "\t" +
+//                                            controller.me + " " + receiver.me + "\t" + Integer.toHexString(yourHash).toUpperCase());
+                                    new Helper().registerConversation(controller.me, receiver.me);
+                                }
+                            }
+                        } else {
+                            synchronized (ServerController.class) {
+                                synchronized (controller.me) {
+                                    synchronized (receiver.me) {
+                                        new Helper().registerConversation(controller.me, receiver.me);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case SEND_DISCONNECT_FROM_CONV: {
+                        Conversation myConv = controller.me.getConversation();
+                        if (myConv != null) {
+                            myConv.removeDude(controller.me);
+                        }
+                        break;
+                    }
+                    case SEND_CALL: {
+                        Conversation myConv = controller.me.getConversation();
+                        if (myConv != null) {
+                            dataPackage.setData(myConv.getAllToString(controller.me));
+                        }
+                        break;
+                    }
+                }
+            };
+        }
+
+        /**
+         * Handles all staff that is not for conversation and not for server
+         * Just sendSound messages and some control instructions
+         *
+         * @param controller basically this if it wasn't static
+         * @return ready to work handler
+         */
+
+        private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
+            return dataPackage -> {
+                if (dataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()) {
+                    /*All that belong to conversation*/
+                    if (dataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
+                        Conversation myConv = controller.me.getConversation();
+                        if (myConv == null) {
+                            return;
+                        }
+                        switch (dataPackage.getHeader().getCode()) {
+                            case SEND_SOUND: {
+                                myConv.sendSound(dataPackage, controller.getId());
+                                break;
+                            }
+                            case SEND_MESSAGE: {
+                                myConv.sendMessage(dataPackage, controller.getId());
+                                break;
+                            }
+                        }
+                    } else {
+                        /*All that belong to direct transition*/
+                        ServerController controllerReceiver = controller.server.getController(dataPackage.getHeader().getTo());
+                        if (controllerReceiver != null) {
+                            controllerReceiver.writer.transferData(dataPackage);
+                        } else {
+                            controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                        }
+                    }
+                }
+            };
+        }
     }
 
 }
