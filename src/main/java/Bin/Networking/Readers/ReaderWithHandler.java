@@ -16,7 +16,7 @@ public class ReaderWithHandler extends BaseReader {
      * shutdown of the system
      */
 
-    ErrorHandler mainErrorHandler;
+    final ErrorHandler mainErrorHandler;
 
     /**
      * Allow usage of both read() with or without exception methods

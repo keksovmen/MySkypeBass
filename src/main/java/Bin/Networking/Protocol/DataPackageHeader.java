@@ -1,7 +1,5 @@
 package Bin.Networking.Protocol;
 
-import Bin.Networking.Writers.BaseWriter;
-
 import java.util.Arrays;
 
 /**
@@ -31,7 +29,7 @@ public class DataPackageHeader extends AbstractHeader {
      * Instruction what to do
      */
 
-    private BaseWriter.CODE code;
+    private CODE code;
 
     /**
      * Length of data that was sent
@@ -82,7 +80,7 @@ public class DataPackageHeader extends AbstractHeader {
      */
 
     @Override
-    public void init(BaseWriter.CODE code, int length, int from, int to) {
+    public void init(CODE code, int length, int from, int to) {
         this.code = code;
         if (length > getMaxLength()) {
             throw new IllegalArgumentException("length must be less or equal to " + getMaxLength());
@@ -102,7 +100,7 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public void init(final byte[] data) {
-        code = BaseWriter.CODE.parse(parser(data, 0));
+        code = CODE.parse(parser(data, 0));
         length = parser(data, 2);
         from = parser(data, 4);
         to = parser(data, 6);
@@ -155,7 +153,7 @@ public class DataPackageHeader extends AbstractHeader {
     }
 
     @Override
-    public BaseWriter.CODE getCode() {
+    public CODE getCode() {
         return code;
     }
 

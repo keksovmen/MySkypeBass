@@ -45,7 +45,7 @@ class Player {
      * Read part from input stream then plays it
      * Handle error with sample size
      *
-     * @param inputStream to read from
+     * @param inputStream    to read from
      * @param sourceDataLine where to play
      * @return amount of bytes read/played
      * @throws IOException if can't read from file

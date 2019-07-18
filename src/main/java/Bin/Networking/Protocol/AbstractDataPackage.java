@@ -1,7 +1,5 @@
 package Bin.Networking.Protocol;
 
-import Bin.Networking.Writers.BaseWriter;
-
 /**
  * Represents a structure of a protocol
  * Contain a header where is meta info,
@@ -34,7 +32,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to);
+    public abstract BaseDataPackage init(final CODE code, final int from, final int to);
 
     /**
      * For sending byte array of data could be anything
@@ -47,7 +45,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to, final byte[] data);
+    public abstract BaseDataPackage init(final CODE code, final int from, final int to, final byte[] data);
 
     /**
      * For sending strings
@@ -61,7 +59,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to, final String data);
+    public abstract BaseDataPackage init(final CODE code, final int from, final int to, final String data);
 
     /**
      * Mutates data

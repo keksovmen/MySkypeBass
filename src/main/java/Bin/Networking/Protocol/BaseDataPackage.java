@@ -1,6 +1,5 @@
 package Bin.Networking.Protocol;
 
-import Bin.Networking.Writers.BaseWriter;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
@@ -71,7 +70,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to) {
+    public BaseDataPackage init(final CODE code, final int from, final int to) {
         header.init(code, 0, from, to);
         return this;
     }
@@ -88,7 +87,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to, @Nullable final byte[] data) {
+    public BaseDataPackage init(final CODE code, final int from, final int to, @Nullable final byte[] data) {
         header.init(code, data == null ? 0 : data.length, from, to);
         this.data = data;
         return this;
@@ -107,7 +106,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final BaseWriter.CODE code, final int from, final int to, @NotNull final String data) {
+    public BaseDataPackage init(final CODE code, final int from, final int to, @NotNull final String data) {
         return init(code, from, to, data.getBytes(charset));
     }
 

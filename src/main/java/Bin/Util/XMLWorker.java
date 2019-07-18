@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * Simple xml worker
@@ -97,7 +96,7 @@ public class XMLWorker {
      * @return List filled with sound names
      */
 
-    private static List<String> getFromProperDocument(Element root){
+    private static List<String> getFromProperDocument(Element root) {
         NodeList childNodes = root.getChildNodes();
         List<String> result = new ArrayList<>(childNodes.getLength());
         for (int i = 0; i < childNodes.getLength(); i++) {

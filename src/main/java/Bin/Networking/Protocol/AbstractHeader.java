@@ -1,7 +1,5 @@
 package Bin.Networking.Protocol;
 
-import Bin.Networking.Writers.BaseWriter;
-
 /**
  * Contains and handles meta info for a package
  */
@@ -73,7 +71,7 @@ public abstract class AbstractHeader {
      * @param to     sender
      */
 
-    public abstract void init(BaseWriter.CODE code, int length, int from, int to);
+    public abstract void init(CODE code, int length, int from, int to);
 
     /**
      * Call this method when you are ready to write in a stream
@@ -87,7 +85,7 @@ public abstract class AbstractHeader {
      * @return Instruction what to do
      */
 
-    public abstract BaseWriter.CODE getCode();
+    public abstract CODE getCode();
 
     /**
      * @return of data except INITIAL_SIZE

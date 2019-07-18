@@ -7,13 +7,13 @@ import Bin.Networking.Utility.ErrorHandler;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public abstract class WriterWithHandler extends BaseWriter{
+public abstract class WriterWithHandler extends BaseWriter {
 
     /**
      * Basically handles cases when network get ruined
      */
 
-    ErrorHandler mainErrorHandler;
+    final ErrorHandler mainErrorHandler;
 
     /**
      * Can use bot write() and writeA() methods

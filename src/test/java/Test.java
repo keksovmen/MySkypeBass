@@ -1,9 +1,8 @@
 import Bin.Networking.ClientController;
-import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Protocol.CODE;
 import Bin.Networking.Protocol.DataPackagePool;
 import Bin.Networking.Server;
-import Bin.Networking.Writers.BaseWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public class Test {
             ClientController clientController = new ClientController(null);
             controllers.add(clientController);
             clientController.getProcessor().addListener(dataPackage -> {
-                if (dataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_CALL)){
+                if (dataPackage.getHeader().getCode().equals(CODE.SEND_CALL)){
                     try {
                         countDownLatch.await();
                         clientController.getWriter().writeAccept(clientController.getMe().getId(), dataPackage.getHeader().getFrom());

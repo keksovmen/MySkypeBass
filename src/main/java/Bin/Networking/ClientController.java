@@ -8,25 +8,23 @@ import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
-import Bin.Networking.Writers.BaseWriter;
+import Bin.Networking.Utility.WHO;
 import Bin.Networking.Writers.ClientWriter;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ClientController implements ErrorHandler {
 
     private Socket socket;
     private ClientWriter writer;
     private ReaderWithHandler reader;
-    private Processable processor;
+    private final Processable processor;
     private BaseUser me;
 
-    private ErrorHandler mainErrorHandler;
+    private final ErrorHandler mainErrorHandler;
 
     /**
      * Uses only for holder of network stuff
@@ -86,9 +84,9 @@ public class ClientController implements ErrorHandler {
         AudioFormat audioFormat = Server.parseAudioFormat(read.getDataAsString());
         //sets audio format and tell the server can speaker play format or not
         if (!AudioClient.getInstance().setAudioFormat(audioFormat)) {
-            writer.writeDeny(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
+            writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
         }
-        writer.writeAccept(BaseWriter.WHO.NO_NAME.getCode(), BaseWriter.WHO.SERVER.getCode());
+        writer.writeAccept(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
         me = new BaseUser(name, read.getHeader().getTo());
         AbstractDataPackagePool.returnPackage(read);
         reader.start("Client reader");

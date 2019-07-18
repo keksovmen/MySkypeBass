@@ -4,11 +4,12 @@ import Bin.Networking.Processors.Processable;
 import Bin.Networking.Processors.ServerProcessor;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Protocol.CODE;
 import Bin.Networking.Readers.ReaderWithHandler;
 import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Utility.ServerUser;
-import Bin.Networking.Writers.BaseWriter;
+import Bin.Networking.Utility.WHO;
 import Bin.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class ServerController implements ErrorHandler {
         AbstractDataPackagePool.returnPackage(dataPackage);
         dataPackage = reader.read();
 
-        if (dataPackage.getHeader().getCode() == BaseWriter.CODE.SEND_APPROVE) {
+        if (dataPackage.getHeader().getCode() == CODE.SEND_APPROVE) {
             canHear = true;
         }
         me = new ServerUser(name, id, this, canHear);
@@ -135,7 +136,7 @@ public class ServerController implements ErrorHandler {
 
         private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
             return baseDataPackage -> {
-                if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
+                if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
                     controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
                 }
             };
@@ -161,8 +162,8 @@ public class ServerController implements ErrorHandler {
                 switch (dataPackage.getHeader().getCode()) {
                     case SEND_APPROVE: {
 
-                        /**
-                         * To reduce code amount
+                        /*
+                          To reduce code amount
                          */
 
                         class Helper {
@@ -275,9 +276,9 @@ public class ServerController implements ErrorHandler {
 
         private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
             return dataPackage -> {
-                if (dataPackage.getHeader().getTo() != BaseWriter.WHO.SERVER.getCode()) {
+                if (dataPackage.getHeader().getTo() != WHO.SERVER.getCode()) {
                     /*All that belong to conversation*/
-                    if (dataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
+                    if (dataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode()) {
                         Conversation myConv = controller.me.getConversation();
                         if (myConv == null) {
                             return;

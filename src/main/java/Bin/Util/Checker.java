@@ -5,7 +5,8 @@ import java.nio.file.NoSuchFileException;
 
 public class Checker {
 
-    private Checker(){}
+    private Checker() {
+    }
 
     /**
      * Simple check if such resource exists
@@ -17,7 +18,7 @@ public class Checker {
 
     public static InputStream getCheckedInput(String path) throws NoSuchFileException {
         InputStream resourceAsStream = Checker.class.getResourceAsStream(path);
-        if (resourceAsStream == null){
+        if (resourceAsStream == null) {
             throw new NoSuchFileException("There is no such resource - " + path);
         }
         return resourceAsStream;

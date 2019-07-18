@@ -3,7 +3,7 @@ package Bin.Networking;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Utility.ServerUser;
 import Bin.Networking.Utility.Starting;
-import Bin.Networking.Writers.BaseWriter;
+import Bin.Networking.Utility.WHO;
 import Bin.Util.Checker;
 
 import javax.sound.sampled.AudioFormat;
@@ -33,8 +33,8 @@ public class Server implements Starting {
 
     public static final Properties serverProp;
 
-    /**
-     * Load of default properties for server parts
+    /*
+      Load of default properties for server parts
      */
 
     static {
@@ -111,7 +111,7 @@ public class Server implements Starting {
     private Server(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
         serverSocket = new ServerSocket(port);
         audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
-        id = new AtomicInteger(BaseWriter.WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
+        id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
         users = new HashMap<>();//change to one of concurrent maps
         executor = new ThreadPoolExecutor(0, AMOUNT_OF_HELPER_THREADS,
                 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>());

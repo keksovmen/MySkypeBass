@@ -6,12 +6,13 @@ import Bin.GUI.Forms.MainFrame;
 import Bin.Networking.ClientController;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Protocol.CODE;
 import Bin.Networking.Protocol.DataPackagePool;
 import Bin.Networking.Server;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.Call;
 import Bin.Networking.Utility.ErrorHandler;
-import Bin.Networking.Writers.BaseWriter;
+import Bin.Networking.Utility.WHO;
 
 import java.awt.*;
 import java.io.IOException;
@@ -215,7 +216,7 @@ public class Main implements ErrorHandler {
 
     private Consumer<AbstractDataPackage> usersIncome() {
         return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_USERS)) {
+            if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
                 BaseUser[] baseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
                 users.clear();
                 Arrays.stream(baseUsers).forEach(baseUser -> users.put(baseUser.getId(), baseUser));
@@ -243,7 +244,7 @@ public class Main implements ErrorHandler {
 
     private Consumer<AbstractDataPackage> showMessage() {
         return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getCode().equals(BaseWriter.CODE.SEND_MESSAGE)) {
+            if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_MESSAGE)) {
 
                 String message = baseDataPackage.getDataAsString();
                 int index = retrieveMessageMeta(message);
@@ -253,7 +254,7 @@ public class Main implements ErrorHandler {
                     audioClient.playRandomMessageSound();
                 }
 
-                if (baseDataPackage.getHeader().getTo() == BaseWriter.WHO.CONFERENCE.getCode()) {
+                if (baseDataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode()) {
                     mainFrame.showConferenceMessage(message, users.get(baseDataPackage.getHeader().getFrom()).toString());
                 } else {
                     mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), message);
@@ -551,7 +552,7 @@ public class Main implements ErrorHandler {
      */
 
     private Consumer<String> sendMessageToConference() {
-        return s -> controller.getWriter().writeMessage(controller.getMe().getId(), BaseWriter.WHO.CONFERENCE.getCode(), s);
+        return s -> controller.getWriter().writeMessage(controller.getMe().getId(), WHO.CONFERENCE.getCode(), s);
     }
 
     @Override
