@@ -57,30 +57,32 @@ public class Conversation {
         Conversation conversation = new Conversation();
         ServerUser[] clearRight = collectOnlyUnique(rightSide, leftSide);
         ServerUser[] clearLeft = collectOnlyUnique(leftSide, rightSide);
-        for (ServerUser right : clearRight) {
-            right.setConversation(conversation);
-            for (ServerUser left : clearLeft) {
-                try {
-                    right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
-                } catch (IOException e) {
-                    /*Simply ignore it will be handled later */
-                }
-            }
-        }
-        for (ServerUser left : clearLeft) {
-            left.setConversation(conversation);
+        synchronized (conversation) {
             for (ServerUser right : clearRight) {
-                try {
-                    left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
-                } catch (IOException e) {
-                    /*Simply ignore it will be handled later */
+                right.setConversation(conversation);
+                for (ServerUser left : clearLeft) {
+                    try {
+                        right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
+                    } catch (IOException e) {
+                        /*Simply ignore it will be handled later */
+                    }
                 }
             }
+            for (ServerUser left : clearLeft) {
+                left.setConversation(conversation);
+                for (ServerUser right : clearRight) {
+                    try {
+                        left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
+                    } catch (IOException e) {
+                        /*Simply ignore it will be handled later */
+                    }
+                }
+            }
+
+
+            conversation.users.addAll(Arrays.asList(clearRight));
+            conversation.users.addAll(Arrays.asList(clearLeft));
         }
-
-
-        conversation.users.addAll(Arrays.asList(clearRight));
-        conversation.users.addAll(Arrays.asList(clearLeft));
     }
 
     /**

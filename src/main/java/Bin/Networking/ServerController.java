@@ -103,8 +103,10 @@ public class ServerController implements ErrorHandler {
 
     @Override
     public void errorCase() {
-        if (me.inConv()) {
-            me.getConversation().removeDude(me);
+        synchronized (me) {
+            if (me.inConv()) {
+                me.getConversation().removeDude(me);
+            }
         }
         server.removeUser(getId());
         try {
@@ -137,7 +139,8 @@ public class ServerController implements ErrorHandler {
         private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
             return baseDataPackage -> {
                 if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
-                    controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                    final int id = controller.getId();
+                    controller.writer.writeUsers(id, controller.server.getUsers(id));
                 }
             };
         }
@@ -172,8 +175,34 @@ public class ServerController implements ErrorHandler {
                                 Conversation conversation;
                                 if (me.inConv()) {
                                     if (receiverUser.inConv()) {
-                                        conversation = me.getConversation();
-                                        Conversation receiverConversation = receiverUser.getConversation();
+
+                                        /*
+                                        Looks like poison but should work well
+                                         */
+                                        final int i = System.identityHashCode(me.getConversation());
+                                        final int j = System.identityHashCode(receiverUser.getConversation());
+                                        if (i > j) {
+                                            synchronized (me.getConversation()) {
+                                                synchronized (receiverUser.getConversation()) {
+                                                    Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
+                                                }
+                                            }
+                                        } else if (i < j) {
+                                            synchronized (receiverUser.getConversation()) {
+                                                synchronized (me.getConversation()) {
+                                                    Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
+                                                }
+                                            }
+                                        } else {
+                                            synchronized (Helper.class) {
+                                                synchronized (me.getConversation()) {
+                                                    synchronized (receiverUser.getConversation()) {
+                                                        Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
+                                                    }
+                                                }
+                                            }
+                                        }
+
                                         /*
                                          * Why no just addDude()?
                                          * Because of some retarded synchronisation when multiple auto accepts occur
@@ -183,16 +212,22 @@ public class ServerController implements ErrorHandler {
                                          * *            *
                                          * But others not, because of that you need to clear both sides when colliding them
                                          */
-                                        Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
+
+//                                        Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
                                     } else {
-                                        conversation = me.getConversation();
-                                        dataPackage.setData(conversation.getAllToString(me));
-                                        conversation.addDude(me, receiverUser);
+//                                        conversation = me.getConversation();
+                                        synchronized (me.getConversation()) {
+                                            conversation = me.getConversation();
+                                            dataPackage.setData(conversation.getAllToString(me));
+                                            conversation.addDude(me, receiverUser);
+                                        }
                                     }
                                 } else {
                                     if (receiverUser.inConv()) {
-                                        conversation = receiverUser.getConversation();
-                                        conversation.addDude(receiverUser, me);
+                                        synchronized (receiverUser.getConversation()) {
+                                            conversation = receiverUser.getConversation();
+                                            conversation.addDude(receiverUser, me);
+                                        }
                                     } else {
                                         Conversation.registerSimpleConversation(me, receiverUser);
                                     }
@@ -203,9 +238,10 @@ public class ServerController implements ErrorHandler {
                         final ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
                         //case when dude disconnected before approve was received
                         if (receiver == null) {
-                            int id = controller.getId();
-                            controller.writer.writeStopConv(id);
-                            controller.writer.writeUsers(id, controller.server.getUsers(id));
+                            /*
+                            You just ignore it because of you don't know in a conference you are or the dude
+                            It'll be handled in transfer handler or could be in conversation
+                             */
                             break;
                         }
 
@@ -275,31 +311,60 @@ public class ServerController implements ErrorHandler {
          */
 
         private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
-            return dataPackage -> {
-                if (dataPackage.getHeader().getTo() != WHO.SERVER.getCode()) {
-                    /*All that belong to conversation*/
-                    if (dataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode()) {
-                        Conversation myConv = controller.me.getConversation();
-                        if (myConv == null) {
-                            return;
-                        }
-                        switch (dataPackage.getHeader().getCode()) {
-                            case SEND_SOUND: {
-                                myConv.sendSound(dataPackage, controller.getId());
-                                break;
+            return new Consumer<AbstractDataPackage>() {
+                private int counter;
+                private static final int BOUNDARY = 5;
+
+                /**
+                 * Idea is each your pocket with sound or text to conference
+                 * That can't reach conference because you don't have one
+                 * will increase counter when it hit BOUNDARY server will tell you
+                 * to stop the conversation
+                 *
+                 * Needed for synchronise purposes
+                 * @return false if you have to stop
+                 */
+
+                private boolean increaseCounter() {
+                    counter++;
+                    if (counter > BOUNDARY) {
+                        counter = 0;
+                        controller.getWriter().writeStopConv(controller.getId());
+                        return false;
+                    }
+                    return true;
+                }
+
+                @Override
+                public void accept(AbstractDataPackage dataPackage) {
+                    final int to = dataPackage.getHeader().getTo();
+                    if (to != WHO.SERVER.getCode()) {
+                        /*All that belong to conversation*/
+                        if (to == WHO.CONFERENCE.getCode()) {
+                            if (!controller.me.inConv()) {
+                                increaseCounter();
+                                return;
                             }
-                            case SEND_MESSAGE: {
-                                myConv.sendMessage(dataPackage, controller.getId());
-                                break;
+                            counter = 0;
+                            Conversation myConv = controller.me.getConversation();
+                            switch (dataPackage.getHeader().getCode()) {
+                                case SEND_SOUND: {
+                                    myConv.sendSound(dataPackage, controller.getId());
+                                    break;
+                                }
+                                case SEND_MESSAGE: {
+                                    myConv.sendMessage(dataPackage, controller.getId());
+                                    break;
+                                }
                             }
-                        }
-                    } else {
-                        /*All that belong to direct transition*/
-                        ServerController controllerReceiver = controller.server.getController(dataPackage.getHeader().getTo());
-                        if (controllerReceiver != null) {
-                            controllerReceiver.writer.transferData(dataPackage);
                         } else {
-                            controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                            /*All that belong to direct transition*/
+                            ServerController controllerReceiver = controller.server.getController(to);
+                            if (controllerReceiver != null) {
+                                controllerReceiver.writer.transferData(dataPackage);
+                            } else {
+                                controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
+                            }
                         }
                     }
                 }

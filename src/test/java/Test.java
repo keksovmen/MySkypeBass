@@ -19,7 +19,7 @@ public class Test {
 
         Server server = Server.getFromIntegers(8188, 40_000, 16);
         server.start("Server");
-        final int size = 3;
+        final int size = 10;
         List<ClientController> controllers = new ArrayList<>(size);
         CountDownLatch countDownLatch = new CountDownLatch(1);
         for (int i = 0; i < size ; i++) {

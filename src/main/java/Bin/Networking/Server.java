@@ -160,9 +160,16 @@ public class Server implements Starting {
             while (work) {
                 try {
                     Socket socket = serverSocket.accept();
-                    new ServerController(socket, this).start();
+                    executor.execute(() -> {
+                        try {
+                            new ServerController(socket, this).start();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
                 } catch (IOException e) {
                     e.printStackTrace();
+                    work = false;
                 }
             }
         }, name).start();

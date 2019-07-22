@@ -18,7 +18,7 @@ public class ServerUser extends BaseUser {
      * Shows in conversation you are or not
      */
 
-    private Conversation conversation;
+    private volatile Conversation conversation;
 
     /**
      * Need for indicating a possibility to play audio
