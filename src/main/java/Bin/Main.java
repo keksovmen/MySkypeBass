@@ -54,10 +54,10 @@ public class Main implements ErrorHandler {
         initialInitForActions();
         EventQueue.invokeLater(() -> {
             mainFrame = new MainFrame(actionsBox);
-            controller.getProcessor().addListener(usersIncome());
-            controller.getProcessor().addListener(showMessage());
-            controller.getProcessor().addListener(callHandler());
-            controller.getProcessor().addListener(audioHandler());
+            controller.getProcessor().addListener(HandlerProducer.usersIncome(this));
+            controller.getProcessor().addListener(HandlerProducer.showMessage(this));
+            controller.getProcessor().addListener(HandlerProducer.callHandler(this));
+            controller.getProcessor().addListener(HandlerProducer.audioHandler(this));
         });
     }
 
@@ -208,24 +208,6 @@ public class Main implements ErrorHandler {
     }
 
     /**
-     * Creates a handler for users income
-     * gets users from string
-     *
-     * @return ready to be established handler
-     */
-
-    private Consumer<AbstractDataPackage> usersIncome() {
-        return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
-                BaseUser[] baseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
-                users.clear();
-                Arrays.stream(baseUsers).forEach(baseUser -> users.put(baseUser.getId(), baseUser));
-                mainFrame.updateUsers(baseUsers);
-            }
-        };
-    }
-
-    /**
      * Creates a function that sendSound a message to someone
      *
      * @return ready to use function
@@ -233,34 +215,6 @@ public class Main implements ErrorHandler {
 
     private BiConsumer<Integer, String> sendMessage() {
         return (integer, s) -> controller.getWriter().writeMessage(controller.getMe().getId(), integer, s);
-    }
-
-    /**
-     * Creates message handler
-     * displays it
-     *
-     * @return ready to be registered handler
-     */
-
-    private Consumer<AbstractDataPackage> showMessage() {
-        return baseDataPackage -> {
-            if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_MESSAGE)) {
-
-                String message = baseDataPackage.getDataAsString();
-                int index = retrieveMessageMeta(message);
-                if (index != -1) {
-                    audioClient.playIndexedMessageSound(index);
-                } else {
-                    audioClient.playRandomMessageSound();
-                }
-
-                if (baseDataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode()) {
-                    mainFrame.showConferenceMessage(message, users.get(baseDataPackage.getHeader().getFrom()).toString());
-                } else {
-                    mainFrame.showMessage(users.get(baseDataPackage.getHeader().getFrom()), message);
-                }
-            }
-        };
     }
 
     /**
@@ -324,80 +278,6 @@ public class Main implements ErrorHandler {
         return baseUser -> {
             controller.getWriter().writeDeny(controller.getMe().getId(), baseUser.getId());
             callDialog.stopCall();
-        };
-    }
-
-    /**
-     * Creates a call handler
-     * Reacts to all call actions
-     * If you are already in calling then according to
-     * who you try to call it will auto accept or cancel
-     * the incoming call
-     * Starts a conversation if accepted
-     * other cases just dispose the dialog with a message
-     *
-     * @return ready to be registered handler
-     */
-
-    private Consumer<AbstractDataPackage> callHandler() {
-        return baseDataPackage -> {
-            switch (baseDataPackage.getHeader().getCode()) {
-                case SEND_CALL: {
-                    int from = baseDataPackage.getHeader().getFrom();
-                    if (callDialog.isCalling()) {
-                        //auto accept and cancel
-                        BaseUser receiver = callDialog.getReceiver();
-                        if (receiver.getId() == from) {
-                            BaseUser[] users;
-                            if (baseDataPackage.getHeader().getLength() > 0) {
-                                BaseUser[] parseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
-                                users = new BaseUser[parseUsers.length + 1];
-                                users[0] = receiver;
-                                System.arraycopy(parseUsers, 0, users, 1, parseUsers.length);
-                            } else {
-                                users = new BaseUser[]{receiver};
-                            }
-                            actionsBox.acceptCall().accept(users);
-                            //auto accept call handle here
-//                            mainFrame.closeCall("Call was accepted");
-                            mainFrame.showDialog("Call was accepted");
-                        } else {
-                            BaseUser caller = users.get(from);
-                            //auto cancel call because you are busied already
-                            cancelCall(false).accept(caller);   //not from actionBox because of boolean argument
-                            mainFrame.showMessage(caller, "I called you, but you were busy, call me");
-                        }
-                    } else {
-                        //ordinary 1 side call
-                        callDialog.incomingCall();
-                        callDialog.setReceiver(users.get(baseDataPackage.getHeader().getFrom()));
-                        mainFrame.showIncomingCall(users.get(baseDataPackage.getHeader().getFrom()).toString(), baseDataPackage.getDataAsString());
-                    }
-                    break;
-                }
-                case SEND_CANCEL: {
-                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
-                        mainFrame.closeCall("Call was canceled");
-                        callDialog.stopCall();
-                    }
-                    break;
-                }
-                case SEND_APPROVE: {
-                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
-                        mainFrame.closeCall("Call was accepted");
-                        callDialog.stopCall();
-                        startConv(baseDataPackage);
-                    }
-                    break;
-                }
-                case SEND_DENY: {
-                    if (callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == callDialog.getReceiver().getId()) {
-                        mainFrame.closeCall("Call was denied");
-                        callDialog.stopCall();
-                    }
-                    break;
-                }
-            }
         };
     }
 
@@ -482,45 +362,6 @@ public class Main implements ErrorHandler {
     }
 
     /**
-     * Create audio handler
-     * Handles all events corresponding to sound
-     * It adds new sound lines and remove already existed
-     * and stop a conversation
-     * <p>
-     * Also clears all existed packages
-     *
-     * @return ready to be registered handler
-     */
-
-    private Consumer<AbstractDataPackage> audioHandler() {
-        return dataPackage -> {
-            switch (dataPackage.getHeader().getCode()) {
-                case SEND_SOUND: {
-                    audioClient.playAudio(dataPackage.getHeader().getFrom(), dataPackage.getData());
-                    break;
-                }
-                case SEND_ADD: {
-                    int from = dataPackage.getHeader().getFrom();
-                    audioClient.add(from);
-                    mainFrame.addToConv(users.get(from).toString(), audioClient.getSettings(from));
-                    break;
-                }
-                case SEND_REMOVE: {
-                    audioClient.remove(dataPackage.getHeader().getFrom());
-                    mainFrame.removeFromConv(users.get(dataPackage.getHeader().getFrom()).toString());
-                    break;
-                }
-                case SEND_STOP_CONV: {
-                    audioClient.close();
-                    mainFrame.closeConversation();
-                    AbstractDataPackagePool.clearStorage();
-                    break;
-                }
-            }
-        };
-    }
-
-    /**
      * Creates action for disconnecting or leaving conversation
      * Also clear all existed packages
      *
@@ -565,6 +406,167 @@ public class Main implements ErrorHandler {
     @Override
     public ErrorHandler[] getNext() {
         return new ErrorHandler[]{controller, audioClient, callDialog, mainFrame};
+    }
+
+    private static class HandlerProducer{
+        /**
+         * Creates a handler for users income
+         * gets users from string
+         *
+         * @return ready to be established handler
+         */
+
+        private static Consumer<AbstractDataPackage> usersIncome(final Main main) {
+            return baseDataPackage -> {
+                if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
+                    BaseUser[] baseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
+                    main.users.clear();
+                    Arrays.stream(baseUsers).forEach(baseUser -> main.users.put(baseUser.getId(), baseUser));
+                    main.mainFrame.updateUsers(baseUsers);
+                }
+            };
+        }
+
+        /**
+         * Creates message handler
+         * displays it
+         *
+         * @return ready to be registered handler
+         */
+
+        private static Consumer<AbstractDataPackage> showMessage(final Main main) {
+            return baseDataPackage -> {
+                if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_MESSAGE)) {
+
+                    String message = baseDataPackage.getDataAsString();
+                    int index = retrieveMessageMeta(message);
+                    if (index != -1) {
+                        main.audioClient.playIndexedMessageSound(index);
+                    } else {
+                        main.audioClient.playRandomMessageSound();
+                    }
+
+                    if (baseDataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode()) {
+                        main.mainFrame.showConferenceMessage(message, main.users.get(baseDataPackage.getHeader().getFrom()).toString());
+                    } else {
+                        main.mainFrame.showMessage(main.users.get(baseDataPackage.getHeader().getFrom()), message);
+                    }
+                }
+            };
+        }
+
+        /**
+         * Creates a call handler
+         * Reacts to all call actions
+         * If you are already in calling then according to
+         * who you try to call it will auto accept or cancel
+         * the incoming call
+         * Starts a conversation if accepted
+         * other cases just dispose the dialog with a message
+         *
+         * @return ready to be registered handler
+         */
+
+        private static Consumer<AbstractDataPackage> callHandler(final Main main) {
+            return baseDataPackage -> {
+                switch (baseDataPackage.getHeader().getCode()) {
+                    case SEND_CALL: {
+                        int from = baseDataPackage.getHeader().getFrom();
+                        if (main.callDialog.isCalling()) {
+                            //auto accept and cancel
+                            BaseUser receiver = main.callDialog.getReceiver();
+                            if (receiver.getId() == from) {
+                                BaseUser[] users;
+                                if (baseDataPackage.getHeader().getLength() > 0) {
+                                    BaseUser[] parseUsers = BaseUser.parseUsers(baseDataPackage.getDataAsString());
+                                    users = new BaseUser[parseUsers.length + 1];
+                                    users[0] = receiver;
+                                    System.arraycopy(parseUsers, 0, users, 1, parseUsers.length);
+                                } else {
+                                    users = new BaseUser[]{receiver};
+                                }
+                                main.actionsBox.acceptCall().accept(users);
+                                //auto accept call handle here
+//                            mainFrame.closeCall("Call was accepted");
+                                main.mainFrame.showDialog("Call was accepted");
+                            } else {
+                                BaseUser caller = main.users.get(from);
+                                //auto cancel call because you are busied already
+                                main.cancelCall(false).accept(caller);   //not from actionBox because of boolean argument
+                                main.mainFrame.showMessage(caller, "I called you, but you were busy, call me");
+                            }
+                        } else {
+                            //ordinary 1 side call
+                            main.callDialog.incomingCall();
+                            main.callDialog.setReceiver(main.users.get(baseDataPackage.getHeader().getFrom()));
+                            main.mainFrame.showIncomingCall(main.users.get(baseDataPackage.getHeader().getFrom()).toString(), baseDataPackage.getDataAsString());
+                        }
+                        break;
+                    }
+                    case SEND_CANCEL: {
+                        if (main.callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == main.callDialog.getReceiver().getId()) {
+                            main.mainFrame.closeCall("Call was canceled");
+                            main.callDialog.stopCall();
+                        }
+                        break;
+                    }
+                    case SEND_APPROVE: {
+                        if (main.callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == main.callDialog.getReceiver().getId()) {
+                            main.mainFrame.closeCall("Call was accepted");
+                            main.callDialog.stopCall();
+                            main.startConv(baseDataPackage);
+                        }
+                        break;
+                    }
+                    case SEND_DENY: {
+                        if (main.callDialog.isCalling() && baseDataPackage.getHeader().getFrom() == main.callDialog.getReceiver().getId()) {
+                            main.mainFrame.closeCall("Call was denied");
+                            main.callDialog.stopCall();
+                        }
+                        break;
+                    }
+                }
+            };
+        }
+
+        /**
+         * Create audio handler
+         * Handles all events corresponding to sound
+         * It adds new sound lines and remove already existed
+         * and stop a conversation
+         * <p>
+         * Also clears all existed packages
+         *
+         * @return ready to be registered handler
+         */
+
+        private static Consumer<AbstractDataPackage> audioHandler(final Main main) {
+            return dataPackage -> {
+                switch (dataPackage.getHeader().getCode()) {
+                    case SEND_SOUND: {
+                        main.audioClient.playAudio(dataPackage.getHeader().getFrom(), dataPackage.getData());
+                        break;
+                    }
+                    case SEND_ADD: {
+                        int from = dataPackage.getHeader().getFrom();
+                        main.audioClient.add(from);
+                        main.mainFrame.addToConv(main.users.get(from).toString(), main.audioClient.getSettings(from));
+                        break;
+                    }
+                    case SEND_REMOVE: {
+                        main.audioClient.remove(dataPackage.getHeader().getFrom());
+                        main.mainFrame.removeFromConv(main.users.get(dataPackage.getHeader().getFrom()).toString());
+                        break;
+                    }
+                    case SEND_STOP_CONV: {
+                        main.audioClient.close();
+                        main.mainFrame.closeConversation();
+                        AbstractDataPackagePool.clearStorage();
+                        break;
+                    }
+                }
+            };
+        }
     }
 
 }
