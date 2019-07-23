@@ -3,9 +3,7 @@ package Bin.Audio;
 import Bin.Util.Checker;
 import Bin.Util.XMLWorker;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,13 +52,13 @@ class MessageNotification {
     private void playMessageSound(int idOfTrack) {
         new Thread(() -> {
             try (BufferedInputStream inputStream = new BufferedInputStream(
-                    Checker.getCheckedInput(notificationPaths.get(idOfTrack)))) {
+                    Checker.getCheckedInput(notificationPaths.get(idOfTrack)));
+                 SourceDataLine sourceDataLine = AudioLineProvider.getFromInput(inputStream);
+                 AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream)) {
 
                 //open source data line in default mixer
-                SourceDataLine sourceDataLine = AudioLineProvider.getFromInput(inputStream);
-
                 //start playing sound will close input stream and source line
-                Player.playLoop(inputStream, sourceDataLine);
+                Player.playLoop(audioInputStream, sourceDataLine);
 
             } catch (IOException | UnsupportedAudioFileException | LineUnavailableException e) {
                 e.printStackTrace();

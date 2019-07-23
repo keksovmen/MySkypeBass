@@ -2,9 +2,7 @@ package Bin.Audio;
 
 import Bin.Util.Checker;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 
@@ -65,11 +63,13 @@ public class CallNotificator {
      */
 
     private void playOneFile(String name) {
+        AudioInputStream audioInputStream = null;
         try (BufferedInputStream inputStream = new BufferedInputStream(
                 Checker.getCheckedInput(name))) {
             speaker = AudioLineProvider.getFromInput(inputStream);
+            audioInputStream = AudioSystem.getAudioInputStream(inputStream);
             while (work) {
-                if (Player.playOnce(inputStream, speaker) == -1) {
+                if (Player.playOnce(audioInputStream, speaker) == -1) {
                     break;
                 }
             }
@@ -79,6 +79,13 @@ public class CallNotificator {
         } finally {
             speaker.drain();
             speaker.close();
+            if (audioInputStream != null) {
+                try {
+                    audioInputStream.close();
+                } catch (IOException e) {
+                    /*Already closed*/
+                }
+            }
         }
     }
 

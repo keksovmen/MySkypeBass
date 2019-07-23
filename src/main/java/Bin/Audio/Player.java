@@ -1,8 +1,8 @@
 package Bin.Audio;
 
+import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Contains static methods for play audio
@@ -17,14 +17,13 @@ class Player {
      * Default play loop
      * Thread will wait until the end of sound
      * Handle different frame sizes
-     * Will close source line at the end
      *
      * @param inputStream    where get audio to play
      * @param sourceDataLine where play audio
      * @throws IOException if can't read from input stream
      */
 
-    static void playLoop(InputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
+    static void playLoop(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
         byte[] data = new byte[AudioClient.CAPTURE_SIZE];
         int amount;
         int j;
@@ -38,7 +37,6 @@ class Player {
             sourceDataLine.write(data, 0, amount);
         }
         sourceDataLine.drain();
-        sourceDataLine.close();
     }
 
     /**
@@ -51,7 +49,7 @@ class Player {
      * @throws IOException if can't read from file
      */
 
-    static int playOnce(InputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
+    static int playOnce(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
         byte[] data = new byte[AudioClient.CAPTURE_SIZE];
         int frameSize = sourceDataLine.getFormat().getFrameSize();
         int amount = inputStream.read(data);
