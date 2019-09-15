@@ -30,7 +30,7 @@ public abstract class AbstractHeader {
     }
 
     /**
-     * Purpose is to be able to ovveride it
+     * Purpose is to be able to override it
      * if you want to make your own bugger package
      *
      * @return size of the header that will be read 100% first
@@ -41,7 +41,7 @@ public abstract class AbstractHeader {
     }
 
     /**
-     * Purpose is to be able to ovveride it,
+     * Purpose is to be able to override it,
      * if you want to make your own bigger package
      *
      * @return max length depends on how much bytes you want to give it

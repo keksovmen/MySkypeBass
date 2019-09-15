@@ -51,7 +51,7 @@ public interface ProtocolBitMap {
      * Will throw exception division by zero if the conditions are not complied
      */
 
-    int MAX_VALUE = (int)(Math.pow(2, 8 * INSTRUCTION_SIZE)) /
+    int MAX_VALUE = ((int)(Math.pow(2, 8 * INSTRUCTION_SIZE)) /
                         (((INSTRUCTION_SIZE | LENGTH_SIZE | FROM_SIZE | TO_SIZE) * 4)
-                == PACKET_SIZE ? 1 : 0);
+                == PACKET_SIZE ? 1 : 0)) - 1;
 }

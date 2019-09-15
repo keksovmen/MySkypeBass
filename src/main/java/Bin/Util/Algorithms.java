@@ -28,11 +28,11 @@ public class Algorithms {
     /**
      * Simple linear search for a given value
      *
-     * @param array where to search
-     * @param item  the value
+     * @param array      where to search
+     * @param item       the value
      * @param comparator used to find identical but different classes thing
-     * @param <T>   template class for array
-     * @param <Y>   template class for finding thing
+     * @param <T>        template class for array
+     * @param <Y>        template class for finding thing
      * @return T or null
      */
 
@@ -69,8 +69,8 @@ public class Algorithms {
      * Simple geometric search for identities
      *
      * @param comparator used instead of equals()
-     * @param array where to search
-     * @param <T>   template class
+     * @param array      where to search
+     * @param <T>        template class
      * @return true if find identities
      */
 
@@ -86,5 +86,20 @@ public class Algorithms {
             }
         }
         return false;
+    }
+
+    /**
+     * Combine two bytes in to an int
+     *
+     * @param highByte  will be high
+     * @param lowerByte will be low
+     * @return unsigned int
+     */
+
+    public static int combineTwoBytes(byte highByte, byte lowerByte) {
+        int result = (highByte & 0xff) << 8;
+        result |= lowerByte & 0xff;
+        result &= 0xffff;
+        return result;
     }
 }

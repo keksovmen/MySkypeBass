@@ -1,20 +1,21 @@
-import Bin.Main;
 import Bin.Networking.Protocol.CODE;
+import Bin.Networking.Protocol.DataPackageHeader;
 import Bin.Networking.Protocol.ProtocolBitMap;
+import Bin.Util.Algorithms;
 
 public class Tester {
 
     private int anInt;
 
-    public synchronized void ImcreaseI(){
+    public synchronized void ImcreaseI() {
         anInt++;
     }
 
-    public void showInt(){
+    public void showInt() {
         System.out.println(anInt);
     }
 
-    public synchronized void showSync(){
+    public synchronized void showSync() {
         System.out.println("SYNC = " + anInt);
     }
 
@@ -23,7 +24,12 @@ public class Tester {
         assert (ProtocolBitMap.MAX_VALUE > 0) : "ProtocolBitMap.MAX_VALUE is negative";
         CODE.uniqueIdCheck();
         assert (CODE.parse(1) == CODE.SEND_NAME);
-
+        System.out.printf("0x%x\t0b%s\n", -128, Integer.toBinaryString(-128).substring(24));
+        System.out.printf("0x%x\t0b%s\n", -1, Integer.toBinaryString(-1).substring(24));
+        System.out.printf("0x%x\t0b%s\n", 128, Integer.toBinaryString(128));
+        System.out.println(Algorithms.combineTwoBytes((byte) 1, (byte) 0));
+        assert (Algorithms.combineTwoBytes((byte) 255, (byte) 255) == 65535);
+        assert (DataPackageHeader.Test());
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
 //                ProtocolBitMap.TO_SIZE;

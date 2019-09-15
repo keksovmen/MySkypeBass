@@ -1,5 +1,7 @@
 package Bin.Networking.Protocol;
 
+import Bin.Util.Algorithms;
+
 import java.util.Arrays;
 
 /**
@@ -16,14 +18,6 @@ import java.util.Arrays;
 
 public class DataPackageHeader extends AbstractHeader {
 
-    /*
-     * Static init of values @see AbstractHeader
-     */
-
-    static {
-        INITIAL_SIZE = 8;
-        MAX_LENGTH = Short.MAX_VALUE * 2;
-    }
 
     /**
      * Instruction what to do
@@ -38,7 +32,7 @@ public class DataPackageHeader extends AbstractHeader {
      * NOT INCLUDES INITIAL_SIZE
      * <p>
      * Purpose is to show how much need to read
-     * after reading header
+     * after reading a header
      */
 
     private int length;
@@ -70,20 +64,81 @@ public class DataPackageHeader extends AbstractHeader {
     }
 
     /**
+     * Unit test
+     *
+     * @return true if successful
+     */
+
+    public static boolean Test() {
+        DataPackageHeader header = new DataPackageHeader();
+        for (int i = -300; i < 300; i++) {
+            try {
+                header.init(CODE.SEND_MESSAGE, i, i, i);
+            } catch (IllegalArgumentException e) {
+                if (i >= 0) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+        }
+        DataPackageHeader second = new DataPackageHeader();
+        for (int i = 0; i < 3200; i++) {
+            header.init(CODE.SEND_MESSAGE, i, i, i);
+            second.init(header.getRawHeader());
+            if (!second.equals(header)) {
+                throw new IllegalStateException("Second isn't equal to first "
+                        + header + "\n" + second);
+            }
+        }
+        header.init(CODE.SEND_NAME, 1, 1, 1);
+        second.init(new byte[]{0, 1, 0, 1, 0, 1, 0, 1});
+        if (!second.equals(header)) {
+            throw new IllegalStateException("Second isn't equal to first "
+                    + header + "\n" + second);
+        }
+        header.init(CODE.SEND_NAME, 128, 128, 128);
+        second.init(new byte[]{0, 1, 0, -128, 0, -128, 0, -128});
+        if (!second.equals(header)) {
+            throw new IllegalStateException("Second isn't equal to first "
+                    + header + "\n" + second);
+        }
+        header.init(CODE.SEND_NAME, 256, 256, 256);
+        second.init(new byte[]{0, 1, 1, 0, 1, 0, 1, 0});
+        if (!second.equals(header)) {
+            throw new IllegalStateException("Second isn't equal to first "
+                    + header + "\n" + second);
+        }
+        final int max = ProtocolBitMap.MAX_VALUE;
+        header.init(CODE.SEND_NAME, max, max, max);
+        second.init(new byte[]{0, 1, -1, -1, -1, -1, -1, -1});
+        if (!second.equals(header)) {
+            throw new IllegalStateException("Second isn't equal to first "
+                    + header + "\n" + second);
+        }
+        return true;
+    }
+
+    /**
      * Default init method
      * Modifies current state
+     * Checks for invariant
      *
      * @param code   instruction to set
      * @param length of data
-     * @param from   sender
-     * @param to     sender
+     * @param from   sender id
+     * @param to     sender id
      */
 
     @Override
     public void init(CODE code, int length, int from, int to) {
         this.code = code;
-        if (length > getMaxLength()) {
-            throw new IllegalArgumentException("length must be less or equal to " + getMaxLength());
+        if (ProtocolBitMap.MAX_VALUE < length ||
+                ProtocolBitMap.MAX_VALUE < from ||
+                ProtocolBitMap.MAX_VALUE < to ||
+                length < 0 || from < 0 || to < 0) {
+            throw new IllegalArgumentException("Arguments are too big or small, " +
+                    "must be in range 0 <= args <= " + ProtocolBitMap.MAX_VALUE +
+                    " args {length = " + length + ", from = " + from + ", to " + to + "}");
         }
         this.length = length;
         this.from = from;
@@ -100,34 +155,12 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public void init(final byte[] data) {
-        code = CODE.parse(parser(data, 0));
-        length = parser(data, 2);
-        from = parser(data, 4);
-        to = parser(data, 6);
+        code = CODE.parse(Algorithms.combineTwoBytes(data[0], data[1]));
+        length = Algorithms.combineTwoBytes(data[2], data[3]);
+        from = Algorithms.combineTwoBytes(data[4], data[5]);
+        to = Algorithms.combineTwoBytes(data[6], data[7]);
         raw = data;
     }
-
-    /**
-     * Simply shift bytes and makes sure
-     * they in appropriate state
-     *
-     * @param data     from getRawHeader()
-     * @param position display where to start
-     * @return parsed value as int
-     */
-
-    private int parser(byte[] data, int position) {
-        return (((data[position] & 0xff) << 8) + (data[++position] & 0xff));
-    }
-
-//    public static void main(String[] args) {
-//        System.out.println(Integer.toBinaryString(-2));
-//        DataPackageHeader dataPackageHeader = new DataPackageHeader();
-//        dataPackageHeader.init(BaseWriter.CODE.SEND_MESSAGE, MAX_LENGTH, 3, 2);
-//        System.out.println(dataPackageHeader);
-//        dataPackageHeader.init(dataPackageHeader.getRawHeader());
-//        System.out.println(dataPackageHeader);
-//    }
 
     /**
      * Call this method when you are ready to write in a stream
@@ -140,16 +173,18 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public byte[] getRawHeader() {
-        byte[] pocket = new byte[getInitialSize()];
-        pocket[0] = (byte) ((code.getCode() >> 8) & 0xFF);
-        pocket[1] = (byte) (code.getCode() & 0xFF);
-        pocket[2] = (byte) ((length >> 8) & 0xFF);
-        pocket[3] = (byte) (length & 0xFF);
-        pocket[4] = (byte) ((from >> 8) & 0xFF);
-        pocket[5] = (byte) (from & 0xFF);
-        pocket[6] = (byte) ((to >> 8) & 0xFF);
-        pocket[7] = (byte) (to & 0xFF);
-        return pocket;
+        if (raw != null)
+            return raw;
+        raw = new byte[ProtocolBitMap.PACKET_SIZE];
+        raw[0] = (byte) ((code.getCode() >>> 8) & 0xFF);
+        raw[1] = (byte) (code.getCode() & 0xFF);
+        raw[2] = (byte) ((length >>> 8) & 0xFF);
+        raw[3] = (byte) (length & 0xFF);
+        raw[4] = (byte) ((from >>> 8) & 0xFF);
+        raw[5] = (byte) (from & 0xFF);
+        raw[6] = (byte) ((to >>> 8) & 0xFF);
+        raw[7] = (byte) (to & 0xFF);
+        return raw;
     }
 
     @Override
@@ -160,6 +195,25 @@ public class DataPackageHeader extends AbstractHeader {
     @Override
     public int getLength() {
         return length;
+    }
+
+    /**
+     * Add more flexibility when you already have package
+     * but you need then add some data in
+     * it will recalculate cache
+     *
+     * @param length new length of new data to be set
+     */
+
+    @Override
+    void setLength(int length) {
+        if (length < 0 || ProtocolBitMap.MAX_VALUE < length) {
+            throw new IllegalArgumentException(
+                    "Length is out of range 0 <= " +
+                            length + " <= " + ProtocolBitMap.MAX_VALUE);
+        }
+        this.length = length;
+        raw = getRawHeader();
     }
 
     @Override
@@ -177,20 +231,6 @@ public class DataPackageHeader extends AbstractHeader {
         return raw;
     }
 
-
-    /**
-     * Add more flexibility when you already have package
-     * but you need then add some data in it will recalculate cache
-     *
-     * @param length new length of new data to be set
-     */
-
-    @Override
-    void setLength(int length) {
-        this.length = length;
-        raw = getRawHeader();
-    }
-
     @Override
     public String toString() {
         return "DataPackageHeader{" +
@@ -198,7 +238,20 @@ public class DataPackageHeader extends AbstractHeader {
                 ", length=" + length +
                 ", from=" + from +
                 ", to=" + to +
-                ", raw=" + Arrays.toString(getRawHeader()) +
+                ", raw=" + (raw == null ? Arrays.toString(getRawHeader()) : Arrays.toString(raw)) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj instanceof DataPackageHeader) {
+            return this.code.equals(((DataPackageHeader) obj).code) &&
+                    this.length == ((DataPackageHeader) obj).length &&
+                    this.from == ((DataPackageHeader) obj).from &&
+                    this.to == ((DataPackageHeader) obj).to;
+        }
+        return false;
     }
 }
