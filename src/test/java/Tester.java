@@ -1,4 +1,6 @@
 import Bin.Main;
+import Bin.Networking.Protocol.CODE;
+import Bin.Networking.Protocol.ProtocolBitMap;
 
 public class Tester {
 
@@ -18,6 +20,18 @@ public class Tester {
 
 
     public static void main(String[] args) {
+        assert (ProtocolBitMap.MAX_VALUE > 0) : "ProtocolBitMap.MAX_VALUE is negative";
+        CODE.uniqueIdCheck();
+        assert (CODE.parse(1) == CODE.SEND_NAME);
+
+//        int v = ProtocolBitMap.INSTRUCTION_SIZE |
+//                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
+//                ProtocolBitMap.TO_SIZE;
+//        int b = v * 4;
+//        System.out.println(b);
+//        System.out.println(ProtocolBitMap.PACKET_SIZE);
+//        System.out.println(b == ProtocolBitMap.PACKET_SIZE ? 1 : 0);
+//        System.out.println(12 == 8 ? 1 : 0);
 //        FileOutputStream fileWriter = new FileOutputStream(new File("D:\\Users\\Roma\\Desktop\\1488.ts"), true);
 //
 //        File file = new File("D:\\Users\\Roma\\Desktop\\Новая папка\\1.ts");
@@ -41,7 +55,7 @@ public class Tester {
 //        fileWriter.close();
 //        System.setProperty("java.util.logging.config.file", Paths.get("src\\main\\resources\\properties\\logging.properties").toString());
 //        LogManager.getLogManager().readConfiguration();
-        Main.main(args);
+//        Main.main(args);
 
 
     }
