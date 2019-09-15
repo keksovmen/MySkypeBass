@@ -22,12 +22,19 @@ public class DataPackagePool extends AbstractDataPackagePool {
 
     private final Queue<AbstractDataPackage> pool;
 
+    private final int INITIAL_SIZE = 10;
+
+    private final int MIN_CLEAR_SIZE = 10;
+
     /**
      * Private constructor
      */
 
     public DataPackagePool() {
         pool = new ConcurrentLinkedDeque<>();
+        for (int i = 0; i < INITIAL_SIZE; i++) {
+            pool.offer(new BaseDataPackage());
+        }
     }
 
     /**
@@ -56,7 +63,7 @@ public class DataPackagePool extends AbstractDataPackagePool {
 
     @Override
     void clearInst() {
-        if (pool.size() > 10) {
+        if (pool.size() > MIN_CLEAR_SIZE) {
             pool.clear();
         }
     }

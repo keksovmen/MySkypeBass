@@ -59,7 +59,7 @@ public abstract class AbstractDataPackagePool {
     }
 
     /**
-     * Ovveride it on your implementation
+     * Override it on your implementation
      *
      * @return package ready to use
      */
@@ -67,7 +67,7 @@ public abstract class AbstractDataPackagePool {
     protected abstract AbstractDataPackage getPackageInst();
 
     /**
-     * Ovveride it on your implementation
+     * Override it on your implementation
      *
      * @param dataPackage to be returned
      */
@@ -75,7 +75,7 @@ public abstract class AbstractDataPackagePool {
     protected abstract void returnPackageInst(AbstractDataPackage dataPackage);
 
     /**
-     * Ovveride it on your implementation
+     * Override it on your implementation
      * Clears an underlying storage with AbstractDataPackage
      */
 

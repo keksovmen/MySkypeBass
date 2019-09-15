@@ -45,20 +45,6 @@ public class BaseDataPackage extends AbstractDataPackage {
         data = null;
     }
 
-
-    /*
-    I didn't need them but initially though otherwise
-     */
-
-//    public void init(DataPackageHeader header, byte[] data) {
-//        this.header = header;
-//        this.data = data;
-//    }
-//
-//    public void init(DataPackageHeader header, String data) {
-//        init(header, data.getBytes(charset));
-//    }
-
     /**
      * Initialisation for empty messages
      * They work like control signals
@@ -70,7 +56,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final CODE code, final int from, final int to) {
+    public BaseDataPackage initZeroLength(final CODE code, final int from, final int to) {
         header.init(code, 0, from, to);
         return this;
     }
@@ -87,7 +73,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final CODE code, final int from, final int to, @Nullable final byte[] data) {
+    public BaseDataPackage initRaw(final CODE code, final int from, final int to, @Nullable final byte[] data) {
         header.init(code, data == null ? 0 : data.length, from, to);
         this.data = data;
         return this;
@@ -106,8 +92,8 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage init(final CODE code, final int from, final int to, @NotNull final String data) {
-        return init(code, from, to, data.getBytes(charset));
+    public BaseDataPackage initString(final CODE code, final int from, final int to, @NotNull final String data) {
+        return initRaw(code, from, to, data.getBytes(charset));
     }
 
     /**
@@ -120,6 +106,27 @@ public class BaseDataPackage extends AbstractDataPackage {
     @Override
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    /**
+     * Check if data is null
+     *
+     * @return string >= 0 length
+     */
+
+    @Override
+    public String getDataAsString() {
+        return data == null ? "" : new String(data, charset);
+    }
+
+    @Override
+    public AbstractHeader getHeader() {
+        return header;
+    }
+
+    @Override
+    public byte[] getData() {
+        return data;
     }
 
     /**
@@ -137,34 +144,13 @@ public class BaseDataPackage extends AbstractDataPackage {
     }
 
     /**
-     * Check if data is null
-     *
-     * @return string >= 0 length
-     */
-
-    @Override
-    public String getDataAsString() {
-
-        return data == null ? "" : new String(data, charset);
-    }
-
-    @Override
-    public AbstractHeader getHeader() {
-        return header;
-    }
-
-    @Override
-    public byte[] getData() {
-        return data;
-    }
-
-    /**
      * Call it when package is done and returned to pool
      */
 
     @Override
     void clear() {
         data = null;
+        header.clear();
     }
 
     @Override

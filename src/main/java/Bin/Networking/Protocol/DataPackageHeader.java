@@ -254,4 +254,9 @@ public class DataPackageHeader extends AbstractHeader {
         }
         return false;
     }
+
+    @Override
+    public void clear() {
+        raw = null;
+    }
 }

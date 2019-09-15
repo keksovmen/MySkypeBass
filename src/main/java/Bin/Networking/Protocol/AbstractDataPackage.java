@@ -32,7 +32,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final CODE code, final int from, final int to);
+    public abstract BaseDataPackage initZeroLength(final CODE code, final int from, final int to);
 
     /**
      * For sending byte array of data could be anything
@@ -45,7 +45,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final CODE code, final int from, final int to, final byte[] data);
+    public abstract BaseDataPackage initRaw(final CODE code, final int from, final int to, final byte[] data);
 
     /**
      * For sending strings
@@ -59,7 +59,7 @@ public abstract class AbstractDataPackage {
      * @return this instance for shorter code
      */
 
-    public abstract BaseDataPackage init(final CODE code, final int from, final int to, final String data);
+    public abstract BaseDataPackage initString(final CODE code, final int from, final int to, final String data);
 
     /**
      * Mutates data

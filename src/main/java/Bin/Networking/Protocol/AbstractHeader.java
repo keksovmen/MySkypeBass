@@ -6,49 +6,7 @@ package Bin.Networking.Protocol;
 
 public abstract class AbstractHeader {
 
-    /**
-     * ATTENTION
-     * when extend your own header must in static {}
-     * define it's value
-     * <p>
-     * Size of header in bytes
-     */
-
-    static int INITIAL_SIZE;
-
-    /**
-     * ATTENTION
-     * when extend your own header must in static {}
-     * define it's value
-     * <p>
-     * Max possible length for data
-     */
-
-    static int MAX_LENGTH;
-
     AbstractHeader() {
-    }
-
-    /**
-     * Purpose is to be able to override it
-     * if you want to make your own bugger package
-     *
-     * @return size of the header that will be read 100% first
-     */
-
-    public static int getInitialSize() {
-        return INITIAL_SIZE;
-    }
-
-    /**
-     * Purpose is to be able to override it,
-     * if you want to make your own bigger package
-     *
-     * @return max length depends on how much bytes you want to give it
-     */
-
-    public static int getMaxLength() {
-        return MAX_LENGTH;
     }
 
     /**
@@ -120,5 +78,11 @@ public abstract class AbstractHeader {
      */
 
     abstract void setLength(int length);
+
+    /**
+     * Release resources if such exists
+     */
+
+    abstract void clear();
 
 }
