@@ -5,7 +5,7 @@ import Bin.Networking.Processors.ServerProcessor;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Protocol.CODE;
-import Bin.Networking.Readers.ReaderWithHandler;
+import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Utility.Conversation;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Utility.ServerUser;
@@ -24,7 +24,7 @@ public class ServerController implements ErrorHandler {
 
     private final Socket socket;
     private ServerWriter writer;
-    private ReaderWithHandler reader;
+    private BaseReader reader;
     private Processable serverProcessor;
     private ServerUser me;
     private final Server server;
@@ -34,7 +34,7 @@ public class ServerController implements ErrorHandler {
         this.server = server;
         writer = new ServerWriter(socket.getOutputStream(), this);
         serverProcessor = new ServerProcessor();
-        reader = new ReaderWithHandler(socket.getInputStream(), serverProcessor, this);
+//        reader = new ReaderWithHandler(socket.getInputStream(), serverProcessor, this);
     }
 
     /**
@@ -89,7 +89,7 @@ public class ServerController implements ErrorHandler {
         serverProcessor.addListener(ServerHandlerProvider.createUsersRequestListener(this));
         serverProcessor.addListener(ServerHandlerProvider.createConvHandler(this));
         serverProcessor.addListener(ServerHandlerProvider.createTransferHandler(this));
-        reader.start("Server reader - " + getId());
+//        reader.start("Server reader - " + getId());
     }
 
     public ServerWriter getWriter() {
@@ -120,7 +120,8 @@ public class ServerController implements ErrorHandler {
 
     @Override
     public ErrorHandler[] getNext() {
-        return new ErrorHandler[]{reader};
+        return null;
+//        return new ErrorHandler[]{reader};
     }
 
 

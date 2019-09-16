@@ -1,6 +1,7 @@
 package Bin.Audio;
 
 import Bin.Networking.Protocol.AbstractHeader;
+import Bin.Networking.Protocol.ProtocolBitMap;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Util.Checker;
 
@@ -73,7 +74,7 @@ public class AudioClient implements ErrorHandler {
 
     public boolean setAudioFormat(AudioFormat audioFormat) {
         this.audioFormat = audioFormat;
-        defineCaptureSizeMain((int) audioFormat.getSampleRate(), audioFormat.getSampleSizeInBits(), AbstractHeader.getMaxLength());
+        defineCaptureSizeMain((int) audioFormat.getSampleRate(), audioFormat.getSampleSizeInBits(), ProtocolBitMap.MAX_VALUE);
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
         return speaker;

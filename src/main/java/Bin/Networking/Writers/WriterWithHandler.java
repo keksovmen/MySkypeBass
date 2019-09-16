@@ -23,7 +23,7 @@ public abstract class WriterWithHandler extends BaseWriter {
      */
 
     public WriterWithHandler(OutputStream outputStream, ErrorHandler mainErrorHandler) {
-        super(outputStream);
+        super(outputStream, 8192);
         this.mainErrorHandler = mainErrorHandler;
     }
 

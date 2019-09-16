@@ -1,7 +1,12 @@
-import Bin.Networking.Protocol.CODE;
-import Bin.Networking.Protocol.DataPackageHeader;
-import Bin.Networking.Protocol.ProtocolBitMap;
+import Bin.Networking.Protocol.*;
+import Bin.Networking.Readers.BaseReader;
 import Bin.Util.Algorithms;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
 public class Tester {
 
@@ -20,7 +25,7 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         assert (ProtocolBitMap.MAX_VALUE > 0) : "ProtocolBitMap.MAX_VALUE is negative";
         CODE.uniqueIdCheck();
         assert (CODE.parse(1) == CODE.SEND_NAME);
@@ -30,6 +35,20 @@ public class Tester {
         System.out.println(Algorithms.combineTwoBytes((byte) 1, (byte) 0));
         assert (Algorithms.combineTwoBytes((byte) 255, (byte) 255) == 65535);
         assert (DataPackageHeader.Test());
+
+        byte packet [] = new byte[]{0, 1, 0, 2, 1, 1, 0, -1, -1, -1};
+        BaseReader baseReader = new BaseReader(
+                new ByteArrayInputStream(packet),
+                32
+                );
+
+        AbstractDataPackagePool.init(new DataPackagePool());
+
+        AbstractDataPackage read = baseReader.read();
+        assert (read.getHeader().getCode().equals(CODE.SEND_NAME));
+        assert (read.getHeader().getLength() == 2);
+        assert (read.getHeader().getFrom() == 257);
+        assert (read.getHeader().getTo() == 255);
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
 //                ProtocolBitMap.TO_SIZE;

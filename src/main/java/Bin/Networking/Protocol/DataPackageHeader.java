@@ -61,6 +61,7 @@ public class DataPackageHeader extends AbstractHeader {
      */
 
     DataPackageHeader() {
+        raw = new byte[ProtocolBitMap.PACKET_SIZE];
     }
 
     /**
@@ -119,6 +120,25 @@ public class DataPackageHeader extends AbstractHeader {
     }
 
     /**
+     * Calculate raw header
+     * Used when init not from raw
+     * Or when you change the length
+     */
+
+    private void calculateRawHeader(){
+        if (raw == null)
+            raw = new byte[ProtocolBitMap.PACKET_SIZE];
+        raw[0] = (byte) ((code.getCode() >>> 8) & 0xFF);
+        raw[1] = (byte) (code.getCode() & 0xFF);
+        raw[2] = (byte) ((length >>> 8) & 0xFF);
+        raw[3] = (byte) (length & 0xFF);
+        raw[4] = (byte) ((from >>> 8) & 0xFF);
+        raw[5] = (byte) (from & 0xFF);
+        raw[6] = (byte) ((to >>> 8) & 0xFF);
+        raw[7] = (byte) (to & 0xFF);
+    }
+
+    /**
      * Default init method
      * Modifies current state
      * Checks for invariant
@@ -143,6 +163,7 @@ public class DataPackageHeader extends AbstractHeader {
         this.length = length;
         this.from = from;
         this.to = to;
+        calculateRawHeader();
     }
 
     /**
@@ -173,17 +194,6 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public byte[] getRawHeader() {
-        if (raw != null)
-            return raw;
-        raw = new byte[ProtocolBitMap.PACKET_SIZE];
-        raw[0] = (byte) ((code.getCode() >>> 8) & 0xFF);
-        raw[1] = (byte) (code.getCode() & 0xFF);
-        raw[2] = (byte) ((length >>> 8) & 0xFF);
-        raw[3] = (byte) (length & 0xFF);
-        raw[4] = (byte) ((from >>> 8) & 0xFF);
-        raw[5] = (byte) (from & 0xFF);
-        raw[6] = (byte) ((to >>> 8) & 0xFF);
-        raw[7] = (byte) (to & 0xFF);
         return raw;
     }
 
@@ -207,13 +217,15 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     void setLength(int length) {
+        if (this.length == length)
+            return;
         if (length < 0 || ProtocolBitMap.MAX_VALUE < length) {
             throw new IllegalArgumentException(
                     "Length is out of range 0 <= " +
                             length + " <= " + ProtocolBitMap.MAX_VALUE);
         }
         this.length = length;
-        raw = getRawHeader();
+        calculateRawHeader();
     }
 
     @Override
@@ -224,11 +236,6 @@ public class DataPackageHeader extends AbstractHeader {
     @Override
     public int getTo() {
         return to;
-    }
-
-    @Override
-    public byte[] getRaw() {
-        return raw;
     }
 
     @Override
@@ -255,8 +262,4 @@ public class DataPackageHeader extends AbstractHeader {
         return false;
     }
 
-    @Override
-    public void clear() {
-        raw = null;
-    }
 }

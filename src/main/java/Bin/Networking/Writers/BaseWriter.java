@@ -12,7 +12,7 @@ import java.io.OutputStream;
  * Base writer that only can write AbstractDataPackage or its children
  */
 
-public abstract class BaseWriter {
+public class BaseWriter {
 
     /**
      * Where to write
@@ -26,8 +26,8 @@ public abstract class BaseWriter {
      * @param outputStream where to write
      */
 
-    BaseWriter(OutputStream outputStream) {
-        this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream));
+    BaseWriter(OutputStream outputStream, int bufferSize) {
+        this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
     }
 
     /**
@@ -37,7 +37,7 @@ public abstract class BaseWriter {
      * @throws IOException if network failing occurs
      */
 
-    synchronized void write(AbstractDataPackage dataPackage) throws IOException {
+    public synchronized void write(AbstractDataPackage dataPackage) throws IOException {
         outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
         if (dataPackage.getHeader().getLength() != 0) {
             outputStream.write(dataPackage.getData());

@@ -51,15 +51,15 @@ public class ServerWriter extends WriterWithHandler {
 
 
     public void writeAudioFormat(int id, String format) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
+        writeWithHandler(AbstractDataPackagePool.getPackage().initString(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
     }
 
     public void writeUsers(int id, String users) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+        writeWithHandler(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
     public void writeDisconnect(int id) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
+        writeWithHandler(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT, WHO.SERVER.getCode(), id));
     }
 
     /**
@@ -72,7 +72,7 @@ public class ServerWriter extends WriterWithHandler {
 
     public synchronized void transferData(AbstractDataPackage dataPackage) {
         try {
-            outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header, when you read it
+            outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header, when you read it
             if (dataPackage.getHeader().getLength() != 0) {
                 outputStream.write(dataPackage.getData());
             }
@@ -98,7 +98,7 @@ public class ServerWriter extends WriterWithHandler {
         try {
             if (lock.tryLock(LOCK_TIME, TimeUnit.MILLISECONDS)) {
                 try {
-                    outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header
+                    outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header
                     if (dataPackage.getHeader().getLength() != 0) {
                         outputStream.write(dataPackage.getData());
                     }
@@ -121,7 +121,7 @@ public class ServerWriter extends WriterWithHandler {
      */
 
     public synchronized void transferMessage(AbstractDataPackage dataPackage) throws IOException {
-        outputStream.write(dataPackage.getHeader().getRaw());//     uses already calculated header, when you read it
+        outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header, when you read it
         if (dataPackage.getHeader().getLength() != 0) {
             outputStream.write(dataPackage.getData());
         }
@@ -129,14 +129,14 @@ public class ServerWriter extends WriterWithHandler {
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().init(CODE.SEND_ADD, whoToAdd, to));
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ADD, whoToAdd, to));
     }
 
     public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().init(CODE.SEND_REMOVE, whoToRemove, to));
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_REMOVE, whoToRemove, to));
     }
 
     public void writeStopConv(int to) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().init(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
+        writeWithHandler(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
     }
 }

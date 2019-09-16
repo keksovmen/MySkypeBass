@@ -106,6 +106,7 @@ public class BaseDataPackage extends AbstractDataPackage {
     @Override
     public void setData(byte[] data) {
         this.data = data;
+        header.setLength(data.length);
     }
 
     /**
@@ -150,7 +151,6 @@ public class BaseDataPackage extends AbstractDataPackage {
     @Override
     void clear() {
         data = null;
-        header.clear();
     }
 
     @Override

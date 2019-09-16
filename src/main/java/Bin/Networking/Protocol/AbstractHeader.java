@@ -64,13 +64,6 @@ public abstract class AbstractHeader {
     public abstract int getTo();
 
     /**
-     * Uses for cache on server
-     *
-     * @return already calculated getRawHeader()
-     */
-    public abstract byte[] getRaw();
-
-    /**
      * Add more flexibility when you already have package
      * but you need then add some data in it will recalculate cache
      *
@@ -78,11 +71,5 @@ public abstract class AbstractHeader {
      */
 
     abstract void setLength(int length);
-
-    /**
-     * Release resources if such exists
-     */
-
-    abstract void clear();
 
 }

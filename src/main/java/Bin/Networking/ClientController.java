@@ -5,7 +5,7 @@ import Bin.Networking.Processors.ClientProcessor;
 import Bin.Networking.Processors.Processable;
 import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
-import Bin.Networking.Readers.ReaderWithHandler;
+import Bin.Networking.Readers.BaseReader;
 import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ErrorHandler;
 import Bin.Networking.Utility.WHO;
@@ -20,7 +20,7 @@ public class ClientController implements ErrorHandler {
 
     private Socket socket;
     private ClientWriter writer;
-    private ReaderWithHandler reader;
+    private BaseReader reader;
     private final Processable processor;
     private BaseUser me;
 
@@ -50,7 +50,7 @@ public class ClientController implements ErrorHandler {
         try {
             socket.connect(new InetSocketAddress(hostName, port), 7_000);
             writer = new ClientWriter(socket.getOutputStream(), mainErrorHandler);
-            reader = new ReaderWithHandler(socket.getInputStream(), processor, mainErrorHandler);
+//            reader = new ReaderWithHandler(socket.getInputStream(), processor, mainErrorHandler);
             authenticate(name);
         } catch (IOException e) {
             e.printStackTrace();
@@ -89,7 +89,7 @@ public class ClientController implements ErrorHandler {
         writer.writeAccept(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
         me = new BaseUser(name, read.getHeader().getTo());
         AbstractDataPackagePool.returnPackage(read);
-        reader.start("Client reader");
+//        reader.start("Client reader");
     }
 
     /**
@@ -97,7 +97,7 @@ public class ClientController implements ErrorHandler {
      */
 
     public void disconnect() {
-        reader.close();
+//        reader.close();
         writer.writeDisconnect(me.getId());
         try {
             socket.close();
@@ -132,6 +132,6 @@ public class ClientController implements ErrorHandler {
 
     @Override
     public ErrorHandler[] getNext() {
-        return new ErrorHandler[]{reader};
+        return new ErrorHandler[]{};
     }
 }
