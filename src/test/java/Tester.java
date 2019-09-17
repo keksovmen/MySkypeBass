@@ -1,12 +1,12 @@
+import Bin.Networking.ClientController;
 import Bin.Networking.Protocol.*;
 import Bin.Networking.Readers.BaseReader;
+import Bin.Networking.Server;
+import Bin.Networking.Utility.WHO;
 import Bin.Util.Algorithms;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 
 public class Tester {
 
@@ -25,9 +25,10 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         assert (ProtocolBitMap.MAX_VALUE > 0) : "ProtocolBitMap.MAX_VALUE is negative";
         CODE.uniqueIdCheck();
+        WHO.uniqueIdCheck();
         assert (CODE.parse(1) == CODE.SEND_NAME);
         System.out.printf("0x%x\t0b%s\n", -128, Integer.toBinaryString(-128).substring(24));
         System.out.printf("0x%x\t0b%s\n", -1, Integer.toBinaryString(-1).substring(24));
@@ -36,11 +37,11 @@ public class Tester {
         assert (Algorithms.combineTwoBytes((byte) 255, (byte) 255) == 65535);
         assert (DataPackageHeader.Test());
 
-        byte packet [] = new byte[]{0, 1, 0, 2, 1, 1, 0, -1, -1, -1};
+        byte packet[] = new byte[]{0, 1, 0, 2, 1, 1, 0, -1, -1, -1};
         BaseReader baseReader = new BaseReader(
                 new ByteArrayInputStream(packet),
                 32
-                );
+        );
 
         AbstractDataPackagePool.init(new DataPackagePool());
 
@@ -49,6 +50,34 @@ public class Tester {
         assert (read.getHeader().getLength() == 2);
         assert (read.getHeader().getFrom() == 257);
         assert (read.getHeader().getTo() == 255);
+
+        System.out.println("Creating server");
+        Server server = Server.getFromIntegers(
+                8188,
+                32_000,
+                16,
+                10);
+
+        System.out.println("Server start checks");
+        assert (server.start("Server"));
+        assert (!server.start("Server"));
+
+        System.out.println("Creating Client controller");
+        ClientController clientController = new ClientController(null);
+        System.out.println("Client controller connect");
+        assert (clientController.connect(
+                "Vasa",
+                "127.0.0.1",
+                8188,
+                8192));
+
+        Thread.sleep(1_000);
+        System.out.println("Check users");
+        assert (server.getUser(WHO.SIZE).equals(clientController.getMe()));
+
+        System.out.println("Closing");
+        clientController.close();
+        server.close();
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
 //                ProtocolBitMap.TO_SIZE;

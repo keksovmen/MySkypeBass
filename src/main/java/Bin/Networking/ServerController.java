@@ -6,10 +6,7 @@ import Bin.Networking.Protocol.AbstractDataPackage;
 import Bin.Networking.Protocol.AbstractDataPackagePool;
 import Bin.Networking.Protocol.CODE;
 import Bin.Networking.Readers.BaseReader;
-import Bin.Networking.Utility.Conversation;
-import Bin.Networking.Utility.ErrorHandler;
-import Bin.Networking.Utility.ServerUser;
-import Bin.Networking.Utility.WHO;
+import Bin.Networking.Utility.*;
 import Bin.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
@@ -20,7 +17,7 @@ import java.util.function.Consumer;
  * Handles all server actions for the connected user
  */
 
-public class ServerController implements ErrorHandler {
+public class ServerController implements ErrorHandler, Starting {
 
     private final Socket socket;
     private ServerWriter writer;
@@ -28,12 +25,14 @@ public class ServerController implements ErrorHandler {
     private Processable serverProcessor;
     private ServerUser me;
     private final Server server;
+    private volatile boolean work;
 
-    public ServerController(Socket socket, Server server) throws IOException {
-        this.socket = socket;
-        this.server = server;
+    public ServerController(Socket socket, Server server, int bufferSize) throws IOException {
+        reader = new BaseReader(socket.getInputStream(), bufferSize);
         writer = new ServerWriter(socket.getOutputStream(), this);
         serverProcessor = new ServerProcessor();
+        this.socket = socket;
+        this.server = server;
 //        reader = new ReaderWithHandler(socket.getInputStream(), serverProcessor, this);
     }
 
@@ -43,13 +42,43 @@ public class ServerController implements ErrorHandler {
      * otherwise disconnect him
      */
 
-    void start() {
+    @Override
+    public boolean start(String name) {
+        if (work)
+            return false;
+        work = true;
+
+        new Thread(() -> {
+            if (!authenticate()) {
+                close();
+                return;
+            }
+            launch();   //Init data here
+
+            //Main loop
+            while (work) {
+                try {
+                    AbstractDataPackage read = reader.read();
+                    serverProcessor.process(read);  //Here all possible cases of CODE
+                } catch (IOException e) {   //Case when a dude just ruined his connection
+                    e.printStackTrace();
+                    close();
+                }
+            }
+
+            //Clean up code
+            server.removeUser(me.getId());
+        }, name).start();
+        return true;
+    }
+
+    @Override
+    public void close() {
+        work = false;
         try {
-            authenticate();
-            launch();
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
-            errorCase();
         }
     }
 
@@ -62,33 +91,49 @@ public class ServerController implements ErrorHandler {
      * after write all users on server to him
      * and notify all other users
      *
-     * @throws IOException if connection get ruined or disconnected
+     * @return true only if you are able to use this audio format
      */
 
-    private void authenticate() throws IOException {
-        AbstractDataPackage dataPackage = reader.read();
+    private boolean authenticate() {
+        try {
+            AbstractDataPackage dataPackage = reader.read();
+            final String name = dataPackage.getDataAsString();
+            AbstractDataPackagePool.returnPackage(dataPackage);
 
-        final String name = dataPackage.getDataAsString();
-        final int id = server.getIdAndIncrement();
-        boolean canHear = false;
+            writer.writeAudioFormat(WHO.NO_NAME.getCode(),
+                    server.getAudioFormat());
+            dataPackage = reader.read();
 
-        writer.writeAudioFormat(id, server.getAudioFormat());
-        AbstractDataPackagePool.returnPackage(dataPackage);
-        dataPackage = reader.read();
+            if (dataPackage.getHeader().getCode() != CODE.SEND_APPROVE) {
+                //Then dude just disconnects so do we
+                AbstractDataPackagePool.returnPackage(dataPackage);
+                return false;
+            }
+            AbstractDataPackagePool.returnPackage(dataPackage);
 
-        if (dataPackage.getHeader().getCode() == CODE.SEND_APPROVE) {
-            canHear = true;
+            final int id = server.getIdAndIncrement();
+            writer.writeId(id);
+
+            me = new ServerUser(name, id, this);
+//            server.addUser(me);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
-        me = new ServerUser(name, id, this, canHear);
-        server.addUser(me);
-
-        AbstractDataPackagePool.returnPackage(dataPackage);
+        return true;
     }
 
+    /**
+     * Uses as initialisation before entering the main loop
+     */
+
     private void launch() {
+        Thread.currentThread().setName(Thread.currentThread().getName() + me.getId());
         serverProcessor.addListener(ServerHandlerProvider.createUsersRequestListener(this));
         serverProcessor.addListener(ServerHandlerProvider.createConvHandler(this));
         serverProcessor.addListener(ServerHandlerProvider.createTransferHandler(this));
+        server.addUser(me);
 //        reader.start("Server reader - " + getId());
     }
 

@@ -20,17 +20,9 @@ public class ServerUser extends BaseUser {
 
     private volatile Conversation conversation;
 
-    /**
-     * Need for indicating a possibility to play audio
-     * basically AudioClient speaker field
-     */
-
-    private final boolean canHear;
-
-    public ServerUser(String name, int id, ServerController controller, boolean canHear) {
+    public ServerUser(String name, int id, ServerController controller) {
         super(name, id);
         this.controller = controller;
-        this.canHear = canHear;
     }
 
     public ServerController getController() {
@@ -47,10 +39,6 @@ public class ServerUser extends BaseUser {
 
     public boolean inConv() {
         return conversation != null;
-    }
-
-    public boolean isCanHear() {
-        return canHear;
     }
 
     /*

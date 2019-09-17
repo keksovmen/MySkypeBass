@@ -119,7 +119,7 @@ public class Conversation {
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
-            if (user.getId() != from && user.isCanHear()) {
+            if (user.getId() != from /*&& user.isCanHear()*/) {
                 ServerController controller = user.getController();
                 try {
                     controller.getWriter().transferAudio(dataPackage);

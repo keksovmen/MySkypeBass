@@ -1,23 +1,20 @@
 package Bin.Networking;
 
 import Bin.Networking.Protocol.AbstractDataPackagePool;
+import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ServerUser;
 import Bin.Networking.Utility.Starting;
 import Bin.Networking.Utility.WHO;
 import Bin.Util.Checker;
+import Bin.Util.FormatWorker;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,7 +79,7 @@ public class Server implements Starting {
      * Where me and the boys are flexing
      */
 
-    private final Map<Integer, ServerUser> users;
+    private final ConcurrentHashMap<Integer, ServerUser> users;
 
     /**
      * For utility purposes
@@ -90,7 +87,13 @@ public class Server implements Starting {
 
     private final ExecutorService executor;
 
-    private static final int AMOUNT_OF_HELPER_THREADS = 10;
+    private final int BUFFER_SIZE_FOR_IO = 32 * 1024;
+
+//    private final int usersAmount;
+
+//    private final List<ServerController> controllerList;
+
+//    private static final int AMOUNT_OF_HELPER_THREADS = 10;
 
 //    private static final Logger logger = Logger.getLogger("MyLogger");
 
@@ -108,13 +111,24 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    private Server(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
+    private Server(final int port, final int sampleRate, final int sampleSizeInBits /*final int usersAmount*/) throws IOException {
         serverSocket = new ServerSocket(port);
-        audioFormat = new AudioFormat(sampleRate, sampleSizeInBits, 1, true, true);
+        audioFormat = new AudioFormat(
+                sampleRate,
+                sampleSizeInBits,
+                1,
+                true,
+                true);
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
-        users = new HashMap<>();//change to one of concurrent maps
-        executor = new ThreadPoolExecutor(0, AMOUNT_OF_HELPER_THREADS,
-                30, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        users = new ConcurrentHashMap<>();//change to one of concurrent maps
+        executor = new ThreadPoolExecutor(
+                0,
+                8,
+                30,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>());
+//        this.usersAmount = usersAmount;
+//        controllerList = new ArrayList<>(usersAmount);
     }
 
     /**
@@ -126,8 +140,12 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
-        return new Server(port, sampleRate, sampleSizeInBits);
+    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, final int usersAmount) throws IOException {
+        return new Server(
+                port,
+                sampleRate,
+                sampleSizeInBits
+        );
     }
 
     /**
@@ -139,8 +157,12 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
-        return new Server(Integer.valueOf(port), Integer.valueOf(sampleRate), Integer.parseInt(sampleSizeInBits));
+    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, final String usersAmount) throws IOException {
+        return new Server(
+                Integer.valueOf(port),
+                Integer.valueOf(sampleRate),
+                Integer.parseInt(sampleSizeInBits)
+        );
     }
 
     /**
@@ -151,9 +173,9 @@ public class Server implements Starting {
      */
 
     @Override
-    public void start(String name) {
+    public boolean start(String name) {
         if (work) {
-            throw new IllegalStateException("Already started");
+            return false;
         }
         work = true;
         new Thread(() -> {
@@ -162,9 +184,19 @@ public class Server implements Starting {
                     Socket socket = serverSocket.accept();
                     executor.execute(() -> {
                         try {
-                            new ServerController(socket, this).start();
+                            ServerController serverController = new ServerController(
+                                    socket,
+                                    this,
+                                    BUFFER_SIZE_FOR_IO
+                            );
+//                            controllerList.add(serverController);
+                            serverController.start("Server controller - ");
                         } catch (IOException e) {
                             e.printStackTrace();
+                            try {
+                                socket.close();
+                            } catch (IOException ignored) {
+                            }
                         }
                     });
                 } catch (IOException e) {
@@ -173,16 +205,20 @@ public class Server implements Starting {
                 }
             }
         }, name).start();
+        return true;
     }
 
     @Override
     public void close() {
         work = false;
+        executor.shutdown();
         try {
             serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
+
         }
+//        return true;
     }
 
     /**
@@ -202,7 +238,7 @@ public class Server implements Starting {
      * @param serverUser to add
      */
 
-    synchronized void addUser(ServerUser serverUser) {
+    public synchronized void addUser(ServerUser serverUser) {
         users.put(serverUser.getId(), serverUser);
 //        logger.fine("Added - " + serverUser + "\nCONTAINS " + users.toString());
         sendUpdateUsers();
@@ -216,7 +252,7 @@ public class Server implements Starting {
      * @param id of user to remove
      */
 
-    synchronized void removeUser(int id) {
+    public synchronized void removeUser(int id) {
         users.remove(id);
 //        logger.fine("Removed - " + id + "\nCONTAINS " + users.toString());
         sendUpdateUsers();
@@ -229,32 +265,11 @@ public class Server implements Starting {
      * @return data enough to represent audio format for client
      */
 
-    String getAudioFormat() {
-        return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
-                "Sample size = " + audioFormat.getSampleSizeInBits();
+    public String getAudioFormat() {
+        return FormatWorker.getAudioFormat(audioFormat);
     }
 
-    /**
-     * Parse string like this Sample rate = 01...n\nSample size = 01....n
-     * retrieve from them digits
-     * <p>
-     * MUST MATCH getAudioFormat() !
-     *
-     * @param data got from the server
-     * @return default audio format
-     */
 
-    public static AudioFormat parseAudioFormat(String data) {
-        String[] strings = data.split("\n");
-        Pattern pattern = Pattern.compile("\\d+?\\b");
-        Matcher matcher = pattern.matcher(strings[0]);
-        matcher.find();
-        int sampleRate = Integer.valueOf(matcher.group());
-        matcher = pattern.matcher(strings[1]);
-        matcher.find();
-        int sampleSize = Integer.valueOf(matcher.group());
-        return new AudioFormat(sampleRate, sampleSize, 1, true, true);
-    }
 
     /**
      * Method for obtaining all except you users
@@ -263,7 +278,7 @@ public class Server implements Starting {
      * @return all others users
      */
 
-    synchronized String getUsers(final int exclusiveId) {
+    public synchronized String getUsers(final int exclusiveId) {
         StringBuilder stringBuilder = new StringBuilder(50);
         users.forEach((integer, serverUser) -> {
             if (integer != exclusiveId) {
@@ -271,6 +286,17 @@ public class Server implements Starting {
             }
         });
         return stringBuilder.toString();
+    }
+
+    /**
+     * Check for null pointer
+     *
+     * @param id as key for the map
+     * @return null or base user
+     */
+
+    public BaseUser getUser(int id){
+        return users.get(id);
     }
 
     /**

@@ -17,7 +17,7 @@ public class Test {
 
         AbstractDataPackagePool.init(new DataPackagePool());
 
-        Server server = Server.getFromIntegers(8188, 40_000, 16);
+        Server server = Server.getFromIntegers(8188, 40_000, 16, 8);
         server.start("Server");
         final int size = 10;
         List<ClientController> controllers = new ArrayList<>(size);
@@ -32,10 +32,12 @@ public class Test {
                         clientController.getWriter().writeAccept(clientController.getMe().getId(), dataPackage.getHeader().getFrom());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
             });
-            clientController.connect(String.valueOf(i), "127.0.0.1", 8188);
+            clientController.connect(String.valueOf(i), "127.0.0.1", 8188, 8192);
         }
 
         for (int i = 0; i < size; i++) {

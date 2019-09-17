@@ -50,8 +50,12 @@ public class ServerWriter extends WriterWithHandler {
     }
 
 
-    public void writeAudioFormat(int id, String format) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().initString(CODE.SEND_AUDIO_FORMAT, WHO.SERVER.getCode(), id, format));
+    public void writeAudioFormat(int id, String format) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_AUDIO_FORMAT,
+                WHO.SERVER.getCode(),
+                id,
+                format));
     }
 
     public void writeUsers(int id, String users) {
@@ -138,5 +142,13 @@ public class ServerWriter extends WriterWithHandler {
 
     public void writeStopConv(int to) {
         writeWithHandler(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
+    }
+
+    public void writeId(int id) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_ID,
+                WHO.SERVER.getCode(),
+                id
+        ));
     }
 }

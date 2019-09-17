@@ -1,5 +1,11 @@
 package Bin.Networking.Utility;
 
+import Bin.Networking.Protocol.CODE;
+import Bin.Networking.Protocol.ProtocolBitMap;
+import Bin.Util.Algorithms;
+
+import java.util.Comparator;
+
 /**
  * Uses as default representation of main users
  */
@@ -9,19 +15,7 @@ public enum WHO {
     SERVER(1), //package for the server
     CONFERENCE(2);  //package for the conference
 
-    /**
-     * Unique id
-     */
-
-    private final int code;
-
-    WHO(int code) {
-        this.code = code;
-    }
-
-    public int getCode() {
-        return code;
-    }
+    private static boolean checked = false;
 
     /**
      * Indicates start of unique users id
@@ -29,4 +23,37 @@ public enum WHO {
      */
 
     public static final int SIZE = WHO.values().length;
+    /**
+     * Unique id
+     */
+
+    private final int code;
+
+
+    /**
+     * Must call before using this enum
+     * <p>
+     * Check for identical IDs
+     */
+
+    public static void uniqueIdCheck() {
+        if (checked)
+            return;
+        boolean b = Algorithms.searchForIdentities(values(), Comparator.comparingInt(WHO::getCode));
+        if (b) {
+            throw new IllegalArgumentException("There is already pair of equal IDs ");
+        }
+        checked = true;
+    }
+
+    WHO(int code) {
+        if (code < 0 || ProtocolBitMap.MAX_VALUE < code) {
+            throw new IllegalArgumentException("Unique id {" + code + "} is out of range");
+        }
+        this.code = code;
+    }
+
+    public int getCode() {
+        return code;
+    }
 }

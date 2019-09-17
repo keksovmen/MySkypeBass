@@ -57,11 +57,16 @@ public class BaseUser {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        BaseUser baseUser = (BaseUser) o;
-        return id == baseUser.id &&
-                Objects.equals(name, baseUser.name);
+        if (this == o)
+            return true;
+        if (o == null)
+            return false;
+        if (o instanceof BaseUser) {
+            BaseUser baseUser = (BaseUser) o;
+            return id == baseUser.id &&
+                    name.equals(baseUser.name);
+        }
+        return false;
     }
 
     @Override

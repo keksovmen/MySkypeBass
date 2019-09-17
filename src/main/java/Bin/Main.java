@@ -122,7 +122,8 @@ public class Main implements ErrorHandler {
 
     private Function<String[], Boolean> connect() {
         return strings -> {
-            boolean connect = controller.connect(strings[0], strings[1], strings[2]);
+//            boolean connect = controller.connect(strings[0], strings[1], strings[2]);
+            boolean connect = true;
             if (connect) {
                 boolean speaker = audioClient.isSpeaker();
                 boolean mic = audioClient.isMic();
@@ -158,7 +159,7 @@ public class Main implements ErrorHandler {
         return strings -> {
             try {
                 if (server == null) {
-                    server = Server.getFromStrings(strings[0], strings[1], strings[2]);
+                    server = Server.getFromStrings(strings[0], strings[1], strings[2], "");
                     server.start("Server");
                     return true;
                 }
@@ -204,7 +205,13 @@ public class Main implements ErrorHandler {
      */
 
     private Runnable callForUsers() {
-        return () -> controller.getWriter().writeUsersRequest(controller.getMe().getId());
+        return () -> {
+            try {
+                controller.getWriter().writeUsersRequest(controller.getMe().getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
     }
 
     /**
@@ -214,7 +221,13 @@ public class Main implements ErrorHandler {
      */
 
     private BiConsumer<Integer, String> sendMessage() {
-        return (integer, s) -> controller.getWriter().writeMessage(controller.getMe().getId(), integer, s);
+        return (integer, s) -> {
+            try {
+                controller.getWriter().writeMessage(controller.getMe().getId(), integer, s);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
     }
 
     /**
@@ -228,7 +241,11 @@ public class Main implements ErrorHandler {
         return baseUser -> {
             callDialog.outComingCall();
             callDialog.setReceiver(baseUser);
-            controller.getWriter().writeCall(controller.getMe().getId(), baseUser.getId());
+            try {
+                controller.getWriter().writeCall(controller.getMe().getId(), baseUser.getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         };
     }
 
@@ -241,7 +258,11 @@ public class Main implements ErrorHandler {
 
     private Consumer<BaseUser> cancelCall(boolean isYou) {
         return baseUser -> {
-            controller.getWriter().writeCancel(controller.getMe().getId(), baseUser.getId());
+            try {
+                controller.getWriter().writeCancel(controller.getMe().getId(), baseUser.getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             if (isYou) {
                 callDialog.stopCall();
             }
@@ -262,7 +283,11 @@ public class Main implements ErrorHandler {
 
             startConv(baseUsers);
 
-            controller.getWriter().writeAccept(controller.getMe().getId(), from);
+            try {
+                controller.getWriter().writeAccept(controller.getMe().getId(), from);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             callDialog.stopCall();
         };
@@ -276,7 +301,11 @@ public class Main implements ErrorHandler {
 
     private Consumer<BaseUser> denyCall() {
         return baseUser -> {
-            controller.getWriter().writeDeny(controller.getMe().getId(), baseUser.getId());
+            try {
+                controller.getWriter().writeDeny(controller.getMe().getId(), baseUser.getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             callDialog.stopCall();
         };
     }
@@ -371,7 +400,11 @@ public class Main implements ErrorHandler {
     private Runnable endConversation() {
         return () -> {
             audioClient.close();
-            controller.getWriter().writeDisconnectFromConv(controller.getMe().getId());
+            try {
+                controller.getWriter().writeDisconnectFromConv(controller.getMe().getId());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             AbstractDataPackagePool.clearStorage();
         };
     }
@@ -393,7 +426,13 @@ public class Main implements ErrorHandler {
      */
 
     private Consumer<String> sendMessageToConference() {
-        return s -> controller.getWriter().writeMessage(controller.getMe().getId(), WHO.CONFERENCE.getCode(), s);
+        return s -> {
+            try {
+                controller.getWriter().writeMessage(controller.getMe().getId(), WHO.CONFERENCE.getCode(), s);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
     }
 
     @Override

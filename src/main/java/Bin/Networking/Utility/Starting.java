@@ -11,11 +11,12 @@ public interface Starting {
      *
      * @param name with given name
      */
-    void start(String name);
+    boolean start(String name);
 
     /**
      * Stop the thread
      */
 
     void close();
+
 }

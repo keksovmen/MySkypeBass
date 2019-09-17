@@ -253,6 +253,7 @@ public class DataPackageHeader extends AbstractHeader {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
+        if (obj == null) return false;
         if (obj instanceof DataPackageHeader) {
             return this.code.equals(((DataPackageHeader) obj).code) &&
                     this.length == ((DataPackageHeader) obj).length &&

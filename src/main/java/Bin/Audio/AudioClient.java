@@ -77,7 +77,7 @@ public class AudioClient implements ErrorHandler {
         defineCaptureSizeMain((int) audioFormat.getSampleRate(), audioFormat.getSampleSizeInBits(), ProtocolBitMap.MAX_VALUE);
         speaker = AudioSystem.isLineSupported(new DataLine.Info(SourceDataLine.class, audioFormat));
         mic = AudioSystem.isLineSupported(new DataLine.Info(TargetDataLine.class, audioFormat));
-        return speaker;
+        return speaker & mic;
     }
 
     /**
