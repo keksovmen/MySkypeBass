@@ -61,13 +61,13 @@ public class ServerController implements ErrorHandler, Starting {
                     AbstractDataPackage read = reader.read();
                     serverProcessor.process(read);  //Here all possible cases of CODE
                 } catch (IOException e) {   //Case when a dude just ruined his connection
-                    e.printStackTrace();
+//                    e.printStackTrace();
                     close();
                 }
             }
 
             //Clean up code
-            server.removeUser(me.getId());
+            server.removeController(getId());
         }, name).start();
         return true;
     }
@@ -114,8 +114,8 @@ public class ServerController implements ErrorHandler, Starting {
             final int id = server.getIdAndIncrement();
             writer.writeId(id);
 
-            me = new ServerUser(name, id, this);
-//            server.addUser(me);
+            me = new ServerUser(name, id);
+//            server.registerController(me);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -133,7 +133,7 @@ public class ServerController implements ErrorHandler, Starting {
         serverProcessor.addListener(ServerHandlerProvider.createUsersRequestListener(this));
         serverProcessor.addListener(ServerHandlerProvider.createConvHandler(this));
         serverProcessor.addListener(ServerHandlerProvider.createTransferHandler(this));
-        server.addUser(me);
+        server.registerController(this);
 //        reader.start("Server reader - " + getId());
     }
 
@@ -141,10 +141,13 @@ public class ServerController implements ErrorHandler, Starting {
         return writer;
     }
 
-    private int getId() {
+    public int getId() {
         return me.getId();
     }
 
+    public ServerUser getMe(){
+        return me;
+    }
 
     @Override
     public void errorCase() {
@@ -153,7 +156,7 @@ public class ServerController implements ErrorHandler, Starting {
                 me.getConversation().removeDude(me);
             }
         }
-        server.removeUser(getId());
+        server.removeController(getId());
         try {
             socket.close();
         } catch (IOException e) {
@@ -416,6 +419,6 @@ public class ServerController implements ErrorHandler, Starting {
                 }
             };
         }
-    }
 
+    }
 }

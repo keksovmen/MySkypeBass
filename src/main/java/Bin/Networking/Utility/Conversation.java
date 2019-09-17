@@ -61,21 +61,21 @@ public class Conversation {
             for (ServerUser right : clearRight) {
                 right.setConversation(conversation);
                 for (ServerUser left : clearLeft) {
-                    try {
-                        right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
-                    } catch (IOException e) {
-                        /*Simply ignore it will be handled later */
-                    }
+//                    try {
+//                        right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
+//                    } catch (IOException e) {
+//                        /*Simply ignore it will be handled later */
+//                    }
                 }
             }
             for (ServerUser left : clearLeft) {
                 left.setConversation(conversation);
                 for (ServerUser right : clearRight) {
-                    try {
-                        left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
-                    } catch (IOException e) {
-                        /*Simply ignore it will be handled later */
-                    }
+//                    try {
+//                        left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
+//                    } catch (IOException e) {
+//                        /*Simply ignore it will be handled later */
+//                    }
                 }
             }
 
@@ -120,12 +120,12 @@ public class Conversation {
     public void sendSound(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from /*&& user.isCanHear()*/) {
-                ServerController controller = user.getController();
-                try {
-                    controller.getWriter().transferAudio(dataPackage);
-                } catch (IOException e) {
-                    removeDude(user);
-                }
+//                ServerController controller = user.getController();
+//                try {
+//                    controller.getWriter().transferAudio(dataPackage);
+//                } catch (IOException e) {
+//                    removeDude(user);
+//                }
             }
         }
     }
@@ -140,12 +140,12 @@ public class Conversation {
     public void sendMessage(AbstractDataPackage dataPackage, int from) {
         for (ServerUser user : users) {
             if (user.getId() != from) {
-                ServerController controller = user.getController();
-                try {
-                    controller.getWriter().transferMessage(dataPackage);
-                } catch (IOException e) {
-                    removeDude(user);
-                }
+//                ServerController controller = user.getController();
+//                try {
+//                    controller.getWriter().transferMessage(dataPackage);
+//                } catch (IOException e) {
+//                    removeDude(user);
+//                }
             }
         }
     }
@@ -160,11 +160,11 @@ public class Conversation {
     public synchronized void addDude(ServerUser exclusive, ServerUser userToAdd) {
         for (ServerUser serverUser : users) {
             if (!serverUser.equals(exclusive)) {
-                try {
-                    serverUser.getController().getWriter().writeAddToConv(userToAdd.getId(), serverUser.getId());
-                } catch (IOException e) {
-                    removeDude(serverUser);
-                }
+//                try {
+//                    serverUser.getController().getWriter().writeAddToConv(userToAdd.getId(), serverUser.getId());
+//                } catch (IOException e) {
+//                    removeDude(serverUser);
+//                }
             }
         }
         userToAdd.setConversation(this);
@@ -185,15 +185,15 @@ public class Conversation {
             return;
         }
         for (ServerUser serverUser : users) {
-            try {
-                serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
-            } catch (IOException e) {
-                removeDude(serverUser);
-            }
+//            try {
+//                serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
+//            } catch (IOException e) {
+//                removeDude(serverUser);
+//            }
         }
         if (users.size() == 1) {
             ServerUser lastUser = users.get(0);
-            lastUser.getController().getWriter().writeStopConv(lastUser.getId());
+//            lastUser.getController().getWriter().writeStopConv(lastUser.getId());
             lastUser.setConversation(null);
             users.clear();
         }

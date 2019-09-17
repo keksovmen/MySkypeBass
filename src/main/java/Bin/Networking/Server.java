@@ -1,7 +1,6 @@
 package Bin.Networking;
 
 import Bin.Networking.Protocol.AbstractDataPackagePool;
-import Bin.Networking.Utility.BaseUser;
 import Bin.Networking.Utility.ServerUser;
 import Bin.Networking.Utility.Starting;
 import Bin.Networking.Utility.WHO;
@@ -16,8 +15,6 @@ import java.net.Socket;
 import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Implementation of server with my protocol
@@ -79,7 +76,7 @@ public class Server implements Starting {
      * Where me and the boys are flexing
      */
 
-    private final ConcurrentHashMap<Integer, ServerUser> users;
+    private final ConcurrentHashMap<Integer, ServerController> users;
 
     /**
      * For utility purposes
@@ -122,7 +119,7 @@ public class Server implements Starting {
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
         users = new ConcurrentHashMap<>();//change to one of concurrent maps
         executor = new ThreadPoolExecutor(
-                0,
+                1,
                 8,
                 30,
                 TimeUnit.SECONDS,
@@ -200,8 +197,9 @@ public class Server implements Starting {
                         }
                     });
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    work = false;
+//                    e.printStackTrace();
+                    close();
+//                    work = false;
                 }
             }
         }, name).start();
@@ -209,7 +207,9 @@ public class Server implements Starting {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
+        if (!work)
+            return;
         work = false;
         executor.shutdown();
         try {
@@ -232,30 +232,32 @@ public class Server implements Starting {
     }
 
     /**
-     * Put new user for all observation
-     * and updates others with new dude on
+     * Put new user
+     * And notifies others with new dude on
      *
-     * @param serverUser to add
+     * @param serverController to add
      */
 
-    public synchronized void addUser(ServerUser serverUser) {
-        users.put(serverUser.getId(), serverUser);
-//        logger.fine("Added - " + serverUser + "\nCONTAINS " + users.toString());
-        sendUpdateUsers();
+    public void registerController(ServerController serverController) {
+        users.put(serverController.getId(), serverController);
+//        System.out.println("Added = " + serverController.getMe());
+        if (work)
+            sendAddDude(serverController);
     }
 
     /**
      * Remove a user from server
-     * and sendSound others update on it
-     * clear any existed data packages from pool
+     * Send notification about it
+     * Clears any existed data packages in the pool
      *
      * @param id of user to remove
      */
 
-    public synchronized void removeUser(int id) {
+    public void removeController(int id) {
         users.remove(id);
-//        logger.fine("Removed - " + id + "\nCONTAINS " + users.toString());
-        sendUpdateUsers();
+//        System.out.println("Removed = " + id + " " + Thread.currentThread().getName());
+        if (work)
+            sendRemoveDude(id);
         AbstractDataPackagePool.clearStorage();
     }
 
@@ -270,7 +272,6 @@ public class Server implements Starting {
     }
 
 
-
     /**
      * Method for obtaining all except you users
      *
@@ -279,13 +280,18 @@ public class Server implements Starting {
      */
 
     public synchronized String getUsers(final int exclusiveId) {
-        StringBuilder stringBuilder = new StringBuilder(50);
-        users.forEach((integer, serverUser) -> {
-            if (integer != exclusiveId) {
-                stringBuilder.append(serverUser.toString()).append("\n");
-            }
-        });
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder(50);
+//        users.forEach((integer, serverUser) -> {
+//            if (integer != exclusiveId) {
+//                stringBuilder.append(serverUser.toString()).append("\n");
+//            }
+//        });
+//        return stringBuilder.toString();
+        return null;
+    }
+
+    public int getControllersSize() {
+        return users.size();
     }
 
     /**
@@ -295,33 +301,71 @@ public class Server implements Starting {
      * @return null or base user
      */
 
-    public BaseUser getUser(int id){
-        return users.get(id);
+    public ServerUser getUser(int id) {
+        ServerController serverController = users.get(id);
+        if (serverController != null)
+            return serverController.getMe();
+        return null;
     }
 
     /**
      * Get controller for other usages
      *
-     * @param who to get
+     * @param who to get id
      * @return null if there is no such dude
      */
 
-    synchronized ServerController getController(int who) {
-        ServerUser serverUser = users.get(who);
-        if (serverUser != null) {
-            return serverUser.getController();
-        }
-        return null;
+    public ServerController getController(int who) {
+//        ServerUser serverUser = users.get(who);
+//        if (serverUser != null) {
+//            return serverUser.getController();
+//        }
+        return users.get(who);
     }
 
     /**
      * Update each user with new users
      */
 
-    private synchronized void sendUpdateUsers() {
-        final String users = getUsers(-1);//-1 isn't possible value so should be everyone
-        this.users.values().forEach(serverUser -> executor.execute(() ->
-                serverUser.getController().getWriter().writeUsers(serverUser.getId(),
-                        users.replaceFirst(serverUser.toString() + "\n", ""))));
+    public void sendAddDude(ServerController dudesController) {
+        users.forEach((integer, controller) ->
+                {
+                    if (integer == dudesController.getId())
+                        return;
+                    executor.execute(() ->
+                    {
+                        try {
+                            controller.getWriter().writeAddToUserList(
+                                    controller.getId(),
+                                    dudesController.getMe().toString()
+                            );
+                        } catch (IOException ignored) {
+                            //If exception with io, is must be handled by corresponding thread not yours
+                        }
+                    });
+                }
+        );
+    }
+
+    /**
+     * Send notification to each user that some dude disconnected
+     *
+     * @param dudesId of disconnected
+     */
+
+    public void sendRemoveDude(int dudesId) {
+        users.forEach((integer, controller) ->
+                executor.execute(() ->
+                {
+                    try {
+                        controller.getWriter().writeRemoveFromUserList(
+                                controller.getId(),
+                                dudesId
+                        );
+                    } catch (IOException ignored) {
+                        //If exception with io, is must be handled by corresponding thread not yours
+                    }
+                })
+        );
     }
 }

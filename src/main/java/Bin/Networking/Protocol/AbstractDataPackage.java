@@ -89,6 +89,15 @@ public abstract class AbstractDataPackage {
     public abstract String getDataAsString();
 
     /**
+     * Use with caution
+     * Will convert first 4 bytes in to int
+     *
+     * @return int from first bytes
+     */
+
+    public abstract int getDataAsInt();
+
+    /**
      * When returning to object pull should call it
      */
 

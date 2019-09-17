@@ -151,4 +151,22 @@ public class ServerWriter extends WriterWithHandler {
                 id
         ));
     }
+
+    public void writeAddToUserList(int to, String dudeToAdd) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_ADD_TO_USER_LIST,
+                WHO.SERVER.getCode(),
+                to,
+                dudeToAdd
+        ));
+    }
+
+    public void writeRemoveFromUserList(int to, int dudeToRemove) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_REMOVE_FROM_USER_LIST,
+                WHO.SERVER.getCode(),
+                to,
+                String.valueOf(dudeToRemove)
+        ));
+    }
 }

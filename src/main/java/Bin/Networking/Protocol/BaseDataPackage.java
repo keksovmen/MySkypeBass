@@ -120,6 +120,17 @@ public class BaseDataPackage extends AbstractDataPackage {
         return data == null ? "" : new String(data, charset);
     }
 
+    /**
+     * You must be sure that there is number as string
+     *
+     * @return int value of data
+     */
+
+    @Override
+    public int getDataAsInt() {
+        return Integer.parseInt(getDataAsString());
+    }
+
     @Override
     public AbstractHeader getHeader() {
         return header;

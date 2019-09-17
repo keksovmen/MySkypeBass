@@ -8,11 +8,11 @@ import Bin.Networking.ServerController;
 
 public class ServerUser extends BaseUser {
 
-    /**
-     * Who created you
-     */
+//    /**
+//     * Who created you
+//     */
 
-    private final ServerController controller;
+//    private final ServerController controller;
 
     /**
      * Shows in conversation you are or not
@@ -20,14 +20,14 @@ public class ServerUser extends BaseUser {
 
     private volatile Conversation conversation;
 
-    public ServerUser(String name, int id, ServerController controller) {
+    public ServerUser(String name, int id) {
         super(name, id);
-        this.controller = controller;
+//        this.controller = controller;
     }
 
-    public ServerController getController() {
-        return controller;
-    }
+//    public ServerController getController() {
+//        return controller;
+//    }
 
     public Conversation getConversation() {
         return conversation;

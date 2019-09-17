@@ -28,7 +28,9 @@ public enum CODE {
     SEND_REMOVE(13),//server sendSound it when some one was removed to your conversation
     SEND_CONFIRM(14),//not used
     SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
-    SEND_STOP_CONV(16);//when you are last one in conversation server sends it to you
+    SEND_STOP_CONV(16),//when you are last one in conversation server sends it to you
+    SEND_ADD_TO_USER_LIST(17),//when you connected to the server it will tell every one that you are online
+    SEND_REMOVE_FROM_USER_LIST(18);//when you disconnect from the server it will tell every one that you are gone
 
     private static boolean checked = false;
 

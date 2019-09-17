@@ -7,6 +7,10 @@ import Bin.Util.Algorithms;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Tester {
 
@@ -63,6 +67,8 @@ public class Tester {
         assert (!server.start("Server"));
 
         System.out.println("Creating Client controller");
+        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        List<ClientController> clientControllers = new ArrayList<>();
         ClientController clientController = new ClientController(null);
         System.out.println("Client controller connect");
         assert (clientController.connect(
@@ -71,13 +77,49 @@ public class Tester {
                 8188,
                 8192));
 
-        Thread.sleep(1_000);
+        for (int i = 0; i < 20; i++) {
+            ClientController clientController1 = new ClientController(null);
+            clientControllers.add(clientController1);
+            ClientController clientController2 = new ClientController(null);
+            executorService.submit(() ->
+            {
+                try {
+                    clientController1.connect(
+                            "Vasa",
+                            "127.0.0.1",
+                            8188,
+                            8192);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+            });
+            executorService.submit(() ->
+            {
+                try {
+                    clientController2.connect(
+                            "Valera",
+                            "127.0.0.1",
+                            8188,
+                            8192);
+                    clientController2.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.exit(-1);
+                }
+            });
+        }
+
+        Thread.sleep(3_000);
         System.out.println("Check users");
         assert (server.getUser(WHO.SIZE).equals(clientController.getMe()));
-
+        int controllersSize = server.getControllersSize();
+        assert (controllersSize == 21) : "Controller size is wrong and equal to = " + controllersSize;
         System.out.println("Closing");
         clientController.close();
         server.close();
+        clientControllers.forEach(ClientController::close);
+        executorService.shutdown();
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
 //                ProtocolBitMap.TO_SIZE;
