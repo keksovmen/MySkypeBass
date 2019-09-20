@@ -1,6 +1,7 @@
 package Com.Networking.Processors;
 
 import Com.Networking.Protocol.AbstractDataPackage;
+import Com.Networking.Protocol.DataPackagePool;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
             if (!super.process(dataPackage)){
                 branching(dataPackage);
             }
+            DataPackagePool.returnPackage(dataPackage);
         });
         return true;
     }

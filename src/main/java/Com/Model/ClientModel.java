@@ -10,7 +10,7 @@ import java.util.Set;
  * And can register and remove them
  */
 
-public class ClientModel extends UnEditableModel implements Registration {
+public class ClientModel extends UnEditableModel implements Registration<Updater> {
 
     private final Set<Updater> listeners;
 
@@ -73,7 +73,7 @@ public class ClientModel extends UnEditableModel implements Registration {
 
     public void removeFromModel(int user) {
         BaseUser remove = userMap.remove(user);
-        if (remove == null)
+        if (remove != null)
             notifyListeners();
     }
 

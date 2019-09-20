@@ -1,12 +1,12 @@
 package Com.GUI.Forms;
 
-import Com.GUI.Interfaces.AudioFormatStatsActions;
+import Com.Pipeline.BUTTONS;
+import Com.Pipeline.WarDuty;
+import Com.Util.FormatWorker;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Properties;
 
 /**
@@ -15,8 +15,8 @@ import java.util.Properties;
  * port for the socket
  */
 
-class AudioFormatStats extends JDialog {
-    private JPanel contentPane;
+public class AudioFormatStats {
+    private JPanel mainPane;
     private JButton buttonOK;
     private JButton buttonCancel;
     private JRadioButton a8000RadioButton;
@@ -28,63 +28,86 @@ class AudioFormatStats extends JDialog {
     private JFormattedTextField customRate;
     private JFormattedTextField textFieldPort;
 
-    /**
-     * Corresponding set of action
-     */
+//    /**
+//     * Corresponding set of action
+//     */
+//
+//    private final AudioFormatStatsActions actions;
 
-    private final AudioFormatStatsActions actions;
-
-    /**
-     * Need its parent component to set in middle of it
-     * when shown
-     */
-
-    private final JComponent relativeTo;
+//    /**
+//     * Need its parent component to set in middle of it
+//     * when shown
+//     */
+//
+//    private final JComponent relativeTo;
 
     /**
      * Firstly load properties set ip sample rate fields
      * register listeners for buttons
      *
-     * @param actions    to call when something clicked
-     * @param relativeTo to center relative to it
      */
 
-    AudioFormatStats(AudioFormatStatsActions actions, JComponent relativeTo) {
-        loadProperties();
+    public AudioFormatStats(WarDuty whereReportAction) {
+//        loadProperties();
 
-        this.actions = actions;
-        this.relativeTo = relativeTo;
-        setContentPane(contentPane);
-        setModal(true);
-        getRootPane().setDefaultButton(buttonOK);
+//        this.actions = actions;
+//        this.relativeTo = relativeTo;
+//        setContentPane(mainPane);
+//        setModal(true);
+//        getRootPane().setDefaultButton(buttonOK);
 
         //set value of the button to customRate text field
-        ActionListener actionListener = e -> customRate.setText(((JRadioButton) e.getSource()).getText());
+        ActionListener actionListener = e -> {
+            JRadioButton radioButton = (JRadioButton) e.getSource();
+            customRate.setText(radioButton.getText());
+        };
         a8000RadioButton.addActionListener(actionListener);
         a16000RadioButton.addActionListener(actionListener);
         a44100RadioButton.addActionListener(actionListener);
         a48000RadioButton.addActionListener(actionListener);
 
-        buttonOK.addActionListener(e -> {
-            actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
-            onOK();
-        });
+        buttonOK.addActionListener(e ->
+                whereReportAction.fight(
+                        BUTTONS.CREATE_SERVER,
+                        new String[]{getPort(), getSampleRate(), getSampleSize()},
+                        null,
+                        -1
+                ));
 
-        buttonCancel.addActionListener(e -> onCancel());
+        buttonCancel.addActionListener(e ->
+                whereReportAction.fight(
+                        BUTTONS.CANCEL_SERVER_CREATION,
+                        null,
+                        null,
+                        -1
+                ));
+
+        a44100RadioButton.setSelected(true);
+        customRate.setText(a44100RadioButton.getText());
+//        buttonOK.addActionListener(e -> {
+//            actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
+//            onOK();
+//        });
+
+//        buttonCancel.addActionListener(e -> onCancel());
 
         // call onCancel() when cross is clicked
-        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                onCancel();
-            }
-        });
+//        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+//        addWindowListener(new WindowAdapter() {
+//            public void windowClosing(WindowEvent e) {
+//                onCancel();
+//            }
+//        });
 
         // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+//        mainPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
 
-        pack();
-        setTitle("Audio Format Settings");
+//        pack();
+//        setTitle("Audio Format Settings");
+    }
+
+    public JPanel getMainPane() {
+        return mainPane;
     }
 
     /**
@@ -92,39 +115,41 @@ class AudioFormatStats extends JDialog {
      */
 
     void display() {
-        setLocationRelativeTo(relativeTo);
-        setVisible(true);
+//        setLocationRelativeTo(relativeTo);
+//        setVisible(true);
     }
 
     private void onOK() {
-        dispose();
+//        dispose();
     }
 
     private void onCancel() {
-        dispose();
+//        dispose();
     }
 
     private String getPort() {
-        return textFieldPort.getText().matches("\\d+") ? textFieldPort.getText() : "8188";
+        return textFieldPort.getText().trim();
+//        return textFieldPort.getText().matches("\\d+") ? textFieldPort.getText() : "8188";
     }
 
     private String getSampleRate() {
-        return customRate.getText().matches("\\d+") ? customRate.getText() : "44100";
+        return customRate.getText().trim();
+//        return customRate.getText().matches("\\d+") ? customRate.getText() : "44100";
     }
 
     private String getSampleSize() {
         return a8RadioButton.isSelected() ? "8" : "16";
     }
 
-    /**
-     * Load some properties
-     */
+//    /**
+//     * Load some properties
+//     */
 
-    private void loadProperties() {
-        Properties defaultStrings = MainFrame.defaultStrings;
-        textFieldPort.setText(defaultStrings.getProperty("port"));
-        customRate.setText(defaultStrings.getProperty("rate"));
-    }
+//    private void loadProperties() {
+//        Properties defaultStrings = MainFrame.defaultStrings;
+//        textFieldPort.setText(defaultStrings.getProperty("port"));
+//        customRate.setText(defaultStrings.getProperty("rate"));
+//    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
@@ -137,8 +162,8 @@ class AudioFormatStats extends JDialog {
         with \\s doesn't work
         It may be problem with string pool but i am not good enough to see it
          */
-        customRate = new JFormattedTextField(FirstSkin.getFormatter());
-        textFieldPort = new JFormattedTextField(FirstSkin.getFormatter());
+        customRate = new JFormattedTextField(FormatWorker.getFormatter());
+        textFieldPort = new JFormattedTextField(FormatWorker.getFormatter());
     }
 
 }

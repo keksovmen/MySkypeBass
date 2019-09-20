@@ -1,8 +1,8 @@
 package Com.Model;
 
-public interface Registration {
+public interface Registration<T> {
 
-    boolean registerListener(Updater listener);
+    boolean registerListener(T listener);
 
-    boolean removeListener(Updater listener);
+    boolean removeListener(T listener);
 }

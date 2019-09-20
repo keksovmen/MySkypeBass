@@ -160,9 +160,10 @@ public class Main implements ErrorHandler {
         return strings -> {
             try {
                 if (server == null) {
-                    server = Server.getFromStrings(strings[0], strings[1], strings[2], "");
+//                    server = Server.getFromStrings(strings[0], strings[1], strings[2], "");
                     server.start("Server");
-                    return true;
+                    throw new IOException();
+//                    return true;
                 }
                 return false;
             } catch (IOException e) {

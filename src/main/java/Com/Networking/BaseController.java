@@ -1,6 +1,8 @@
 package Com.Networking;
 
 import Com.Networking.Processors.Processable;
+import Com.Networking.Protocol.AbstractDataPackage;
+import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Readers.BaseReader;
 import Com.Networking.Utility.Starting;
 
@@ -27,7 +29,9 @@ public abstract class BaseController implements Starting {
     abstract Processable getProcessor();
 
     void mainLoopAction() throws IOException {
-        getProcessor().process(reader.read());
+        AbstractDataPackage read = reader.read();
+        getProcessor().process(read);
+        DataPackagePool.returnPackage(read);
     }
 
     private void mainLoop() {
@@ -44,7 +48,8 @@ public abstract class BaseController implements Starting {
     @Override
     public boolean start(String name) {
         if (work)
-            return false;
+            throw new IllegalStateException("Already started");
+//            return false;
         work = true;
 
         if (!authenticate()) {

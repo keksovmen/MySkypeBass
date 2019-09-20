@@ -154,7 +154,7 @@ public class Server implements Starting, Executor {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, final String usersAmount) throws IOException {
+    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
         return new Server(
                 Integer.valueOf(port),
                 Integer.valueOf(sampleRate),

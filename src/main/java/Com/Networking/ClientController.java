@@ -64,11 +64,11 @@ public class ClientController extends BaseController {
         socket = new Socket();
 
         try {
-            socket.connect(new InetSocketAddress(hostName, port), 7_000);
+            socket.connect(new InetSocketAddress(hostName, port), 7_000); // timeOut as property
             writer = new ClientWriter(socket.getOutputStream(), bufferSize);
             reader = new BaseReader(socket.getInputStream(), bufferSize);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -126,6 +126,17 @@ public class ClientController extends BaseController {
         return true;
     }
 
+    /**
+     * You don't want to return package because it is processed in another thread
+     *
+     * @throws IOException if network fails
+     */
+
+    @Override
+    void mainLoopAction() throws IOException {
+        processor.process(reader.read());
+    }
+
     @Override
     void dataInitialisation() {
         //Add all your possible action handler
@@ -177,31 +188,4 @@ public class ClientController extends BaseController {
 //    public ClientWriter getWriter() {
 //        return writer;
 //    }
-    private static class Handlers {
-
-        private static Consumer<AbstractDataPackage> onUsers(ClientController current) {
-            return dataPackage -> {
-                String data = dataPackage.getDataAsString();
-                if (0 < data.length()) {
-                    BaseUser[] users = BaseUser.parseUsers(data);
-                    //Update model with users
-                    current.model.updateModel(users);
-                }
-            };
-        }
-
-        private static Consumer<AbstractDataPackage> onAddUserToList(ClientController current) {
-            return dataPackage -> {
-                String data = dataPackage.getDataAsString();
-                current.model.addToModel(BaseUser.parse(data));
-            };
-        }
-
-        private static Consumer<AbstractDataPackage> onRemoveUserFromList(ClientController current) {
-            return dataPackage -> {
-                String data = dataPackage.getDataAsString();
-                current.model.removeFromModel(BaseUser.parse(data));
-            };
-        }
-    }
 }

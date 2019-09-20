@@ -37,7 +37,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      * Just for connection and server creation
      */
 
-    private FirstSkin firstSkin;
+    private EntrancePane firstSkin;
 
     /**
      * Will appear secondly
@@ -90,7 +90,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
         this.actions = actions;
         updateActions();
 
-        firstSkin = new FirstSkin(actions);
+//        firstSkin = new EntrancePane(actions);
         add(firstSkin.getPane());
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -138,10 +138,10 @@ public class MainFrame extends JFrame implements ErrorHandler {
     private Function<String[], Boolean> connect(Function<String[], Boolean> connect) {
         return strings -> {
             //block connect button
-            firstSkin.blockConnectButton();
+//            firstSkin.blockConnectButton();
             Boolean aBoolean = connect.apply(strings);
             //release connect button
-            firstSkin.releaseConnectButton();
+//            firstSkin.releaseConnectButton();
 
             if (aBoolean) {
                 remove(firstSkin.getPane());

@@ -1,3 +1,5 @@
+import Com.Client;
+import Com.GUI.Forms.AudioFormatStats;
 import Com.Model.ClientModel;
 import Com.Networking.ClientController;
 import Com.Networking.Processors.ClientProcessor;
@@ -8,8 +10,10 @@ import Com.Networking.Utility.BaseUser;
 import Com.Networking.Utility.WHO;
 import Com.Util.Algorithms;
 
+import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,14 +37,14 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         AbstractDataPackagePool.init(new DataPackagePool());
-        testPackage();
-        testServer();
-        clientTest();
-
+//        testPackage();
+//        testServer();
+//        clientTest();
+        testFullConstruction();
 
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |
@@ -259,5 +263,11 @@ public class Tester {
 //        clientController.close();
 
         System.out.println("CLIENT TEST ENDS");
+    }
+
+    public static void testFullConstruction() throws IOException {
+//        Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
+//        server.start("Server");
+        Client client = new Client();
     }
 }
