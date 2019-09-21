@@ -1,6 +1,5 @@
 package Com.GUI.Forms;
 
-import Com.GUI.Interfaces.ConferencePaneActions;
 import Com.Networking.Utility.ErrorHandler;
 
 import javax.sound.sampled.FloatControl;
@@ -31,11 +30,11 @@ class ConferencePane implements ErrorHandler {
 
     private final Map<String, UserSettings> conferenceMembers;
 
-    /**
-     * All possible actions
-     */
+//    /**
+//     * All possible actions
+//     */
 
-    private final ConferencePaneActions actions;
+//    private final ConferencePaneActions actions;
 
 
     /**
@@ -44,20 +43,20 @@ class ConferencePane implements ErrorHandler {
      * 2 - spinner model
      * 3 - register actions
      *
-     * @param actions all possible actions
+//     * @param actions all possible actions
      */
 
-    ConferencePane(ConferencePaneActions actions) {
-        this.actions = actions;
+    ConferencePane() {
+//        this.actions = actions;
         volume.setModel(new SpinnerNumberModel(1d, 1d, 20d, 0.05d));
 
         conferenceMembers = new HashMap<>();
 
-        endCallButton.addActionListener(e -> actions.endCall().run());
+//        endCallButton.addActionListener(e -> actions.endCall().run());
 
-        muteButton.addActionListener(e -> reactToMute(actions.mute().get()));
+//        muteButton.addActionListener(e -> reactToMute(actions.mute().get()));
 
-        volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
+//        volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
 
         sender.addActionListener(e -> sendMessage(getMessage()));
     }
@@ -135,7 +134,7 @@ class ConferencePane implements ErrorHandler {
     }
 
     void showMessage(String message, String from) {
-        displayPlace.append(from + " (" + ThirdSkin.getTime() + "): " + message + "\n");
+        displayPlace.append(from + " (" + MessagePane.getTime() + "): " + message + "\n");
     }
 
     private void sendMessage(String message) {
@@ -143,7 +142,7 @@ class ConferencePane implements ErrorHandler {
             return;
         }
         showMessage(message, "Me");
-        actions.sendMessageToConference().accept(message);
+//        actions.sendMessageToConference().accept(message);
     }
 
     private String getMessage() {

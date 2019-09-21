@@ -176,11 +176,15 @@ public class ClientController extends BaseController {
 //
 //    }
 //
-    public BaseUser getMe() {
-        return model.getMe();
+//    public BaseUser getMe() {
+//        return model.getMe();
+//    }
+
+    public ClientWriter getWriter() {
+        return writer;
     }
 
-//    public Registration getModel() {
+    //    public Registration getModel() {
 //        return model;
 //    }
 

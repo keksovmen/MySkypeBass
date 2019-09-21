@@ -175,7 +175,7 @@ public class Tester {
 
         Thread.sleep(3_000);
         System.out.println("Check users");
-        assert (server.getUser(WHO.SIZE).equals(clientController.getMe()));
+        assert (server.getUser(WHO.SIZE).equals(clientModel.getMe()));
         int controllersSize = server.getControllersSize();
         assert (controllersSize == 21) : "Controller size is wrong and equal to = " + controllersSize;
         System.out.println("Closing");
@@ -265,9 +265,31 @@ public class Tester {
         System.out.println("CLIENT TEST ENDS");
     }
 
-    public static void testFullConstruction() throws IOException {
-//        Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
-//        server.start("Server");
+    public static void testFullConstruction() throws IOException, InterruptedException {
+        Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
+        server.start("Server");
         Client client = new Client();
+
+        Thread.sleep(5_000);
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        List<ClientController> controllers = Collections.synchronizedList(new ArrayList<>());
+        for (int i = 0; i < 5; i++) {
+            executorService.execute(() -> {
+                ClientModel clientModel = new ClientModel();
+                clientModel.setMe(new BaseUser("DUMMY", 0));
+                ClientProcessor clientProcessor = new ClientProcessor();
+                ClientController clientController = new ClientController(clientProcessor, clientModel);
+                controllers.add(clientController);
+                clientController.connect(
+                        "127.0.0.1",
+                        8188,
+                        8192
+                );
+                clientController.start("Client controller test");
+            });
+        }
+        System.out.println("GO");
+        Thread.sleep(10_000);
+        controllers.forEach(clientController -> clientController.close());
     }
 }

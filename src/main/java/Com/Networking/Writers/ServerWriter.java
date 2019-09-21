@@ -168,4 +168,13 @@ public class ServerWriter extends WriterWithHandler {
                 String.valueOf(dudeToRemove)
         ));
     }
+
+    public void writeMessage(int to, int from, String message) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_MESSAGE,
+                from,
+                to,
+                message
+        ));
+    }
 }

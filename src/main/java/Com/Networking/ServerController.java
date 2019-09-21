@@ -138,6 +138,7 @@ public class ServerController extends BaseController {
         //Add listeners here
 //        Processor processor = new Processor();
         processor.getOnUsers().setListener(Handlers.onUsersRequest(this));
+        processor.getOnMessage().setListener(Handlers.onMessageSend(this));
 //        processor.setListener(ServerHandlerProvider.createUsersRequestListener(this));
 //        processor.setListener(ServerHandlerProvider.createConvHandler(this));
 //        processor.setListener(ServerHandlerProvider.createTransferHandler(this));
@@ -425,6 +426,26 @@ public class ServerController extends BaseController {
             return dataPackage -> {
                 String users = current.server.getUsers(current.getId());
                 current.writer.writeUsers(current.getId(), users);
+            };
+        }
+
+        private static Consumer<AbstractDataPackage> onMessageSend(ServerController current){
+            return dataPackage -> {
+                int to = dataPackage.getHeader().getTo();
+                ServerController receiver = current.server.getController(to);
+                if (receiver == null){
+                    //send that dude is offline
+                }else {
+                    try {
+                        receiver.writer.writeMessage(
+                                to,
+                                dataPackage.getHeader().getFrom(),
+                                dataPackage.getDataAsString()
+                        );
+                    } catch (IOException e) {
+                        //tell that dude is offline
+                    }
+                }
             };
         }
     }

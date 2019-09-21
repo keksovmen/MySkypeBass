@@ -44,7 +44,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      * Handle all other stuff
      */
 
-    private SecondSkin secondSkin;
+    private MultiplePurposePane multiplePurposePane;
 
     /**
      * Just to make the constructor easy to call
@@ -146,12 +146,12 @@ public class MainFrame extends JFrame implements ErrorHandler {
             if (aBoolean) {
                 remove(firstSkin.getPane());
                 //lazy init
-                if (secondSkin == null) {
-                    secondSkin = new SecondSkin(actions.nameAndId().get(), actions);
+                if (multiplePurposePane == null) {
+//                    multiplePurposePane = new MultiplePurposePane(actions.nameAndId().get(), actions);
                 } else {
-                    secondSkin.setNameAndId(actions.nameAndId().get());
+                    multiplePurposePane.setNameAndId(actions.nameAndId().get());
                 }
-                add(secondSkin.getPane());
+                add(multiplePurposePane.getPane());
                 revalidate();
                 repaint();
             } else {
@@ -195,7 +195,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
     private Runnable disconnect(Runnable disconnect) {
         return () -> {
             disconnect.run();
-            remove(secondSkin.getPane());
+            remove(multiplePurposePane.getPane());
             add(firstSkin.getPane());
             revalidate();
             repaint();
@@ -223,7 +223,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void updateUsers(BaseUser[] users) {
-        EventQueue.invokeLater(() -> secondSkin.displayUsers(users));
+        EventQueue.invokeLater(() -> multiplePurposePane.displayUsers(users));
     }
 
     /**
@@ -234,7 +234,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void showMessage(final BaseUser from, final String message) {
-        EventQueue.invokeLater(() -> secondSkin.showMessage(from, message));
+        EventQueue.invokeLater(() -> multiplePurposePane.showMessage(from, message));
     }
 
     /**
@@ -245,7 +245,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void showIncomingCall(String who, String convInfo) {
-        EventQueue.invokeLater(() -> secondSkin.callIncomingDialog(who, convInfo));
+//        EventQueue.invokeLater(() -> multiplePurposePane.callIncomingDialog(who, convInfo));
     }
 
     /**
@@ -256,7 +256,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
 
     public void closeCall(String message) {
         EventQueue.invokeLater(() -> {
-            secondSkin.closeCallDialog();
+//            multiplePurposePane.closeCallDialog();
             JOptionPane.showMessageDialog(this, message, "Message", JOptionPane.INFORMATION_MESSAGE);
         });
     }
@@ -269,7 +269,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void startConversation(String user, FloatControl control) {
-        EventQueue.invokeLater(() -> secondSkin.conversationStart(user, control));
+        EventQueue.invokeLater(() -> multiplePurposePane.conversationStart(user, control));
     }
 
     /**
@@ -280,7 +280,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void addToConv(String name, FloatControl control) {
-        EventQueue.invokeLater(() -> secondSkin.addToConv(name, control));
+        EventQueue.invokeLater(() -> multiplePurposePane.addToConv(name, control));
     }
 
     /**
@@ -290,7 +290,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void removeFromConv(String name) {
-        EventQueue.invokeLater(() -> secondSkin.removeFromConf(name));
+        EventQueue.invokeLater(() -> multiplePurposePane.removeFromConf(name));
     }
 
     /**
@@ -298,7 +298,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void closeConversation() {
-        EventQueue.invokeLater(() -> secondSkin.stopConversation());
+        EventQueue.invokeLater(() -> multiplePurposePane.stopConversation());
     }
 
     /**
@@ -309,7 +309,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void showConferenceMessage(String message, String from) {
-        EventQueue.invokeLater(() -> secondSkin.showConferenceMessage(message, from));
+        EventQueue.invokeLater(() -> multiplePurposePane.showConferenceMessage(message, from));
     }
 
     @Override
@@ -329,6 +329,6 @@ public class MainFrame extends JFrame implements ErrorHandler {
 
     @Override
     public ErrorHandler[] getNext() {
-        return new ErrorHandler[]{secondSkin};
+        return new ErrorHandler[]{};
     }
 }

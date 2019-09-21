@@ -51,8 +51,16 @@ public class FormatWorker {
         return hostName.matches(compile.pattern());
     }
 
-    public static boolean verifyPort(String port) {
+    public static boolean verifyPortFormat(String port) {
         return port.matches("\\d+?");
+    }
+
+    public static boolean portInRange(int port){
+        return 0 < port && port < 0xFFFF;
+    }
+
+    public static boolean checkZeroLength(String data){
+        return data.length() == 0;
     }
 
     /**
@@ -67,10 +75,15 @@ public class FormatWorker {
             @Override
             public JFormattedTextField.AbstractFormatter getFormatter(JFormattedTextField tf) {
                 return new JFormattedTextField.AbstractFormatter() {
+                    private final int MAX_LENGTH_AS_STRING =
+                            String.valueOf(Integer.MAX_VALUE).length() - 1; //-1 just in case ov largest value
                     @Override
                     public Object stringToValue(String text) {
                         String result = text.trim();
                         result = result.replaceAll("\\D", "");
+                        int difference = result.length() - MAX_LENGTH_AS_STRING ;
+                        if (0 < difference)
+                            result = result.substring(0, result.length() - difference);
                         return result.equals("") ? "" : Integer.parseInt(result);
                     }
 

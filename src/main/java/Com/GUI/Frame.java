@@ -2,6 +2,7 @@ package Com.GUI;
 
 import Com.GUI.Forms.AudioFormatStats;
 import Com.GUI.Forms.EntrancePane;
+import Com.GUI.Forms.MultiplePurposePane;
 import Com.Model.Registration;
 import Com.Model.UnEditableModel;
 import Com.Model.Updater;
@@ -10,6 +11,7 @@ import Com.Pipeline.ACTIONS;
 import Com.Pipeline.BUTTONS;
 import Com.Pipeline.CivilDuty;
 import Com.Pipeline.WarDuty;
+import Com.Util.Resources;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -21,11 +23,16 @@ import java.util.List;
 
 public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty {
 
+    public static final int WIDTH = 400;
+    public static final int HEIGHT = 300;
+
+
     private final List<WarDuty> warDutyList;
 
     private final JFrame frame;
     private final EntrancePane entrancePane;
     private final AudioFormatStats serverCreatePane;
+    private final MultiplePurposePane purposePane;
 
     public Frame() {
         warDutyList = new ArrayList<>();
@@ -34,6 +41,7 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
 
         entrancePane = new EntrancePane(this);
         serverCreatePane = new AudioFormatStats(this);
+        purposePane = new MultiplePurposePane(this);
 
         setSize();
         setIcon();
@@ -45,7 +53,9 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
 
     @Override
     public void update(UnEditableModel model) {
-
+        SwingUtilities.invokeLater(() -> {
+            purposePane.update(model);
+        });
     }
 
     @Override
@@ -72,8 +82,9 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
                     break;
                 }
                 case CONNECT_SUCCEEDED:{
-                    showMessage("Connected!");
+//                    showMessage("Connected!");
                     //Change pane to new one
+                    onConnected();
                     break;
                 }
                 case WRONG_SAMPLE_RATE_FORMAT:{
@@ -85,12 +96,22 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
                     break;
                 }
                 case SERVER_CREATED:{
-                    onServerCancel();
+                    onServerCreated();
+                    break;
+                }
+                case PORT_ALREADY_BUSY:{
+                    showErrorMessage("Port already in use - " + stringData);
+                    break;
+                }
+                case PORT_OUT_OF_RANGE:{
+                    showErrorMessage("Port is out of range, must be in "
+                            + stringData + ". But yours is " + intData);
                     break;
                 }
             }
 
             entrancePane.respond(action, from, stringData, bytesData, intData);
+            purposePane.respond(action, from, stringData, bytesData, intData);
         });
     }
 
@@ -126,24 +147,25 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame.setBounds(
-                screenSize.width / 2 - 200,
-                screenSize.height / 2 - 150,
-                400,
-                300);
+                screenSize.width / 2 - WIDTH / 2,
+                screenSize.height / 2 - HEIGHT / 2,
+                WIDTH,
+                HEIGHT);
     }
 
     private void setIcon() {
-        try {
-            InputStream ricardo = getClass().getResourceAsStream("/Images/ricardo.png");
-            if (ricardo == null) {
-                JOptionPane.showMessageDialog(frame, "Can't find the icon");
-                return;
-            }
-            frame.setIconImage(ImageIO.read(ricardo));
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Can't set the icon");
-        }
+//        try {
+//            InputStream ricardo = getClass().getResourceAsStream("/Images/ricardo.png");
+//            if (ricardo == null) {
+//                JOptionPane.showMessageDialog(frame, "Can't find the icon");
+//                return;
+//            }
+//            frame.setIconImage(ImageIO.read(ricardo));
+            frame.setIconImage(Resources.ricardo.getImage());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            JOptionPane.showMessageDialog(frame, "Can't set the icon");
+//        }
     }
 
     private void showErrorMessage(String message){
@@ -174,19 +196,32 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
     }
 
     private void onServerPaneCreate(){
-        frame.remove(entrancePane.getPane());
+//        frame.remove(frame.getContentPane());
+//        removeContentPane();
         frame.setContentPane(serverCreatePane.getMainPane());
         repaint();
     }
 
     private void onServerCancel(){
-        frame.remove(serverCreatePane.getMainPane());
+//        frame.remove(serverCreatePane.getMainPane());
+//        frame.remove(frame.getContentPane());
+//        removeContentPane();
         frame.setContentPane(entrancePane.getPane());
         repaint();
     }
 
     private void onServerCreated(){
         onServerCancel();
+    }
+
+    private void onConnected(){
+//        frame.getContentPane().removeAll();
+        frame.setContentPane(purposePane.getPane());
+        repaint();
+    }
+
+    private void removeContentPane(){
+        frame.remove(frame.getContentPane());
     }
 
     private void repaint(){

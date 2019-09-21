@@ -281,9 +281,9 @@ public class Server implements Starting, Executor {
 
     public synchronized String getUsers(final int exclusiveId) {
         StringBuilder stringBuilder = new StringBuilder(50);
-        users.forEach((integer, serverUser) -> {
+        users.forEach((integer, serverController) -> {
             if (integer != exclusiveId) {
-                stringBuilder.append(serverUser.toString()).append("\n");
+                stringBuilder.append(serverController.getMe().toString()).append("\n");
             }
         });
         return stringBuilder.toString();

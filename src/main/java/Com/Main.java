@@ -45,6 +45,7 @@ public class Main implements ErrorHandler {
 
     private Main() {
         AbstractDataPackagePool.init(new DataPackagePool());
+        Client client = new Client();
 
         audioClient = AudioClient.getInstance();
         users = new HashMap<>();

@@ -63,6 +63,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         processor.getOnUsers().setListener(this::onUsers);
         processor.getOnAddUserToList().setListener(this::onAddUserToList);
         processor.getOnRemoveUserFromList().setListener(this::onRemoveUserFromList);
+        processor.getOnMessage().setListener(this::onIncomingMessage);
         model.registerListener(frame);
         registerListener(frame);
         frame.registerListener(this);
@@ -87,6 +88,15 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
             }
             case CREATE_SERVER:{
                 onServerCreate(plainData);
+                return;
+            }
+            case ASC_FOR_USERS:{
+//                System.out.println("ASK");
+                onUsersRequest();
+                return;
+            }
+            case SEND_MESSAGE:{
+                onMessageSend(integerData, stringData);
                 return;
             }
 
@@ -115,23 +125,24 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
 
     void onConnect(Object plainData){
         String[] data = (String[]) plainData;
+
         String name = data[0];
-        if (name.length() == 0)
+        if (FormatWorker.checkZeroLength(name))
             name = System.getProperty("user.name"); // or get from property map
+
         String hostName = data[1];
-        if (hostName.length() == 0)
+        if (FormatWorker.checkZeroLength(hostName))
             hostName = "127.0.0.1"; // or get from property
         if (!FormatWorker.isHostNameCorrect(hostName)) {
-            respond(ACTIONS.WRONG_HOST_NAME_FORMAT, null, hostName, null, -1);
+            stringRespond(ACTIONS.WRONG_HOST_NAME_FORMAT, hostName);
             return;
         }
+
         String port = data[2];
-        if (port.length() == 0)
+        if (FormatWorker.checkZeroLength(port))
             port = "8188"; // or get from property
-        if (!FormatWorker.verifyPort(port)) {
-            respond(ACTIONS.WRONG_PORT_FORMAT, null, port, null, -1);
+        if (!checkPort(port))
             return;
-        }
         onConnect(hostName, Integer.parseInt(port), name);
     }
 
@@ -141,43 +152,44 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         boolean connect = controller.connect(hostName, port, 8192);//Load buffer size from properties
         if (!connect) {
             //tell gui to show that can't connect to the server
-            respond(ACTIONS.CONNECT_FAILED, null, null, null, -1);
+            plainRespond(ACTIONS.CONNECT_FAILED);
             return;
         }
         boolean audioFormatAccepted = controller.start("Client Reader");
         if (!audioFormatAccepted) {
             //tell gui to show that audio format can't be set
-            respond(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, null,
-                    "HERE GOES AUDIO FORMAT AS STRING", null, -1);
+            stringRespond(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED,
+                    "HERE GOES AUDIO FORMAT AS STRING");
             return;
         }
-        respond(ACTIONS.AUDIO_FORMAT_ACCEPTED, null,
-                "HERE GOES AUDIO FORMAT AS STRING", null, -1);
-        respond(ACTIONS.CONNECT_SUCCEEDED, null, null, null, -1);
+        stringRespond(ACTIONS.AUDIO_FORMAT_ACCEPTED,
+                "HERE GOES AUDIO FORMAT AS STRING");
 
-        //connect
-        //notify frame about your connection was it succeed or not
+        stringRespond(ACTIONS.CONNECT_SUCCEEDED, model.getMe().toString());
     }
 
     private void onServerCreate(Object plainData){
         String[] data = (String[]) plainData;
         String port = data[0];
-        if (port.length() == 0)
+        if (FormatWorker.checkZeroLength(port))
             port = "8188"; // or get from property map
-        if (!FormatWorker.verifyPort(port)){
-            respond(ACTIONS.WRONG_PORT_FORMAT, null, port, null, -1);
+        if (!checkPort(port))
             return;
-        }
+
         String sampleRate = data[1];
-        if (sampleRate.length() == 0 || !FormatWorker.verifyOnlyDigits(sampleRate)){
-            respond(ACTIONS.WRONG_SAMPLE_RATE_FORMAT, null, sampleRate, null, -1);
+        if (FormatWorker.checkZeroLength(sampleRate)
+                || !FormatWorker.verifyOnlyDigits(sampleRate)){
+            stringRespond(ACTIONS.WRONG_SAMPLE_RATE_FORMAT, sampleRate);
             return;
         }
+
         String sampleSize = data[2];
-        if (sampleSize.length() == 0 || !FormatWorker.verifyOnlyDigits(sampleSize)){
-            respond(ACTIONS.WRONG_SAMPLE_SIZE_FORMAT, null, sampleSize, null, -1);
+        if (FormatWorker.checkZeroLength(sampleSize)
+                || !FormatWorker.verifyOnlyDigits(sampleSize)){
+            stringRespond(ACTIONS.WRONG_SAMPLE_SIZE_FORMAT, sampleSize);
             return;
         }
+
         onServerCreate(port, sampleRate, sampleSize);
     }
 
@@ -186,18 +198,67 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
             server = Server.getFromStrings(port, sampleRate, sampleSize);
         } catch (IOException e) {
             server = null;
-            respond(ACTIONS.PORT_ALREADY_BUSY, null, port, null, -1);
+            stringRespond(ACTIONS.PORT_ALREADY_BUSY, port);
             return;
-//            e.printStackTrace();
         }
         boolean start = this.server.start("Server");
         if (start) {
-            respond(ACTIONS.SERVER_CREATED, null, null, null, -1);
+            plainRespond(ACTIONS.SERVER_CREATED);
         }else {
-            respond(ACTIONS.SERVER_CREATED_ALREADY, null, null, null, -1);
+            plainRespond(ACTIONS.SERVER_CREATED_ALREADY);
         }
+    }
 
+    private boolean checkPort(String port){
+        if (!FormatWorker.verifyPortFormat(port)) {
+            stringRespond(ACTIONS.WRONG_PORT_FORMAT, port);
+            return false;
+        }
+        int portAsInt = Integer.parseInt(port);
+        if (!FormatWorker.portInRange(portAsInt)){
+            respond(
+                    ACTIONS.PORT_OUT_OF_RANGE,
+                    null,
+                    "0 < port < " + 0xFFFF,
+                    null,
+                    portAsInt
+            );
+            return false;
+        }
+        return true;
+    }
 
+    private void onUsersRequest(){
+        try {
+            controller.getWriter().writeUsersRequest(model.getMe().getId());
+        } catch (IOException e) {
+            onNetworkException();
+        }
+    }
+
+    private void plainRespond(ACTIONS action){
+        respond(action, null, null, null, -1);
+    }
+
+    private void stringRespond(ACTIONS action, String data){
+        respond(action, null, data, null, -1);
+    }
+
+    private void onMessageSend(int to, String message){
+        try {
+            controller.getWriter().writeMessage(model.getMe().getId(), to, message);
+        } catch (IOException e) {
+//            e.printStackTrace();//disconnected act
+            onNetworkException();
+//            plainRespond(ACTIONS.CONNECTION_SERVER_FAILED);
+
+        }
+    }
+
+    private void onNetworkException(){
+        plainRespond(ACTIONS.CONNECTION_SERVER_FAILED);
+        controller.close();
+        processor.close();
     }
 
     /* Listeners on receive here */
@@ -216,6 +277,19 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         int user = dataPackage.getDataAsInt();
         model.removeFromModel(user);
     }
+
+    void onIncomingMessage(AbstractDataPackage dataPackage){
+        BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        respond(
+                ACTIONS.INCOMING_MESSAGE,
+                sender,
+                dataPackage.getDataAsString(),
+                null,
+                -1
+        );
+    }
+
+    /* Other stuff here */
 
 
 }

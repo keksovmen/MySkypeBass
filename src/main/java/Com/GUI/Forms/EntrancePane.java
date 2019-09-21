@@ -70,25 +70,31 @@ public class EntrancePane implements CivilDuty {
             mainPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
         });
 
-        createButton.addActionListener(e -> {
-            whereReportAction.fight(
-                    BUTTONS.CREATE_SERVER_PANE,
-                    null,
-                    null,
-                    -1
-            );
-        });
+        createButton.addActionListener(e ->
+                whereReportAction.fight(
+                BUTTONS.CREATE_SERVER_PANE,
+                null,
+                null,
+                -1
+        ));
     }
 
     @Override
     public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
-        if (action.equals(ACTIONS.CONNECT_SUCCEEDED) ||
-                action.equals(ACTIONS.CONNECT_FAILED)
-        ){
+        if (/*action.equals(ACTIONS.CONNECT_SUCCEEDED)*/
+                action.equals(ACTIONS.CONNECT_FAILED) ||
+                action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
+                action.equals(ACTIONS.WRONG_PORT_FORMAT)
+        ) {
             releaseConnectButton();
             mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-        }else if (action.equals(ACTIONS.SERVER_CREATED)){
+        }else if (action.equals(ACTIONS.CONNECT_SUCCEEDED)){
+            mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+        }
+        else if (action.equals(ACTIONS.SERVER_CREATED)) {
             blockCreateServerButton();
+        }else if (action.equals(ACTIONS.CONNECTION_SERVER_FAILED)){
+            releaseConnectButton();
         }
     }
 
@@ -103,7 +109,6 @@ public class EntrancePane implements CivilDuty {
 //        }
 //        audioFormatStats.display();
 //    }
-
     public JPanel getPane() {
         return mainPane;
     }
@@ -142,7 +147,7 @@ public class EntrancePane implements CivilDuty {
     private String getPort() {
         String port = portField.getText().trim();
         return port;
-//        return FormatWorker.verifyPort(port) ? port : "8188";
+//        return FormatWorker.verifyPortFormat(port) ? port : "8188";
     }
 
 

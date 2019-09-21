@@ -1,15 +1,21 @@
 package Com.GUI.Forms;
 
-import Com.GUI.Interfaces.SecondSkinActions;
+import Com.GUI.Forms.ActionHolder.MessangerActions;
+import Com.Model.UnEditableModel;
+import Com.Model.Updater;
 import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.ErrorHandler;
+import Com.Pipeline.ACTIONS;
+import Com.Pipeline.BUTTONS;
+import Com.Pipeline.CivilDuty;
+import Com.Pipeline.WarDuty;
+import Com.Util.Resources;
 
 import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * Handles messaging, call pane
@@ -17,7 +23,7 @@ import java.util.function.Consumer;
  * Has pop up menu in usersList
  */
 
-class SecondSkin implements ErrorHandler {
+public class MultiplePurposePane implements Updater, CivilDuty {
 
     /**
      * Name for conversation tab uses in search cases
@@ -45,19 +51,14 @@ class SecondSkin implements ErrorHandler {
     private DefaultListModel<BaseUser> model;
 
     /**
-     * Need for messaging contain entries name - pane
+     * Need for messaging isCashed entries name - pane
      */
 
-    private final Map<String, ThirdSkin> tabs;
+    private final Map<BaseUser, MessagePane> tabs;
 
-    private final CallDialog callDialog;
-    private ConferencePane conferencePane;
+    private final ConferencePane conferencePane;
 
-    /**
-     * Available actions
-     */
-
-    private final SecondSkinActions actions;
+    private final MessangerActions actions;
 
     /**
      * Default constructor
@@ -66,85 +67,113 @@ class SecondSkin implements ErrorHandler {
      * 2 - set my name and id
      * 3 - register buttons action
      * 4 - create pop up menu for userList
-     *
-     * @param nameAndId your data
-     * @param actions   available actions
      */
 
-    SecondSkin(String nameAndId, SecondSkinActions actions) {
-        this.actions = actions;
-        updateActions();
-
+    public MultiplePurposePane(WarDuty whereToReportActions) {
         tabs = new HashMap<>();
-        callDialog = new CallDialog(actions, mainPane);
-
-        labelMe.setText(nameAndId);
-
-        disconnectButton.addActionListener(e -> actions.disconnect().run());
-
-        callButton.addActionListener(e -> callOutcomDialog(actions.callSomeOne()));
+        conferencePane = new ConferencePane();
+        actions = new MessangerActions((s, user) -> whereToReportActions.fight(
+                BUTTONS.SEND_MESSAGE,
+                null,
+                s,
+                user.getId()));
 
         callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
-
-        registerPopUp();
+//
+        registerPopUp(whereToReportActions);
 
     }
 
-    /**
-     * Upgrades already existed actions
-     */
+    @Override
+    public void update(UnEditableModel model) {
+        this.model.clear();
+        model.getUserMap().values().forEach(
+                baseUser -> this.model.addElement(baseUser));
+        //Go through tabs and set online or offline icons, except CONFERENCE
+        changeIconsOfTabs();
 
-    private void updateActions() {
-        actions.updateCloseTab(closeTabRun());
-        actions.updateDisconnect(disconnect(actions.disconnect()));
-        actions.updateEndCall(endCall(actions.endCall()));
+        mainPane.revalidate();
+        mainPane.repaint();
     }
 
-    private Runnable disconnect(Runnable disconnect) {
-        return () -> {
-            disconnect.run();
-            clearSkin();
-        };
+    @Override
+    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+        switch (action) {
+            case CONNECT_SUCCEEDED: {
+                labelMe.setText(stringData);
+                return;
+            }
+            case INCOMING_MESSAGE:{
+                showMessage(from, stringData);
+                return;
+            }
+        }
     }
 
-    private Runnable endCall(Runnable end) {
-        return () -> {
-            end.run();
-            stopConversation();
-        };
-    }
-
-    JPanel getPane() {
+    public JPanel getPane() {
         return mainPane;
     }
 
     /**
      * Creates and register pop up menu on usersList
      * Consist of
-     * Send message - when user is selected open ThirdSkin on callTable
+     * Send message - when user is selected open MessagePane on callTable
      * Refresh - ask for users on the server
      */
 
-    private void registerPopUp() {
+    private void registerPopUp(WarDuty registration) {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
         sendMessageMenu.addActionListener(e -> {
-            if (!selected()) return;
+            if (!selected())
+                return;
             BaseUser selected = getSelected();
-            String s = selected.toString();
-            if (isExist(s)) return;
-            if (contain(s)) {
-                callTable.addTab(s, tabs.get(s).getMainPane());
+//            String s = selected.toString();
+            if (isShownAlready(selected))
+                return;
+            if (isCashed(selected)) {
+                callTable.addTab(
+                        selected.toString(),
+                        Resources.onlineIcon,
+                        tabs.get(selected).getMainPane()
+                );
             } else {
-                callTable.addTab(s, createPane(s).getMainPane());
+                callTable.addTab(
+                        selected.toString(),
+                        Resources.onlineIcon,
+                        createPane(
+                                selected,
+                                actions.getSendMessage(),
+                                closeSelectedTab()
+                        ).getMainPane());
             }
         });
+
         JMenuItem refresh = new JMenuItem("Refresh");
-        refresh.addActionListener(e -> actions.callForUsers().run());
+        refresh.addActionListener(e ->
+                registration.fight(
+                        BUTTONS.ASC_FOR_USERS,
+                        null,
+                        null,
+                        -1
+                ));
         popupMenu.add(sendMessageMenu);
         popupMenu.add(refresh);
 
         usersList.setComponentPopupMenu(popupMenu);
+    }
+
+    private void changeIconsOfTabs() {
+        tabs.forEach((user, messagePane) -> {
+            if (messagePane.isShown()){
+                if (!model.contains(user)){
+                    callTable.setIconAt(
+                            callTable.indexOfTab(user.toString()),
+                            Resources.offlineIcon
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -169,30 +198,29 @@ class SecondSkin implements ErrorHandler {
         return model.get(usersList.getSelectedIndex());
     }
 
-    private boolean isExist(String nameAndId) {
-        return callTable.indexOfTab(nameAndId) != -1;
+    private boolean isShownAlready(BaseUser user) {
+        return callTable.indexOfTab(user.toString()) != -1;
     }
 
-    private boolean contain(String nameAndId) {
-        return tabs.containsKey(nameAndId);
+    private boolean isCashed(BaseUser user) {
+        return tabs.containsKey(user);
     }
 
     /**
-     * Creates ThirdSkin object which has JPane
+     * Creates MessagePane object which has JPane
      *
-     * @param name for who you create it
-     * @return ready to use ThirdSkin
+     * @return ready to use MessagePane
      */
 
-    private ThirdSkin createPane(String name) {
-        ThirdSkin thirdSkin = new ThirdSkin(name, actions);
-        tabs.put(name, thirdSkin);
-        return thirdSkin;
+    private MessagePane createPane(BaseUser user, BiConsumer<String, BaseUser> sendMessage, Runnable closeTab) {
+        MessagePane messagePane = new MessagePane(user, sendMessage, closeTab);
+        tabs.put(user, messagePane);
+        return messagePane;
     }
 
     /**
      * Display a user message
-     * if there is no ThirdSkin creates
+     * if there is no MessagePane creates
      * otherwise uses cashed
      * or already displayed one
      *
@@ -200,28 +228,30 @@ class SecondSkin implements ErrorHandler {
      * @param message plain text
      */
 
-    void showMessage(final BaseUser from, final String message) {
-        String s = from.toString();
-        if (isExist(s)) {
-            tabs.get(s).showMessage(message, false);
+    public void showMessage(final BaseUser from, final String message) {
+        if (from == null) // do nothing when dude is not present in model
+            return;
+        if (isShownAlready(from)) {
+            tabs.get(from).showMessage(message, false);
         } else {
-            if (contain(s)) {
-                ThirdSkin thirdSkin = tabs.get(s);
-                callTable.addTab(s, thirdSkin.getMainPane());
-                thirdSkin.showMessage(message, false);
+            if (isCashed(from)) {
+                MessagePane messagePane = tabs.get(from);
+                callTable.addTab(from.toString(), Resources.onlineIcon, messagePane.getMainPane());
+                messagePane.showMessage(message, false);
             } else {
-                ThirdSkin pane = createPane(s);
-                callTable.addTab(s, pane.getMainPane());
+                MessagePane pane = createPane(from, actions.getSendMessage(), closeSelectedTab());
+                callTable.addTab(from.toString(), Resources.onlineIcon, pane.getMainPane());
                 pane.showMessage(message, false);
             }
         }
-        colorForMessage(callTable.indexOfTab(s));
+        colorForMessage(callTable.indexOfTab(from.toString()));
     }
 
-    private Runnable closeTabRun() {
+    private Runnable closeSelectedTab() {
         return () -> {
             int selectedIndex = callTable.getSelectedIndex();
-            if (selectedIndex == -1) return;
+            if (selectedIndex == -1)
+                return;
             callTable.removeTabAt(selectedIndex);
         };
     }
@@ -252,44 +282,6 @@ class SecondSkin implements ErrorHandler {
     }
 
     /**
-     * Call a selected user
-     * show CallDialog with appropriate actions
-     *
-     * @param call action that sendSound call to some one
-     */
-
-    private void callOutcomDialog(Consumer<BaseUser> call) {
-        if (!selected()) {
-            return;
-        }
-        BaseUser selected = getSelected();
-        if (conferencePane == null || !conferencePane.containPerson(selected.toString())) {
-            call.accept(selected);
-
-            callDialog.showOutcoming(selected.toString());
-        }
-    }
-
-    /**
-     * Show CallDialog when you get called
-     *
-     * @param who      calls you
-     * @param convInfo contain baseUser.toString() + "\n" and so on
-     */
-
-    void callIncomingDialog(String who, String convInfo) {
-        callDialog.showIncoming(who, convInfo);
-    }
-
-    /**
-     * Just to dispose CallDialog
-     */
-
-    void closeCallDialog() {
-        callDialog.dispose();
-    }
-
-    /**
      * Creates if necessary conferencePane
      * and add user who called you in
      *
@@ -299,7 +291,7 @@ class SecondSkin implements ErrorHandler {
 
     void conversationStart(String user, FloatControl control) {
         if (conferencePane == null) {
-            conferencePane = new ConferencePane(actions);
+//            conferencePane = new ConferencePane();
         }
         conferencePane.addUser(user, control);
         callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
@@ -350,11 +342,11 @@ class SecondSkin implements ErrorHandler {
         for (int i = 0; i < callTable.getTabCount(); i++) {
             callTable.removeTabAt(i);
         }
-        tabs.clear();
+//        tabs.clear();
         model.removeAllElements();
     }
 
-    void setNameAndId(String nameAndId) {
+    public void setNameAndId(String nameAndId) {
         labelMe.setText(nameAndId);
     }
 
@@ -368,18 +360,6 @@ class SecondSkin implements ErrorHandler {
     void showConferenceMessage(String message, String from) {
         conferencePane.showMessage(message, from);
         colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
-    }
-
-    @Override
-    public void errorCase() {
-        stopConversation();
-        clearSkin();
-        iterate();
-    }
-
-    @Override
-    public ErrorHandler[] getNext() {
-        return new ErrorHandler[]{callDialog, conferencePane};
     }
 
     private void createUIComponents() {
