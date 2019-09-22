@@ -4,7 +4,6 @@ import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Protocol.DataPackagePool;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,7 +43,7 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
         if (executor.isShutdown())
             return false;
         executor.execute(() -> {
-            if (!super.process(dataPackage)){
+            if (!super.process(dataPackage)) {
                 branching(dataPackage);
             }
             DataPackagePool.returnPackage(dataPackage);
@@ -54,7 +53,8 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
 
     @Override
     public void execute(Runnable command) {
-        executor.execute(command);
+        if (!executor.isShutdown())
+            executor.execute(command);
     }
 
     @Override
@@ -70,13 +70,13 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
         return onRemoveUserFromList;
     }
 
-    private void branching(AbstractDataPackage dataPackage){
-        switch (dataPackage.getHeader().getCode()){
-            case SEND_ADD_TO_USER_LIST:{
+    private void branching(AbstractDataPackage dataPackage) {
+        switch (dataPackage.getHeader().getCode()) {
+            case SEND_ADD_TO_USER_LIST: {
                 onAddUserToList.process(dataPackage);
                 return;
             }
-            case SEND_REMOVE_FROM_USER_LIST:{
+            case SEND_REMOVE_FROM_USER_LIST: {
                 onRemoveUserFromList.process(dataPackage);
                 return;
             }

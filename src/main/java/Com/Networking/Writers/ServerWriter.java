@@ -57,8 +57,8 @@ public class ServerWriter extends WriterWithHandler {
                 format));
     }
 
-    public void writeUsers(int id, String users) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+    public void writeUsers(int id, String users) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
     public void writeDisconnect(int id) {
@@ -139,8 +139,8 @@ public class ServerWriter extends WriterWithHandler {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_REMOVE, whoToRemove, to));
     }
 
-    public void writeStopConv(int to) {
-        writeWithHandler(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
+    public void writeStopConv(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_STOP_CONV, WHO.CONFERENCE.getCode(), to));
     }
 
     public void writeId(int id) throws IOException {
@@ -169,12 +169,33 @@ public class ServerWriter extends WriterWithHandler {
         ));
     }
 
-    public void writeMessage(int to, int from, String message) throws IOException {
+    public void transferPacket(AbstractDataPackage dataPackage) throws IOException {
+        writeWithoutReturnToPool(dataPackage);
+    }
+
+    public void writeDudeIsOffline(int from, int to, String whoIsMissing) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(
-                CODE.SEND_MESSAGE,
+                CODE.SEND_DUDE_IS_OFFLINE,
                 from,
                 to,
-                message
+                whoIsMissing
+        ));
+    }
+
+    public void writeCallAccepted(int from, int to, String boysInConv) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_ACCEPT_CALL,
+                from,
+                to,
+                boysInConv
+        ));
+    }
+
+    public void writeBothInConversations(int me) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_BOTH_IN_CONVERSATIONS,
+                WHO.SERVER.getCode(),
+                me
         ));
     }
 }

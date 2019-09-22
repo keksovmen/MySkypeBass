@@ -1,6 +1,6 @@
 package Com.Pipeline;
 
-public interface WarDuty {
+public interface ActionableLogic {
 
     /**
      * Check values in BUTTONS enum because most of the time they are null
@@ -11,5 +11,5 @@ public interface WarDuty {
      * @param integerData data as int
      */
 
-    void fight(BUTTONS button, Object plainData, String stringData, int integerData);
+    void act(BUTTONS button, Object plainData, String stringData, int integerData);
 }

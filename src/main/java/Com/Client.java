@@ -1,6 +1,5 @@
 package Com;
 
-import Com.GUI.Frame;
 import Com.Model.ClientModel;
 import Com.Model.Registration;
 import Com.Networking.ClientController;
@@ -10,14 +9,12 @@ import Com.Networking.Server;
 import Com.Networking.Utility.BaseUser;
 import Com.Networking.Utility.WHO;
 import Com.Pipeline.ACTIONS;
+import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.CivilDuty;
-import Com.Pipeline.WarDuty;
+import Com.Pipeline.ResponsibleGUI;
 import Com.Util.FormatWorker;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +23,7 @@ import java.util.List;
  * Include Networking, Audio, GUI
  */
 
-public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
+public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, ActionableLogic {
 
 //    private InitialDataStorage
 
@@ -36,23 +33,17 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
     private final ClientProcessor processor;
     private final ClientController controller;
 
-    private final List<CivilDuty> civilDutyList;
+    private final List<ResponsibleGUI> responsibleGUIList;
 
     //Here goes Audio part and GUI
-    private Frame frame;
+//    private Frame frame;
 
 
-    public Client() {
-        model = new ClientModel();
+    public Client(ClientModel model) {
+        this.model = model;
         processor = new ClientProcessor();
         controller = new ClientController(processor, model);
-        civilDutyList = new ArrayList<>();
-
-        try {
-            SwingUtilities.invokeAndWait(() -> frame = new Frame());
-        } catch (InterruptedException | InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        responsibleGUIList = new ArrayList<>();
 
         init();
     }
@@ -64,39 +55,43 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         processor.getOnAddUserToList().setListener(this::onAddUserToList);
         processor.getOnRemoveUserFromList().setListener(this::onRemoveUserFromList);
         processor.getOnMessage().setListener(this::onIncomingMessage);
-        model.registerListener(frame);
-        registerListener(frame);
-        frame.registerListener(this);
+//        model.registerListener(listener);
+//        registerListener(frame);
+//        frame.registerListener(this);
     }
 
     @Override
-    public boolean registerListener(CivilDuty listener) {
-        return civilDutyList.add(listener);
+    public boolean registerListener(ResponsibleGUI listener) {
+        return responsibleGUIList.add(listener);
     }
 
     @Override
-    public boolean removeListener(CivilDuty listener) {
-        return civilDutyList.remove(listener);
+    public boolean removeListener(ResponsibleGUI listener) {
+        return responsibleGUIList.remove(listener);
     }
 
     @Override
-    public void fight(BUTTONS button, Object plainData, String stringData, int integerData) {
-        switch (button){ //there probably will be swing thread
-            case CONNECT:{
+    public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+        switch (button) { //there probably will be swing thread
+            case CONNECT: {
                 processor.execute(() -> onConnect(plainData));
                 return;
             }
-            case CREATE_SERVER:{
+            case CREATE_SERVER: {
                 onServerCreate(plainData);
                 return;
             }
-            case ASC_FOR_USERS:{
+            case ASC_FOR_USERS: {
 //                System.out.println("ASK");
                 onUsersRequest();
                 return;
             }
-            case SEND_MESSAGE:{
+            case SEND_MESSAGE: {
                 onMessageSend(integerData, stringData);
+                return;
+            }
+            case DISCONNECT: {
+                onDisconnect();
                 return;
             }
 
@@ -104,13 +99,13 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
     }
 
     @Override
-    public void respond (ACTIONS action,
-                                 BaseUser from,
-                                 String stringData,
-                                 byte[] bytesData,
-                                 int intData) {
-        civilDutyList.forEach(
-                civilDuty -> civilDuty.respond(
+    public void respond(ACTIONS action,
+                        BaseUser from,
+                        String stringData,
+                        byte[] bytesData,
+                        int intData) {
+        responsibleGUIList.forEach(
+                responsibleGUI -> responsibleGUI.respond(
                         action,
                         from,
                         stringData,
@@ -123,7 +118,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
 
     /* Action for UI here */
 
-    void onConnect(Object plainData){
+    void onConnect(Object plainData) {
         String[] data = (String[]) plainData;
 
         String name = data[0];
@@ -168,7 +163,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         stringRespond(ACTIONS.CONNECT_SUCCEEDED, model.getMe().toString());
     }
 
-    private void onServerCreate(Object plainData){
+    private void onServerCreate(Object plainData) {
         String[] data = (String[]) plainData;
         String port = data[0];
         if (FormatWorker.checkZeroLength(port))
@@ -178,14 +173,14 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
 
         String sampleRate = data[1];
         if (FormatWorker.checkZeroLength(sampleRate)
-                || !FormatWorker.verifyOnlyDigits(sampleRate)){
+                || !FormatWorker.verifyOnlyDigits(sampleRate)) {
             stringRespond(ACTIONS.WRONG_SAMPLE_RATE_FORMAT, sampleRate);
             return;
         }
 
         String sampleSize = data[2];
         if (FormatWorker.checkZeroLength(sampleSize)
-                || !FormatWorker.verifyOnlyDigits(sampleSize)){
+                || !FormatWorker.verifyOnlyDigits(sampleSize)) {
             stringRespond(ACTIONS.WRONG_SAMPLE_SIZE_FORMAT, sampleSize);
             return;
         }
@@ -193,7 +188,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         onServerCreate(port, sampleRate, sampleSize);
     }
 
-    private void onServerCreate(String port, String sampleRate, String sampleSize){
+    private void onServerCreate(String port, String sampleRate, String sampleSize) {
         try {
             server = Server.getFromStrings(port, sampleRate, sampleSize);
         } catch (IOException e) {
@@ -204,18 +199,18 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         boolean start = this.server.start("Server");
         if (start) {
             plainRespond(ACTIONS.SERVER_CREATED);
-        }else {
+        } else {
             plainRespond(ACTIONS.SERVER_CREATED_ALREADY);
         }
     }
 
-    private boolean checkPort(String port){
+    private boolean checkPort(String port) {
         if (!FormatWorker.verifyPortFormat(port)) {
             stringRespond(ACTIONS.WRONG_PORT_FORMAT, port);
             return false;
         }
         int portAsInt = Integer.parseInt(port);
-        if (!FormatWorker.portInRange(portAsInt)){
+        if (!FormatWorker.portInRange(portAsInt)) {
             respond(
                     ACTIONS.PORT_OUT_OF_RANGE,
                     null,
@@ -228,7 +223,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         return true;
     }
 
-    private void onUsersRequest(){
+    private void onUsersRequest() {
         try {
             controller.getWriter().writeUsersRequest(model.getMe().getId());
         } catch (IOException e) {
@@ -236,29 +231,42 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         }
     }
 
-    private void plainRespond(ACTIONS action){
+    private void plainRespond(ACTIONS action) {
         respond(action, null, null, null, -1);
     }
 
-    private void stringRespond(ACTIONS action, String data){
+    private void stringRespond(ACTIONS action, String data) {
         respond(action, null, data, null, -1);
     }
 
-    private void onMessageSend(int to, String message){
+    private void onMessageSend(int to, String message) {
         try {
             controller.getWriter().writeMessage(model.getMe().getId(), to, message);
         } catch (IOException e) {
 //            e.printStackTrace();//disconnected act
             onNetworkException();
-//            plainRespond(ACTIONS.CONNECTION_SERVER_FAILED);
+//            plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
 
         }
     }
 
-    private void onNetworkException(){
-        plainRespond(ACTIONS.CONNECTION_SERVER_FAILED);
+    private void onNetworkException() {
+        plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
         controller.close();
-        processor.close();
+//        processor.close();
+    }
+
+    private void onDisconnect(){
+        try {
+            controller.getWriter().writeDisconnect(model.getMe().getId());
+        } catch (IOException ignored) {
+        }
+        controller.close();
+//        processor.close();
+        model.clear();
+        plainRespond(ACTIONS.DISCONNECTED);
+        //audio close too
+
     }
 
     /* Listeners on receive here */
@@ -278,7 +286,7 @@ public class Client implements Registration<CivilDuty>, CivilDuty, WarDuty {
         model.removeFromModel(user);
     }
 
-    void onIncomingMessage(AbstractDataPackage dataPackage){
+    void onIncomingMessage(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
         respond(
                 ACTIONS.INCOMING_MESSAGE,

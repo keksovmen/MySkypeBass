@@ -1,5 +1,7 @@
 package Com.GUI.Forms;
 
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Networking.Utility.BaseUser;
 
 import javax.swing.*;
@@ -46,7 +48,7 @@ class MessagePane {
      * //     * @param actions all your actions
      */
 
-    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, Runnable closeTab) {
+    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, GUIDuty actions) {
         nameWho.setText(forWho.toString());
 
         sendButton.addActionListener(e -> this.sendMessage(sendMessage, forWho));
@@ -54,7 +56,7 @@ class MessagePane {
         textField.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
         closeButton.addActionListener(e -> {
-            closeTab.run();
+            actions.displayChanges(GUIActions.CLOSE_MESSAGE_PANE, forWho.toString());
             isShown = false;
         });
 

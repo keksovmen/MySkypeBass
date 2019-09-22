@@ -17,13 +17,12 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.function.Consumer;
 
 public class ClientController extends BaseController {
 
     //    private Socket socket;
     private final ClientProcessor processor;
-//    private BaseUser me;
+    //    private BaseUser me;
     private final ClientModel model;
     private ClientWriter writer;
 
@@ -149,7 +148,7 @@ public class ClientController extends BaseController {
 
     @Override
     void cleanUp() {
-        processor.close();
+//        processor.close();
     }
 
     @Override
@@ -157,39 +156,8 @@ public class ClientController extends BaseController {
         return processor;
     }
 
-    //    @Override
-//    void mainLoopAction() throws IOException {
-//
-//    }
-
-//    /**
-//     * Default action for disconnecting the user
-//     */
-
-    //    public void disconnect() {
-//        try {
-//            writer.writeDisconnect(me.getId());
-//            socket.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//    }
-//
-//    public BaseUser getMe() {
-//        return model.getMe();
-//    }
-
     public ClientWriter getWriter() {
         return writer;
     }
 
-    //    public Registration getModel() {
-//        return model;
-//    }
-
-    //
-//    public ClientWriter getWriter() {
-//        return writer;
-//    }
 }

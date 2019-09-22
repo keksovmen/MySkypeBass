@@ -6,7 +6,9 @@ import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.CODE;
 import Com.Networking.Readers.BaseReader;
-import Com.Networking.Utility.*;
+import Com.Networking.Utility.Conversation;
+import Com.Networking.Utility.ServerUser;
+import Com.Networking.Utility.WHO;
 import Com.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
@@ -32,58 +34,15 @@ public class ServerController extends BaseController {
         this.server = server;
     }
 
-    /**
-     * Start authenticate procedure
-     * if success starts a new thread to handle the user
-     * otherwise disconnect him
-     */
-
-//    @Override
-//    public boolean start(String name) {
-//        if (work)
-//            return false;
-//        work = true;
-//
-//        if (!authenticate()) {
-//            close();
-//            return false;
-//        }
-//        launch();   //Init data here
-//
-//        new Thread(() -> {
-//            mainLoop();
-//            cleanUp();
-//        }, name).start();
-//        return true;
-//    }
-//    @Override
-//    void mainLoopAction() throws IOException {
-////        while (work) {
-////            try {
-//                AbstractDataPackage read = reader.read();
-//                processor.process(read);  //Here all possible cases of CODE
-////            } catch (IOException e) {   //Case when a dude just ruined his connection
-////                    e.printStackTrace();
-////                close();
-////            }
-////        }
-//    }
-
     @Override
     void cleanUp() {
         //Clean up code
         server.removeController(getId());
+        if (me.inConv()){
+            me.getConversation().removeDude(this);
+            me.setConversation(null);
+        }
     }
-
-//    @Override
-//    public void close() {
-//        work = false;
-//        try {
-//            socket.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     /**
      * Trying to register a new user for the server
@@ -138,13 +97,36 @@ public class ServerController extends BaseController {
         //Add listeners here
 //        Processor processor = new Processor();
         processor.getOnUsers().setListener(Handlers.onUsersRequest(this));
-        processor.getOnMessage().setListener(Handlers.onMessageSend(this));
+        processor.getOnMessage().setListener(Handlers.onTransfer(this));
+        processor.getOnDisconnect().setListener(Handlers.onDisconnect(this));
+        processor.getOnCall().setListener(Handlers.onCall(this));
+        processor.getOnCallAccept().setListener(Handlers.onCallAccept(this));
+
 //        processor.setListener(ServerHandlerProvider.createUsersRequestListener(this));
 //        processor.setListener(ServerHandlerProvider.createConvHandler(this));
 //        processor.setListener(ServerHandlerProvider.createTransferHandler(this));
 //        this.processor = processor;
         server.registerController(this);
-//        reader.start("Server reader - " + getId());
+        sendUsers();
+        //        reader.start("Server reader - " + getId());
+    }
+
+    private void sendUsers() {
+        String users = server.getUsers(getId());
+        try {
+            writer.writeUsers(getId(), users);
+        } catch (IOException e) {
+            //dude was disconnected
+            close();
+        }
+    }
+
+    private void onDudeIsMissing(int whoIsMissing) {
+        try {
+            writer.writeDudeIsOffline(WHO.SERVER.getCode(), getId(), String.valueOf(whoIsMissing));
+        } catch (IOException e) {
+            close();
+        }
     }
 
     @Override
@@ -164,255 +146,6 @@ public class ServerController extends BaseController {
         return me;
     }
 
-    private static class ServerHandlerProvider {
-
-        private ServerHandlerProvider() {
-        }
-
-        /**
-         * Sends all <s>nudes</s> users except you to you
-         *
-         * @param controller basically this if it wasn't static
-         * @return ready to work listener
-         */
-
-        private static Consumer<AbstractDataPackage> createUsersRequestListener(ServerController controller) {
-            return baseDataPackage -> {
-                if (baseDataPackage.getHeader().getCode().equals(CODE.SEND_USERS)) {
-                    final int id = controller.getId();
-                    controller.writer.writeUsers(id, controller.server.getUsers(id));
-                }
-            };
-        }
-
-        /**
-         * Handles all conversation actions
-         * <p>
-         * MAIN PROBLEM THAT I HAVEN'T TESTED: @see Test
-         * When auto accept occurs what will happen?
-         * Both clients sendSound approve that triers create conversation handler
-         * Maybe change Conversation to static synchronised factory method
-         * <p>
-         * Tried to make it handle auto accept by locking on this class
-         *
-         * @param controller basically this if it wasn't static
-         * @return ready to work listener
-         */
-
-        private static Consumer<AbstractDataPackage> createConvHandler(final ServerController controller) {
-            return dataPackage -> {
-
-                switch (dataPackage.getHeader().getCode()) {
-                    case SEND_APPROVE: {
-
-                        /*
-                          To reduce code amount
-                         */
-
-                        class Helper {
-
-                            private void registerConversation(ServerUser me, ServerUser receiverUser) {
-                                Conversation conversation;
-                                if (me.inConv()) {
-                                    if (receiverUser.inConv()) {
-
-                                        /*
-                                        Looks like poison but should work well
-                                         */
-                                        final int i = System.identityHashCode(me.getConversation());
-                                        final int j = System.identityHashCode(receiverUser.getConversation());
-                                        if (i > j) {
-                                            synchronized (me.getConversation()) {
-                                                synchronized (receiverUser.getConversation()) {
-                                                    Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
-                                                }
-                                            }
-                                        } else if (i < j) {
-                                            synchronized (receiverUser.getConversation()) {
-                                                synchronized (me.getConversation()) {
-                                                    Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
-                                                }
-                                            }
-                                        } else {
-                                            synchronized (Helper.class) {
-                                                synchronized (me.getConversation()) {
-                                                    synchronized (receiverUser.getConversation()) {
-                                                        Conversation.registerComplexConversation(me.getConversation().getAll(), receiverUser.getConversation().getAll());
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        /*
-                                         * Why no just addDude()?
-                                         * Because of some retarded synchronisation when multiple auto accepts occur
-                                         * It happens that two dudes * already in both conferences indicated as --
-                                         * * - * -- * - *
-                                         * |            |
-                                         * *            *
-                                         * But others not, because of that you need to clear both sides when colliding them
-                                         */
-
-//                                        Conversation.registerComplexConversation(conversation.getAll(), receiverConversation.getAll());
-                                    } else {
-//                                        conversation = me.getConversation();
-                                        synchronized (me.getConversation()) {
-                                            conversation = me.getConversation();
-                                            dataPackage.setData(conversation.getAllToString(me));
-                                            conversation.addDude(me, receiverUser);
-                                        }
-                                    }
-                                } else {
-                                    if (receiverUser.inConv()) {
-                                        synchronized (receiverUser.getConversation()) {
-                                            conversation = receiverUser.getConversation();
-                                            conversation.addDude(receiverUser, me);
-                                        }
-                                    } else {
-                                        Conversation.registerSimpleConversation(me, receiverUser);
-                                    }
-                                }
-                            }
-                        }
-
-                        final ServerController receiver = controller.server.getController(dataPackage.getHeader().getTo());
-                        //case when dude disconnected before approve was received
-                        if (receiver == null) {
-                            /*
-                            You just ignore it because of you don't know in a conference you are or the dude
-                            It'll be handled in transfer handler or could be in conversation
-                             */
-                            break;
-                        }
-
-                    /*
-                    Has to be atomic operation for auto accept purposes
-                    The best I can do
-                    Main problem is when you try get intrinsic lock on any server user
-                    you will end up with dead lock
-                    So you need something that can be a bridge between two threads
-                    Initially though to use server executor, but it is not single thread
-
-                    Solved thanks to Java Concurrency In Practice 10.1.2 Dynamic Lock Order Deadlocks
-                     */
-                        final int myHash = System.identityHashCode(controller.me);
-                        final int yourHash = System.identityHashCode(receiver.me);
-                        if (myHash > yourHash) {
-                            synchronized (controller.me) {
-                                synchronized (receiver.me) {
-//                                    System.out.println("my > your \t" + Integer.toHexString(myHash).toUpperCase() + "\t"
-//                                            + controller.me + " " + receiver.me + "\t" + Integer.toHexString(yourHash).toUpperCase());
-                                    new Helper().registerConversation(controller.me, receiver.me);
-                                }
-                            }
-                        } else if (myHash < yourHash) {
-                            synchronized (receiver.me) {
-                                synchronized (controller.me) {
-//                                    System.out.println("my < your \t" + Integer.toHexString(myHash).toUpperCase() + "\t" +
-//                                            controller.me + " " + receiver.me + "\t" + Integer.toHexString(yourHash).toUpperCase());
-                                    new Helper().registerConversation(controller.me, receiver.me);
-                                }
-                            }
-                        } else {
-                            synchronized (ServerController.class) {
-                                synchronized (controller.me) {
-                                    synchronized (receiver.me) {
-                                        new Helper().registerConversation(controller.me, receiver.me);
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case SEND_DISCONNECT_FROM_CONV: {
-                        Conversation myConv = controller.me.getConversation();
-                        if (myConv != null) {
-                            myConv.removeDude(controller.me);
-                        }
-                        break;
-                    }
-                    case SEND_CALL: {
-                        Conversation myConv = controller.me.getConversation();
-                        if (myConv != null) {
-                            dataPackage.setData(myConv.getAllToString(controller.me));
-                        }
-                        break;
-                    }
-                }
-            };
-        }
-
-        /**
-         * Handles all staff that is not for conversation and not for server
-         * Just sendSound messages and some control instructions
-         *
-         * @param controller basically this if it wasn't static
-         * @return ready to work handler
-         */
-
-        private static Consumer<AbstractDataPackage> createTransferHandler(ServerController controller) {
-            return new Consumer<AbstractDataPackage>() {
-                private int counter;
-                private static final int BOUNDARY = 5;
-
-                /**
-                 * Idea is each your pocket with sound or text to conference
-                 * That can't reach conference because you don't have one
-                 * will increase counter when it hit BOUNDARY server will tell you
-                 * to stop the conversation
-                 *
-                 * Needed for synchronise purposes
-                 * @return false if you have to stop
-                 */
-
-                private boolean increaseCounter() {
-                    counter++;
-                    if (counter > BOUNDARY) {
-                        counter = 0;
-                        controller.getWriter().writeStopConv(controller.getId());
-                        return false;
-                    }
-                    return true;
-                }
-
-                @Override
-                public void accept(AbstractDataPackage dataPackage) {
-                    final int to = dataPackage.getHeader().getTo();
-                    if (to != WHO.SERVER.getCode()) {
-                        /*All that belong to conversation*/
-                        if (to == WHO.CONFERENCE.getCode()) {
-                            if (!controller.me.inConv()) {
-                                increaseCounter();
-                                return;
-                            }
-                            counter = 0;
-                            Conversation myConv = controller.me.getConversation();
-                            switch (dataPackage.getHeader().getCode()) {
-                                case SEND_SOUND: {
-                                    myConv.sendSound(dataPackage, controller.getId());
-                                    break;
-                                }
-                                case SEND_MESSAGE: {
-                                    myConv.sendMessage(dataPackage, controller.getId());
-                                    break;
-                                }
-                            }
-                        } else {
-                            /*All that belong to direct transition*/
-                            ServerController controllerReceiver = controller.server.getController(to);
-                            if (controllerReceiver != null) {
-                                controllerReceiver.writer.transferData(dataPackage);
-                            } else {
-                                controller.writer.writeUsers(controller.getId(), controller.server.getUsers(controller.getId()));
-                            }
-                        }
-                    }
-                }
-            };
-        }
-
-    }
-
     private static class Handlers {
 
         /**
@@ -423,29 +156,140 @@ public class ServerController extends BaseController {
          */
 
         private static Consumer<AbstractDataPackage> onUsersRequest(ServerController current) {
+            return dataPackage -> current.sendUsers();
+        }
+
+        private static Consumer<AbstractDataPackage> onTransfer(ServerController current) {
             return dataPackage -> {
-                String users = current.server.getUsers(current.getId());
-                current.writer.writeUsers(current.getId(), users);
+                int to = dataPackage.getHeader().getTo();
+                ServerController receiver = checkedGet(current, to);
+                if (receiver == null)
+                    return;
+                try {
+                    receiver.writer.transferPacket(dataPackage);
+                } catch (IOException e) {
+                    //tell that dude is offline
+                    current.onDudeIsMissing(to);
+                }
             };
         }
 
-        private static Consumer<AbstractDataPackage> onMessageSend(ServerController current){
+        private static Consumer<AbstractDataPackage> onCall(ServerController current) {
             return dataPackage -> {
                 int to = dataPackage.getHeader().getTo();
-                ServerController receiver = current.server.getController(to);
-                if (receiver == null){
-                    //send that dude is offline
-                }else {
+                ServerController receiver = checkedGet(current, to);
+                if (receiver == null)
+                    return;
+
+                //check if we both in conversations
+                ServerUser me = current.me;
+                ServerUser dude = receiver.me;
+                Runnable release = doubleLock(me, dude);
+                try {
+                    if (me.inConv() && dude.inConv()) {
+                        try {
+                            current.writer.writeBothInConversations(current.getId());
+                        } catch (IOException e) {
+                            current.close();
+                        }
+                    }
                     try {
-                        receiver.writer.writeMessage(
-                                to,
-                                dataPackage.getHeader().getFrom(),
-                                dataPackage.getDataAsString()
-                        );
+                        receiver.writer.transferPacket(dataPackage);
                     } catch (IOException e) {
                         //tell that dude is offline
+                        current.onDudeIsMissing(to);
                     }
+                } finally {
+                    release.run();
                 }
+            };
+        }
+
+        private static Consumer<AbstractDataPackage> onDisconnect(ServerController current) {
+            return dataPackage -> {
+                current.close();
+                //check conversation cleanup
+            };
+        }
+
+        private static Consumer<AbstractDataPackage> onCallAccept(ServerController current) {
+            return dataPackage -> {
+                int to = dataPackage.getHeader().getTo();
+                ServerController receiver = checkedGet(current, to);
+                if (receiver == null)
+                    return;
+
+                ServerUser me = current.me;
+                ServerUser dude = receiver.me;
+                Runnable release = doubleLock(me, dude);
+                //here goes atomic code
+                Conversation conversation;
+                if (me.inConv()) {
+                    //add dude to conv
+                    conversation = me.getConversation();
+                    conversation.addDude(receiver, current);
+                    dude.setConversation(conversation);
+                } else if (dude.inConv()) {
+                    //add me to dude's conv
+                    conversation = dude.getConversation();
+                    conversation.addDude(current, receiver);
+                    me.setConversation(conversation);
+//                }else if (me.inConv() && dude.inConv()){
+                    //merge conversations
+                    /*
+                    I am too weak to sync this shit
+                    Problems start when some one from any conversation
+                    calling some one else or even another conversation
+
+                    Tried to think for each conversation to have it's own semaphore
+                    but won't work because you need to set conversation in ServerUser
+                    so it will be changed while it was waiting for obsolete semaphore
+
+                    So it will be deprecated some time maybe always,
+                    and handled on call level which will check if both in conversation
+                    will tell caller that dude is already in a conversion
+                    */
+
+                } else {
+                    //create conv for us
+                    conversation = new Conversation(current, receiver);
+                    me.setConversation(conversation);
+                    dude.setConversation(conversation);
+                }
+                release.run();
+
+                try {
+                    receiver.getWriter().writeCallAccepted(
+                            me.getId(),
+                            dude.getId(),
+                            conversation.getAllToString(receiver)
+                    );
+                } catch (IOException ignored) {
+                    //Dude disconnected before so it's thread will handle
+                }
+
+            };
+        }
+
+        private static ServerController checkedGet(ServerController current, int who) {
+            ServerController receiver = current.server.getController(who);
+            if (receiver == null) {
+                current.onDudeIsMissing(who);
+            }
+            return receiver;
+        }
+
+        private static Runnable doubleLock(ServerUser me, ServerUser dude) {
+            if (me.getId() > dude.getId()) {
+                me.lock();
+                dude.lock();
+            } else {
+                dude.lock();
+                me.lock();
+            }
+            return () -> {
+                me.release();
+                dude.release();
             };
         }
     }

@@ -2,9 +2,9 @@ package Com.Networking.Utility;
 
 
 import Com.Networking.Protocol.AbstractDataPackage;
+import Com.Networking.ServerController;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -20,92 +20,19 @@ public class Conversation {
      * CopyOnWriteArrayList works well
      */
 
-    private final List<ServerUser> users;
+    private final List<ServerController> users;
 
     /**
-     * Private constructor
-     * For sync purposes
+     * Creates conversation for two dudes that know about each other
+     *
+     * @param first  initiator
+     * @param second dude
      */
 
-    private Conversation() {
+    public Conversation(ServerController first, ServerController second) {
         users = new CopyOnWriteArrayList<>();
-    }
-
-    /**
-     * Create a conversation and register it on users
-     * that don't have a conversation already
-     *
-     * @param users should be 2+ users
-     */
-
-    public static void registerSimpleConversation(ServerUser... users) {
-        Conversation conversation = new Conversation();
-        conversation.users.addAll(Arrays.asList(users));
-        conversation.users.forEach(serverUser -> serverUser.setConversation(conversation));
-    }
-
-    /**
-     * For those who already in conversation
-     *
-     * @param rightSide dude that in conversation and his boys, caller or receiver
-     * @param leftSide  dude that in conversation and his boys, caller or receiver
-     */
-
-    public static void registerComplexConversation(ServerUser[] rightSide, ServerUser[] leftSide) {
-        Conversation conversation = new Conversation();
-        ServerUser[] clearRight = collectOnlyUnique(rightSide, leftSide);
-        ServerUser[] clearLeft = collectOnlyUnique(leftSide, rightSide);
-        synchronized (conversation) {
-            for (ServerUser right : clearRight) {
-                right.setConversation(conversation);
-                for (ServerUser left : clearLeft) {
-//                    try {
-//                        right.getController().getWriter().writeAddToConv(left.getId(), right.getId());
-//                    } catch (IOException e) {
-//                        /*Simply ignore it will be handled later */
-//                    }
-                }
-            }
-            for (ServerUser left : clearLeft) {
-                left.setConversation(conversation);
-                for (ServerUser right : clearRight) {
-//                    try {
-//                        left.getController().getWriter().writeAddToConv(right.getId(), left.getId());
-//                    } catch (IOException e) {
-//                        /*Simply ignore it will be handled later */
-//                    }
-                }
-            }
-
-
-            conversation.users.addAll(Arrays.asList(clearRight));
-            conversation.users.addAll(Arrays.asList(clearLeft));
-        }
-    }
-
-    /**
-     * Only needed when auto accept occur on dudes with conversations @see Test
-     *
-     * @param left  side
-     * @param right side
-     * @return unique version of 1 side
-     */
-
-    private static ServerUser[] collectOnlyUnique(ServerUser[] left, ServerUser[] right) {
-        List<ServerUser> result = new ArrayList<>();
-        for (ServerUser leftUser : left) {
-            boolean unique = true;
-            for (ServerUser aRight : right) {
-                if (leftUser.equals(aRight)) {
-                    unique = false;
-                    break;
-                }
-            }
-            if (unique) {
-                result.add(leftUser);
-            }
-        }
-        return result.toArray(new ServerUser[0]);
+        users.add(first);
+        users.add(second);
     }
 
     /**
@@ -116,16 +43,16 @@ public class Conversation {
      */
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
-        for (ServerUser user : users) {
-            if (user.getId() != from /*&& user.isCanHear()*/) {
-//                ServerController controller = user.getController();
-//                try {
-//                    controller.getWriter().transferAudio(dataPackage);
-//                } catch (IOException e) {
-//                    removeDude(user);
-//                }
-            }
-        }
+//        for (ServerUser user : users) {
+//            if (user.getId() != from /*&& user.isCanHear()*/) {
+////                ServerController controller = user.getController();
+////                try {
+////                    controller.getWriter().transferAudio(dataPackage);
+////                } catch (IOException e) {
+////                    removeDude(user);
+////                }
+//            }
+//        }
     }
 
     /**
@@ -136,37 +63,33 @@ public class Conversation {
      */
 
     public void sendMessage(AbstractDataPackage dataPackage, int from) {
-        for (ServerUser user : users) {
-            if (user.getId() != from) {
+//        for (ServerUser user : users) {
+//            if (user.getId() != from) {
 //                ServerController controller = user.getController();
 //                try {
 //                    controller.getWriter().transferMessage(dataPackage);
 //                } catch (IOException e) {
 //                    removeDude(user);
 //                }
-            }
-        }
+//            }
+//        }
     }
 
     /**
      * Add new user(s) to this conference
-     *
-     * @param exclusive who called this method and know that this dude in
-     * @param userToAdd to be added
      */
 
-    public synchronized void addDude(ServerUser exclusive, ServerUser userToAdd) {
-        for (ServerUser serverUser : users) {
-            if (!serverUser.equals(exclusive)) {
-//                try {
-//                    serverUser.getController().getWriter().writeAddToConv(userToAdd.getId(), serverUser.getId());
-//                } catch (IOException e) {
-//                    removeDude(serverUser);
-//                }
+    public synchronized void addDude(ServerController dude, ServerController me) {
+        users.forEach(serverController -> {
+            if (serverController.getId() == me.getId())
+                return;
+            try {
+                serverController.getWriter().writeAddToConv(dude.getId(), serverController.getId());
+            } catch (IOException ignored) {
+                //who you send message is offline ignore it. His thread will handle shit
             }
-        }
-        userToAdd.setConversation(this);
-        users.add(userToAdd);
+        });
+        users.add(dude);
     }
 
     /**
@@ -177,36 +100,24 @@ public class Conversation {
      * @param user to be removed
      */
 
-    public synchronized void removeDude(ServerUser user) {
-        user.setConversation(null);
-        if (!users.remove(user)) {
-            return;
+    public synchronized void removeDude(ServerController user) {
+        users.remove(user);
+        users.forEach(serverController -> {
+            try {
+                serverController.getWriter().writeRemoveFromConv(user.getId(), serverController.getId());
+            } catch (IOException ignored) {
+                //Ignore this dude's thread will handle the mess
+            }
+        });
+        if (users.size() == 1){
+            ServerController last = users.get(0);
+            try {
+                last.getWriter().writeStopConv(last.getId());
+                last.getMe().setConversation(null);
+            } catch (IOException ignored) {
+                //Ignore this dude's thread will handle the mess
+            }
         }
-        for (ServerUser serverUser : users) {
-//            try {
-//                serverUser.getController().getWriter().writeRemoveFromConv(user.getId(), serverUser.getId());
-//            } catch (IOException e) {
-//                removeDude(serverUser);
-//            }
-        }
-        if (users.size() == 1) {
-            ServerUser lastUser = users.get(0);
-//            lastUser.getController().getWriter().writeStopConv(lastUser.getId());
-            lastUser.setConversation(null);
-            users.clear();
-        }
-    }
-
-    /**
-     * Not used
-     * For checking is there a dude
-     *
-     * @param user to be checked
-     * @return if he is in
-     */
-
-    public synchronized boolean contains(ServerUser user) {
-        return users.contains(user);
     }
 
     /**
@@ -227,13 +138,13 @@ public class Conversation {
      * @return all except you
      */
 
-    public synchronized String getAllToString(ServerUser exclusive) {
+    public synchronized String getAllToString(ServerController exclusive) {
         StringBuilder result = new StringBuilder();
-        for (ServerUser user : users) {
-            if (!user.equals(exclusive)) {
-                result.append(user).append("\n");
-            }
-        }
+        users.forEach(serverController -> {
+            if (serverController.getId() == exclusive.getId())
+                return;
+            result.append(serverController.getMe().toString()).append("\n");
+        });
         return result.toString();
     }
 }

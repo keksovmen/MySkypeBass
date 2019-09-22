@@ -1,10 +1,12 @@
 package Com.GUI.Forms;
 
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
+import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.CivilDuty;
-import Com.Pipeline.WarDuty;
+import Com.Pipeline.ResponsibleGUI;
 import Com.Util.FormatWorker;
 
 import javax.swing.*;
@@ -17,7 +19,7 @@ import java.awt.*;
  * Have some parameters in properties
  */
 
-public class EntrancePane implements CivilDuty {
+public class EntrancePane implements ResponsibleGUI {
     private JTextField nameField;
     private JTextField ipField;
     private JFormattedTextField portField;
@@ -46,7 +48,7 @@ public class EntrancePane implements CivilDuty {
 //     * @param actions your abilities
 //     */
 
-    public EntrancePane(WarDuty whereReportAction) {
+    public EntrancePane(ActionableLogic actionsForLogic, GUIDuty actionForGui) {
 //        loadProperties();
 
 //        this.actions = actions;
@@ -60,7 +62,7 @@ public class EntrancePane implements CivilDuty {
 
 //        createButton.addActionListener(e -> createServer());
         connectButton.addActionListener(e -> {
-            whereReportAction.fight(
+            actionsForLogic.act(
                     BUTTONS.CONNECT,
                     new String[]{getMyName(), getIp(), getPort()},
                     null,
@@ -71,29 +73,28 @@ public class EntrancePane implements CivilDuty {
         });
 
         createButton.addActionListener(e ->
-                whereReportAction.fight(
-                BUTTONS.CREATE_SERVER_PANE,
-                null,
-                null,
-                -1
-        ));
+                actionForGui.displayChanges(
+                        GUIActions.CREATE_SERVER_PANE,
+                        null
+                ));
     }
 
     @Override
     public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         if (/*action.equals(ACTIONS.CONNECT_SUCCEEDED)*/
                 action.equals(ACTIONS.CONNECT_FAILED) ||
-                action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
-                action.equals(ACTIONS.WRONG_PORT_FORMAT)
+                        action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
+                        action.equals(ACTIONS.WRONG_PORT_FORMAT)
         ) {
             releaseConnectButton();
             mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-        }else if (action.equals(ACTIONS.CONNECT_SUCCEEDED)){
+        } else if (action.equals(ACTIONS.CONNECT_SUCCEEDED)) {
             mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-        }
-        else if (action.equals(ACTIONS.SERVER_CREATED)) {
+        } else if (action.equals(ACTIONS.SERVER_CREATED)) {
             blockCreateServerButton();
-        }else if (action.equals(ACTIONS.CONNECTION_SERVER_FAILED)){
+        } else if (action.equals(ACTIONS.CONNECTION_TO_SERVER_FAILED) ||
+                action.equals(ACTIONS.DISCONNECTED)
+        ) {
             releaseConnectButton();
         }
     }

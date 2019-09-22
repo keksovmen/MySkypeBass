@@ -38,13 +38,32 @@ public class BaseWriter {
      */
 
     public synchronized void write(AbstractDataPackage dataPackage) throws IOException {
+        writeWithoutReturnToPool(dataPackage);
+//        outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
+//        if (dataPackage.getHeader().getLength() != 0) {
+//            outputStream.write(dataPackage.getData());
+//        }
+//        outputStream.flush();
+//        System.out.println(dataPackage + " " + Thread.currentThread().getName());
+        AbstractDataPackagePool.returnPackage(dataPackage);
+    }
+
+    /**
+     * Same as above but doesn't return data package in to pull
+     * for cash purposes
+     *
+     * @param dataPackage to write
+     * @throws IOException if network fails
+     */
+
+    public synchronized void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
         if (dataPackage.getHeader().getLength() != 0) {
             outputStream.write(dataPackage.getData());
         }
         outputStream.flush();
 //        System.out.println(dataPackage + " " + Thread.currentThread().getName());
-        AbstractDataPackagePool.returnPackage(dataPackage);
+//        AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
 }

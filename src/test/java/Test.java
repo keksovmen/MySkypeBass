@@ -1,18 +1,9 @@
-import Com.Client;
-import Com.Model.ClientModel;
-import Com.Networking.ClientController;
-import Com.Networking.Protocol.AbstractDataPackagePool;
-import Com.Networking.Protocol.CODE;
-import Com.Networking.Protocol.DataPackagePool;
-import Com.Networking.Server;
-import Com.Networking.Utility.WHO;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
 
 public class Test {
+
+
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -54,9 +45,54 @@ public class Test {
 //
 //        Thread.sleep(1_000);
 //        countDownLatch.countDown();
-        CODE.uniqueIdCheck();
-        WHO.uniqueIdCheck();
-        AbstractDataPackagePool.init(new DataPackagePool());
-        new Client();
+//        CODE.uniqueIdCheck();
+//        WHO.uniqueIdCheck();
+//        AbstractDataPackagePool.init(new DataPackagePool());
+//        new Client();
+        Body body = new Body();
+        Thread t1 = new Thread(() -> {
+            body.acquireSam();
+            body.show();
+            body.releaseSem();
+        }, "First");
+        Thread t2 = new Thread(() -> {
+            body.acquireSam();
+            body.show();
+            body.releaseSem();
+        }, "Second");
+        Thread t3 = new Thread(() -> {
+            body.acquireSam();
+            body.show();
+            body.releaseSem();
+        }, "Third");
+        t1.start();
+        t2.start();
+        t3.start();
+//        Pattern compile = Pattern.compile("/bound\\?min_lon=\\d+\\.\\d+&min_lat=\\d+\\.\\d+&max_lon=\\d+\\.\\d+&max_lat=\\d+\\.\\d+&from_ts=\\d+&_=\\d+");
+    }
+
+
+
+    private static class Body{
+        private Semaphore semaphore = new Semaphore(1);
+
+        private void acquireSam(){
+            try {
+                semaphore.acquire();
+                System.out.println(Thread.currentThread().getName() + " Acquired");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void show(){
+            System.out.println(Thread.currentThread().getName());
+        }
+
+        private void releaseSem(){
+            semaphore.release();
+            System.out.println(Thread.currentThread().getName() + " Released");
+
+        }
     }
 }

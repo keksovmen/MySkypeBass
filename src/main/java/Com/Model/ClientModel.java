@@ -40,7 +40,7 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param users to put
      */
 
-    public void updateModel(BaseUser users[]) {
+    public synchronized void updateModel(BaseUser users[]) {
         userMap.clear();
         for (BaseUser user : users) {
             userMap.put(user.getId(), user);
@@ -54,7 +54,7 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param user the dude
      */
 
-    public void addToModel(BaseUser user) {
+    public synchronized void addToModel(BaseUser user) {
         userMap.put(user.getId(), user);
         notifyListeners();
     }
@@ -65,16 +65,21 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param user the dude
      */
 
-    public void removeFromModel(BaseUser user) {
-        boolean remove = userMap.remove(user.getId(), user);
-        if (remove)
-            notifyListeners();
+    public synchronized void removeFromModel(BaseUser user) {
+        removeFromModel(user.getId());
     }
 
-    public void removeFromModel(int user) {
+    public synchronized void removeFromModel(int user) {
         BaseUser remove = userMap.remove(user);
         if (remove != null)
             notifyListeners();
+    }
+
+    public synchronized void clear(){
+        if (!userMap.isEmpty()) {
+            userMap.clear();
+            notifyListeners();
+        }
     }
 
     public void setMe(BaseUser me){

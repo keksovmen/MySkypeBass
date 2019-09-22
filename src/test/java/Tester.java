@@ -268,7 +268,7 @@ public class Tester {
     public static void testFullConstruction() throws IOException, InterruptedException {
         Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
         server.start("Server");
-        Client client = new Client();
+        Client client = new Client(null);
 
         Thread.sleep(5_000);
         ExecutorService executorService = Executors.newFixedThreadPool(5);

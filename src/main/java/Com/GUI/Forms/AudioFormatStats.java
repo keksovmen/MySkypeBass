@@ -1,13 +1,13 @@
 package Com.GUI.Forms;
 
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.WarDuty;
+import Com.Pipeline.ActionableLogic;
 import Com.Util.FormatWorker;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.Properties;
 
 /**
  * Dialog where you get info for server creating
@@ -44,10 +44,9 @@ public class AudioFormatStats {
     /**
      * Firstly load properties set ip sample rate fields
      * register listeners for buttons
-     *
      */
 
-    public AudioFormatStats(WarDuty whereReportAction) {
+    public AudioFormatStats(ActionableLogic actionsForLogic, GUIDuty actionForGui) {
 //        loadProperties();
 
 //        this.actions = actions;
@@ -67,7 +66,7 @@ public class AudioFormatStats {
         a48000RadioButton.addActionListener(actionListener);
 
         buttonOK.addActionListener(e ->
-                whereReportAction.fight(
+                actionsForLogic.act(
                         BUTTONS.CREATE_SERVER,
                         new String[]{getPort(), getSampleRate(), getSampleSize()},
                         null,
@@ -75,11 +74,9 @@ public class AudioFormatStats {
                 ));
 
         buttonCancel.addActionListener(e ->
-                whereReportAction.fight(
-                        BUTTONS.CANCEL_SERVER_CREATION,
-                        null,
-                        null,
-                        -1
+                actionForGui.displayChanges(
+                        GUIActions.CANCEL_SERVER_CREATION,
+                        null
                 ));
 
         a44100RadioButton.setSelected(true);

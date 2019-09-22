@@ -1,13 +1,14 @@
 package Com.GUI.Forms;
 
-import Com.GUI.Forms.ActionHolder.MessangerActions;
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Model.UnEditableModel;
 import Com.Model.Updater;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
+import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.CivilDuty;
-import Com.Pipeline.WarDuty;
+import Com.Pipeline.ResponsibleGUI;
 import Com.Util.Resources;
 
 import javax.sound.sampled.FloatControl;
@@ -23,7 +24,7 @@ import java.util.function.BiConsumer;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements Updater, CivilDuty {
+public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
 
     /**
      * Name for conversation tab uses in search cases
@@ -58,7 +59,7 @@ public class MultiplePurposePane implements Updater, CivilDuty {
 
     private final ConferencePane conferencePane;
 
-    private final MessangerActions actions;
+    private final BiConsumer<String, BaseUser> sendAction;
 
     /**
      * Default constructor
@@ -69,16 +70,23 @@ public class MultiplePurposePane implements Updater, CivilDuty {
      * 4 - create pop up menu for userList
      */
 
-    public MultiplePurposePane(WarDuty whereToReportActions) {
+    public MultiplePurposePane(ActionableLogic whereToReportActions) {
         tabs = new HashMap<>();
         conferencePane = new ConferencePane();
-        actions = new MessangerActions((s, user) -> whereToReportActions.fight(
+        sendAction = ((s, user) -> whereToReportActions.act(
                 BUTTONS.SEND_MESSAGE,
                 null,
                 s,
                 user.getId()));
 
         callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
+
+        disconnectButton.addActionListener(e -> whereToReportActions.act(
+                BUTTONS.DISCONNECT,
+                null,
+                null,
+                -1
+        ));
 //
         registerPopUp(whereToReportActions);
 
@@ -103,10 +111,21 @@ public class MultiplePurposePane implements Updater, CivilDuty {
                 labelMe.setText(stringData);
                 return;
             }
-            case INCOMING_MESSAGE:{
+            case INCOMING_MESSAGE: {
                 showMessage(from, stringData);
                 return;
+            }case DISCONNECTED:{
+                onDisconnect();
+                return;
             }
+        }
+    }
+
+    @Override
+    public void displayChanges(GUIActions action, Object data) {
+        if (action.equals(GUIActions.CLOSE_MESSAGE_PANE)) {
+            String tabName = (String) data;
+            closeTab(tabName);
         }
     }
 
@@ -121,7 +140,7 @@ public class MultiplePurposePane implements Updater, CivilDuty {
      * Refresh - ask for users on the server
      */
 
-    private void registerPopUp(WarDuty registration) {
+    private void registerPopUp(ActionableLogic registration) {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
         sendMessageMenu.addActionListener(e -> {
@@ -141,17 +160,13 @@ public class MultiplePurposePane implements Updater, CivilDuty {
                 callTable.addTab(
                         selected.toString(),
                         Resources.onlineIcon,
-                        createPane(
-                                selected,
-                                actions.getSendMessage(),
-                                closeSelectedTab()
-                        ).getMainPane());
+                        createPane(selected).getMainPane());
             }
         });
 
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e ->
-                registration.fight(
+                registration.act(
                         BUTTONS.ASC_FOR_USERS,
                         null,
                         null,
@@ -165,8 +180,8 @@ public class MultiplePurposePane implements Updater, CivilDuty {
 
     private void changeIconsOfTabs() {
         tabs.forEach((user, messagePane) -> {
-            if (messagePane.isShown()){
-                if (!model.contains(user)){
+            if (messagePane.isShown()) {
+                if (!model.contains(user)) {
                     callTable.setIconAt(
                             callTable.indexOfTab(user.toString()),
                             Resources.offlineIcon
@@ -212,8 +227,8 @@ public class MultiplePurposePane implements Updater, CivilDuty {
      * @return ready to use MessagePane
      */
 
-    private MessagePane createPane(BaseUser user, BiConsumer<String, BaseUser> sendMessage, Runnable closeTab) {
-        MessagePane messagePane = new MessagePane(user, sendMessage, closeTab);
+    private MessagePane createPane(BaseUser user) {
+        MessagePane messagePane = new MessagePane(user, sendAction, this);
         tabs.put(user, messagePane);
         return messagePane;
     }
@@ -239,7 +254,7 @@ public class MultiplePurposePane implements Updater, CivilDuty {
                 callTable.addTab(from.toString(), Resources.onlineIcon, messagePane.getMainPane());
                 messagePane.showMessage(message, false);
             } else {
-                MessagePane pane = createPane(from, actions.getSendMessage(), closeSelectedTab());
+                MessagePane pane = createPane(from);
                 callTable.addTab(from.toString(), Resources.onlineIcon, pane.getMainPane());
                 pane.showMessage(message, false);
             }
@@ -247,14 +262,21 @@ public class MultiplePurposePane implements Updater, CivilDuty {
         colorForMessage(callTable.indexOfTab(from.toString()));
     }
 
-    private Runnable closeSelectedTab() {
-        return () -> {
-            int selectedIndex = callTable.getSelectedIndex();
-            if (selectedIndex == -1)
-                return;
-            callTable.removeTabAt(selectedIndex);
-        };
+
+    private void closeTab(String name) {
+        int indexOfTab = callTable.indexOfTab(name);
+        if (indexOfTab == -1)
+            return;
+        callTable.removeTabAt(indexOfTab);
     }
+//    private Runnable closeSelectedTab() {
+//        return () -> {
+//            int selectedIndex = callTable.getSelectedIndex();
+//            if (selectedIndex == -1)
+//                return;
+//            callTable.removeTabAt(selectedIndex);
+//        };
+//    }
 
     /**
      * Paint a tab which has received a message and not in focus
@@ -279,6 +301,11 @@ public class MultiplePurposePane implements Updater, CivilDuty {
     private void deColored(final int indexOfTab) {
         if (indexOfTab == -1 || !callTable.getBackgroundAt(indexOfTab).equals(Color.RED)) return;
         callTable.setBackgroundAt(indexOfTab, null);
+    }
+
+    private void onDisconnect(){
+        removeAllTabs();
+        tabs.clear();
     }
 
     /**
@@ -338,12 +365,12 @@ public class MultiplePurposePane implements Updater, CivilDuty {
      * Prepare for new server to connect
      */
 
-    private void clearSkin() {
+    private void removeAllTabs() {
         for (int i = 0; i < callTable.getTabCount(); i++) {
             callTable.removeTabAt(i);
         }
 //        tabs.clear();
-        model.removeAllElements();
+//        model.removeAllElements();
     }
 
     public void setNameAndId(String nameAndId) {

@@ -1,5 +1,7 @@
 package Com.GUI;
 
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.GUI.Forms.AudioFormatStats;
 import Com.GUI.Forms.EntrancePane;
 import Com.GUI.Forms.MultiplePurposePane;
@@ -9,25 +11,22 @@ import Com.Model.Updater;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.CivilDuty;
-import Com.Pipeline.WarDuty;
+import Com.Pipeline.ResponsibleGUI;
+import Com.Pipeline.ActionableLogic;
 import Com.Util.Resources;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty {
+public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
-    public static final int WIDTH = 400;
+    public static final int WIDTH = 500;
     public static final int HEIGHT = 300;
 
 
-    private final List<WarDuty> warDutyList;
+    private final List<ActionableLogic> actionableLogicList;
 
     private final JFrame frame;
     private final EntrancePane entrancePane;
@@ -35,12 +34,12 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
     private final MultiplePurposePane purposePane;
 
     public Frame() {
-        warDutyList = new ArrayList<>();
+        actionableLogicList = new ArrayList<>();
 
-        frame = new JFrame("Skype Bass");
+        frame = new JFrame("Skype Bass"); // take it from property
 
-        entrancePane = new EntrancePane(this);
-        serverCreatePane = new AudioFormatStats(this);
+        entrancePane = new EntrancePane(this, this);
+        serverCreatePane = new AudioFormatStats(this, this);
         purposePane = new MultiplePurposePane(this);
 
         setSize();
@@ -61,51 +60,53 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
     @Override
     public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         SwingUtilities.invokeLater(() -> { // there will be others thread not swing
-
             switch (action) {
                 case CONNECT_FAILED: {
                     showErrorMessage("Not connected, check port or host name or internet connection");
                     break;
                 }
-                case AUDIO_FORMAT_NOT_ACCEPTED:{
+                case AUDIO_FORMAT_NOT_ACCEPTED: {
                     showErrorMessage(
                             "Not connected, because you audio system can't handle this format {" +
                                     " " + stringData + " }");
                     break;
                 }
-                case WRONG_HOST_NAME_FORMAT:{
+                case WRONG_HOST_NAME_FORMAT: {
                     showInfoMessage("Wrong host name format - " + stringData);
                     break;
                 }
-                case WRONG_PORT_FORMAT:{
+                case WRONG_PORT_FORMAT: {
                     showInfoMessage("Wrong port format - " + stringData);
                     break;
                 }
-                case CONNECT_SUCCEEDED:{
+                case CONNECT_SUCCEEDED: {
 //                    showMessage("Connected!");
                     //Change pane to new one
                     onConnected();
                     break;
                 }
-                case WRONG_SAMPLE_RATE_FORMAT:{
+                case WRONG_SAMPLE_RATE_FORMAT: {
                     showInfoMessage("Wrong sample rate format - " + stringData);
                     break;
                 }
-                case WRONG_SAMPLE_SIZE_FORMAT:{
+                case WRONG_SAMPLE_SIZE_FORMAT: {
                     showInfoMessage("Wrong sample size format - " + stringData);
                     break;
                 }
-                case SERVER_CREATED:{
+                case SERVER_CREATED: {
                     onServerCreated();
                     break;
                 }
-                case PORT_ALREADY_BUSY:{
+                case PORT_ALREADY_BUSY: {
                     showErrorMessage("Port already in use - " + stringData);
                     break;
                 }
-                case PORT_OUT_OF_RANGE:{
+                case PORT_OUT_OF_RANGE: {
                     showErrorMessage("Port is out of range, must be in "
                             + stringData + ". But yours is " + intData);
+                    break;
+                }case DISCONNECTED:{
+                    onDisconnect();
                     break;
                 }
             }
@@ -116,31 +117,34 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
     }
 
     @Override
-    public boolean registerListener(WarDuty listener) {
-        return warDutyList.add(listener);
+    public boolean registerListener(ActionableLogic listener) {
+        return actionableLogicList.add(listener);
     }
 
     @Override
-    public boolean removeListener(WarDuty listener) {
-        return warDutyList.remove(listener);
+    public boolean removeListener(ActionableLogic listener) {
+        return actionableLogicList.remove(listener);
     }
 
     @Override
-    public void fight(BUTTONS button, Object plainData, String stringData, int integerData) {
-        switch (button){ //handle panel changes
-            case CREATE_SERVER_PANE:{
+    public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+//        switch (button) { //handle panel changes
+//        }
+        actionableLogicList.forEach(warDuty -> warDuty.act(button, plainData, stringData, integerData));
+    }
+
+    @Override
+    public void displayChanges(GUIActions action, Object data) {
+        switch (action){
+            case CREATE_SERVER_PANE: {
                 onServerPaneCreate();
                 return;
             }
-            case CANCEL_SERVER_CREATION:{
+            case CANCEL_SERVER_CREATION: {
                 onServerCancel();
                 return;
             }
-            case CONNECT:{
-
-            }
         }
-        warDutyList.forEach(warDuty -> warDuty.fight(button, plainData, stringData, integerData));
     }
 
     private void setSize() {
@@ -161,23 +165,23 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
 //                return;
 //            }
 //            frame.setIconImage(ImageIO.read(ricardo));
-            frame.setIconImage(Resources.ricardo.getImage());
+        frame.setIconImage(Resources.ricardo.getImage());
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //            JOptionPane.showMessageDialog(frame, "Can't set the icon");
 //        }
     }
 
-    private void showErrorMessage(String message){
+    private void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(
                 frame,
                 message,
                 "Error",
                 JOptionPane.ERROR_MESSAGE
-                );
+        );
     }
 
-    private void showInfoMessage(String message){
+    private void showInfoMessage(String message) {
         JOptionPane.showMessageDialog(
                 frame,
                 message,
@@ -186,7 +190,7 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
         );
     }
 
-    private void showMessage(String message){
+    private void showMessage(String message) {
         JOptionPane.showMessageDialog(
                 frame,
                 message,
@@ -195,14 +199,14 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
         );
     }
 
-    private void onServerPaneCreate(){
+    private void onServerPaneCreate() {
 //        frame.remove(frame.getContentPane());
 //        removeContentPane();
         frame.setContentPane(serverCreatePane.getMainPane());
         repaint();
     }
 
-    private void onServerCancel(){
+    private void onServerCancel() {
 //        frame.remove(serverCreatePane.getMainPane());
 //        frame.remove(frame.getContentPane());
 //        removeContentPane();
@@ -210,21 +214,22 @@ public class Frame implements Updater, CivilDuty, Registration<WarDuty>, WarDuty
         repaint();
     }
 
-    private void onServerCreated(){
+    private void onServerCreated() {
         onServerCancel();
     }
 
-    private void onConnected(){
+    private void onConnected() {
 //        frame.getContentPane().removeAll();
         frame.setContentPane(purposePane.getPane());
         repaint();
     }
 
-    private void removeContentPane(){
-        frame.remove(frame.getContentPane());
+    private void onDisconnect(){
+        frame.setContentPane(entrancePane.getPane());
+        repaint();
     }
 
-    private void repaint(){
+    private void repaint() {
         frame.revalidate();
         frame.repaint();
     }
