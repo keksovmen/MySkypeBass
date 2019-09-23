@@ -7,11 +7,9 @@ import Com.Networking.Processors.ClientProcessor;
 import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Server;
 import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
-import Com.Pipeline.ACTIONS;
-import Com.Pipeline.ActionableLogic;
-import Com.Pipeline.BUTTONS;
-import Com.Pipeline.ResponsibleGUI;
+import Com.Pipeline.*;
 import Com.Util.FormatWorker;
 
 import java.io.IOException;
@@ -23,11 +21,11 @@ import java.util.List;
  * Include Networking, Audio, GUI
  */
 
-public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, ActionableLogic {
+public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, ActionableLogic {
 
 //    private InitialDataStorage
 
-    private Server server;
+    private Server server; // made final
 
     private final ClientModel model;
     private final ClientProcessor processor;
@@ -39,8 +37,8 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
 //    private Frame frame;
 
 
-    public Client(ClientModel model) {
-        this.model = model;
+    public Client() {
+        model = new ClientModel();
         processor = new ClientProcessor();
         controller = new ClientController(processor, model);
         responsibleGUIList = new ArrayList<>();
@@ -55,18 +53,20 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
         processor.getOnAddUserToList().setListener(this::onAddUserToList);
         processor.getOnRemoveUserFromList().setListener(this::onRemoveUserFromList);
         processor.getOnMessage().setListener(this::onIncomingMessage);
-//        model.registerListener(listener);
-//        registerListener(frame);
-//        frame.registerListener(this);
+        processor.getOnCall().setListener(this::onIncomingCall);
+        processor.getOnCallCancel().setListener(this::onCallCanceled);
+        processor.getOnCallDeny().setListener(this::onCallDenied);
     }
 
     @Override
-    public boolean registerListener(ResponsibleGUI listener) {
+    public boolean registerListener(UpdaterAndGUI listener) {
+        model.registerListener(listener);
         return responsibleGUIList.add(listener);
     }
 
     @Override
-    public boolean removeListener(ResponsibleGUI listener) {
+    public boolean removeListener(UpdaterAndGUI listener) {
+        model.removeListener(listener);
         return responsibleGUIList.remove(listener);
     }
 
@@ -82,7 +82,6 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
                 return;
             }
             case ASC_FOR_USERS: {
-//                System.out.println("ASK");
                 onUsersRequest();
                 return;
             }
@@ -92,6 +91,18 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
             }
             case DISCONNECT: {
                 onDisconnect();
+                return;
+            }
+            case CALL:{
+                onCallSomeOne((BaseUser) plainData);
+                return;
+            }
+            case CALL_DENIED:{
+                onDenyCall((BaseUser) plainData);
+                return;
+            }
+            case CALL_CANCELLED:{
+                onCancelCall((BaseUser) plainData);
                 return;
             }
 
@@ -143,7 +154,7 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
 
     //should be called by Swing thread when press connect button
     void onConnect(String hostName, int port, String name) {
-        model.setMe(new BaseUser(name, WHO.NO_NAME.getCode()));
+        model.setMe(new ClientUser(name, WHO.NO_NAME.getCode()));
         boolean connect = controller.connect(hostName, port, 8192);//Load buffer size from properties
         if (!connect) {
             //tell gui to show that can't connect to the server
@@ -239,6 +250,10 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
         respond(action, null, data, null, -1);
     }
 
+    private void dudeRespond(ACTIONS action, BaseUser dude){
+        respond(action, dude, null, null, -1);
+    }
+
     private void onMessageSend(int to, String message) {
         try {
             controller.getWriter().writeMessage(model.getMe().getId(), to, message);
@@ -253,7 +268,6 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
     private void onNetworkException() {
         plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
         controller.close();
-//        processor.close();
     }
 
     private void onDisconnect(){
@@ -267,6 +281,40 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
         plainRespond(ACTIONS.DISCONNECTED);
         //audio close too
 
+    }
+
+    private void onCallSomeOne(BaseUser baseUser){
+        if (model.getMe().isCalling()){
+            plainRespond(ACTIONS.ALREADY_CALLING_SOMEONE);
+            return;
+        }
+        model.getMe().call();
+        try {
+            controller.getWriter().writeCall(model.getMe().getId(), baseUser.getId());
+            dudeRespond(ACTIONS.OUT_CALL, baseUser);
+        } catch (IOException e) {
+            onNetworkException();
+        }
+    }
+
+    private void onDenyCall(BaseUser user){
+        model.getMe().drop();
+        try {
+            controller.getWriter().writeDeny(model.getMe().getId(), user.getId());
+//            dudeRespond(ACTIONS.CALL_DENIED, user);
+        } catch (IOException e) {
+            onNetworkException();
+        }
+    }
+
+    private void onCancelCall(BaseUser user){
+        model.getMe().drop();
+        try {
+            controller.getWriter().writeCancel(model.getMe().getId(), user.getId());
+//            dudeRespond(ACTIONS.CALL_CANCELLED, user);
+        } catch (IOException e) {
+            onNetworkException();
+        }
     }
 
     /* Listeners on receive here */
@@ -295,6 +343,37 @@ public class Client implements Registration<ResponsibleGUI>, ResponsibleGUI, Act
                 null,
                 -1
         );
+    }
+
+    void onIncomingCall(AbstractDataPackage dataPackage){
+        BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        if (model.getMe().isCalling()){
+            //Auto deny because you already calling and send some shit
+            //that will tell that you wre called
+            try {
+                controller.getWriter().writeDeny(model.getMe().getId(), sender.getId());
+                dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
+            } catch (IOException e) {
+                onNetworkException();
+            }
+            return;
+        }
+        model.getMe().call();
+        String dudesInConv = dataPackage.getDataAsString();
+        //Use BaseUser.parse(dudesInConv)
+        respond(ACTIONS.INCOMING_CALL, sender, dudesInConv, null, -1);
+    }
+
+    void onCallCanceled(AbstractDataPackage dataPackage){
+        model.getMe().drop();
+        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        dudeRespond(ACTIONS.CALL_CANCELLED, baseUser);
+    }
+
+    void onCallDenied(AbstractDataPackage dataPackage){
+        model.getMe().drop();
+        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        dudeRespond(ACTIONS.CALL_DENIED, baseUser);
     }
 
     /* Other stuff here */

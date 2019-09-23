@@ -9,6 +9,7 @@ import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Readers.BaseReader;
 import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
 import Com.Networking.Writers.ClientWriter;
 import Com.Util.FormatWorker;
@@ -113,7 +114,7 @@ public class ClientController extends BaseController {
             writer.writeAccept(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
 
             read = reader.read();
-            model.setMe(new BaseUser(
+            model.setMe(new ClientUser(
                     model.getMe().getName(),
                     read.getHeader().getTo()
             ));

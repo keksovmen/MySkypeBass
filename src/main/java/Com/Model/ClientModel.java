@@ -1,6 +1,7 @@
 package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.ClientUser;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -82,7 +83,7 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
         }
     }
 
-    public void setMe(BaseUser me){
+    public void setMe(ClientUser me){
         this.me = me;
     }
 

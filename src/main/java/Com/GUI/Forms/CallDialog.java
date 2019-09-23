@@ -1,122 +1,98 @@
 package Com.GUI.Forms;
 
-import Com.GUI.Interfaces.CallDialogActions;
 import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.ErrorHandler;
+import Com.Pipeline.ACTIONS;
+import Com.Pipeline.ActionableLogic;
+import Com.Pipeline.BUTTONS;
+import Com.Pipeline.ResponsibleGUI;
 
 import javax.swing.*;
-import java.util.function.Consumer;
 
 /**
  * Handle calls
  * Gives you an opportunity to cancel, deny and approve calls
  */
 
-class CallDialog extends JDialog implements ErrorHandler {
+public class CallDialog extends JDialog implements ResponsibleGUI {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
     private JLabel nameTo;
     private JButton denyButton;
     private JLabel conversationInfo;
+    private JLabel middleLabel;
 
-    /**
-     * Corresponding actions
-     */
-
-    private final CallDialogActions actions;
-
-    /**
-     * To display in center of it
-     */
-
-    private final JComponent relativeTo;
+    private BaseUser user;
+    private String dudes;
 
     /**
      * Single constructor
      * Init and update actions
      * register listeners
      * And don't show the dialog for this purpose here is a method
-     *
-     * @param actions    which you have
-     * @param relativeTo to center showing
      */
 
-    CallDialog(CallDialogActions actions, JComponent relativeTo) {
-        this.actions = actions;
-        updateActions();
+    public CallDialog(ActionableLogic whereToReportActions) {
 
-        this.relativeTo = relativeTo;
+        buttonOK.addActionListener(e -> {
+            whereToReportActions.act(
+                    BUTTONS.CALL_ACCEPTED,
+                    user,
+                    dudes,
+                    -1
+            );
+            dispose();
+        });
+
+        denyButton.addActionListener(e -> {
+            whereToReportActions.act(
+                    BUTTONS.CALL_DENIED,
+                    user,
+                    null,
+                    -1
+            );
+            dispose();
+        });
+
+        buttonCancel.addActionListener(e -> {
+            whereToReportActions.act(
+                    BUTTONS.CALL_CANCELLED,
+                    user,
+                    null,
+                    -1
+            );
+            dispose();
+        });
+
         setContentPane(contentPane);
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
-
-        buttonOK.addActionListener(e -> onOK(actions.acceptCall()));
-
-        buttonCancel.addActionListener(e -> onCancel(actions.cancelCall()));
-
-        denyButton.addActionListener(e -> onDeny(actions.denyCall()));
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         pack();
     }
 
-    /**
-     * Simply adds dispose of this dialog action
-     */
-
-    private void updateActions() {
-        actions.updateAcceptCall(onAcceptCall(actions.acceptCall()));
-        actions.updateCancelCall(onSomethingCall(actions.cancelCall()));
-        actions.updateDenyCall(onSomethingCall(actions.denyCall()));
-    }
-
-    private Consumer<BaseUser[]> onAcceptCall(Consumer<BaseUser[]> onAcceptCall) {
-        return users -> {
-            onAcceptCall.accept(users);
-            dispose();
-        };
-    }
-
-    private Consumer<BaseUser> onSomethingCall(Consumer<BaseUser> onSomethingCall) {
-        return users -> {
-            onSomethingCall.accept(users);
-            dispose();
-        };
-    }
-
-    /**
-     * When you accept an incoming call
-     * firstly see how supposed to look like BaseUser[] array in Main
-     * Just get users from 2 labels
-     * and put them in 1 array
-     * first in it is who called than others
-     *
-     * @param acceptCall action to call when pressed the button
-     */
-
-    private void onOK(Consumer<BaseUser[]> acceptCall) {
-        BaseUser whoCall = BaseUser.parse(nameTo.getText());
-        BaseUser[] convUsers = BaseUser.parseUsers(conversationInfo.getText());
-        BaseUser[] result = new BaseUser[convUsers.length + 1];
-
-        System.arraycopy(convUsers, 0, result, 1, convUsers.length);
-        result[0] = whoCall;
-
-        acceptCall.accept(result);
-        dispose();
-    }
-
-    private void onCancel(Consumer<BaseUser> cancel) {
-        // add your code here if necessary
-        cancel.accept(BaseUser.parse(nameTo.getText()));
-        dispose();
-    }
-
-    private void onDeny(Consumer<BaseUser> denyCall) {
-        denyCall.accept(BaseUser.parse(nameTo.getText()));
-        dispose();
+    @Override
+    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+        switch (action){
+            case CALL_DENIED:{
+                dispose();
+                return;
+            }
+            case CALL_ACCEPTED:{
+                dispose();
+                return;
+            }
+            case CALL_CANCELLED:{
+                dispose();
+                return;
+            }
+            case CONNECTION_TO_SERVER_FAILED:{
+                dispose();
+                return;
+            }
+        }
     }
 
     /**
@@ -127,16 +103,21 @@ class CallDialog extends JDialog implements ErrorHandler {
      * @param who you are calling
      */
 
-    void showOutcoming(String who) {
+    public void showOutcoming(BaseUser who, JComponent relativeTo) {
+        user = who;
+        dudes = "";
+
         setTitle("Calling");
 
-        nameTo.setText(who);
+        nameTo.setText(who.toString());
 
         nameTo.setVisible(true);
+        buttonCancel.setVisible(true);
+
+        middleLabel.setVisible(false);
         conversationInfo.setVisible(false);
         buttonOK.setVisible(false);
         denyButton.setVisible(false);
-        buttonCancel.setVisible(true);
 
         setLocationRelativeTo(relativeTo);
 
@@ -151,16 +132,28 @@ class CallDialog extends JDialog implements ErrorHandler {
      * @param conversationInfo and conversation with him
      */
 
-    void showIncoming(String fromWho, String conversationInfo) {
+    public void showIncoming(BaseUser fromWho, String conversationInfo, JComponent relativeTo) {
+        user = fromWho;
+        dudes = conversationInfo;
+
         setTitle("Incoming");
 
-        nameTo.setText(fromWho);
-        this.conversationInfo.setText(conversationInfo);
+        nameTo.setText(fromWho.toString());
+
+        if (conversationInfo.length() == 0) {
+            this.conversationInfo.setVisible(false);
+            middleLabel.setVisible(false);
+        } else {
+            this.conversationInfo.setText(conversationInfo);
+            this.conversationInfo.setVisible(true);
+            middleLabel.setVisible(true);
+        }
+
 
         nameTo.setVisible(true);
-        this.conversationInfo.setVisible(true);
         buttonOK.setVisible(true);
         denyButton.setVisible(true);
+
         buttonCancel.setVisible(false);
 
         setLocationRelativeTo(relativeTo);
@@ -168,13 +161,4 @@ class CallDialog extends JDialog implements ErrorHandler {
         setVisible(true);
     }
 
-    @Override
-    public void errorCase() {
-        dispose();
-    }
-
-    @Override
-    public ErrorHandler[] getNext() {
-        return null;
-    }
 }

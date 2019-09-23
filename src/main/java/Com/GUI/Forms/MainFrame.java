@@ -137,27 +137,28 @@ public class MainFrame extends JFrame implements ErrorHandler {
 
     private Function<String[], Boolean> connect(Function<String[], Boolean> connect) {
         return strings -> {
-            //block connect button
-//            firstSkin.blockConnectButton();
-            Boolean aBoolean = connect.apply(strings);
-            //release connect button
-//            firstSkin.releaseConnectButton();
-
-            if (aBoolean) {
-                remove(firstSkin.getPane());
-                //lazy init
-                if (multiplePurposePane == null) {
-//                    multiplePurposePane = new MultiplePurposePane(actions.nameAndId().get(), actions);
-                } else {
-                    multiplePurposePane.setNameAndId(actions.nameAndId().get());
-                }
-                add(multiplePurposePane.getPane());
-                revalidate();
-                repaint();
-            } else {
-                showDialog("Server doesn't exist");
-            }
-            return aBoolean;
+//            //block connect button
+////            firstSkin.blockConnectButton();
+//            Boolean aBoolean = connect.apply(strings);
+//            //release connect button
+////            firstSkin.releaseConnectButton();
+//
+//            if (aBoolean) {
+//                remove(firstSkin.getPane());
+//                //lazy init
+//                if (multiplePurposePane == null) {
+////                    multiplePurposePane = new MultiplePurposePane(actions.nameAndId().get(), actions);
+//                } else {
+//                    multiplePurposePane.setNameAndId(actions.nameAndId().get());
+//                }
+//                add(multiplePurposePane.getPane());
+//                revalidate();
+//                repaint();
+//            } else {
+//                showDialog("Server doesn't exist");
+//            }
+//            return aBoolean;
+            return true;
         };
     }
 

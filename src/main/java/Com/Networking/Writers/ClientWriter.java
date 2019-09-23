@@ -47,11 +47,11 @@ public class ClientWriter extends BaseWriter {
     }
 
     public void writeDeny(int from, int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DENY, from, to));
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DENY_CALL, from, to));
     }
 
     public void writeCancel(int from, int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CANCEL, from, to));
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CANCEL_CALL, from, to));
     }
 
     public void writeSound(int from, byte[] data) throws IOException {

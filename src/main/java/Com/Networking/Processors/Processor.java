@@ -82,11 +82,11 @@ public class Processor implements Processable{
                 return true;
             }
             case SEND_DENY_CALL:{
-                onCallAccept.process(dataPackage);
+                onCallDeny.process(dataPackage);
                 return true;
             }
             case SEND_CANCEL_CALL:{
-                onCallAccept.process(dataPackage);
+                onCallCancel.process(dataPackage);
                 return true;
             }
             //And so on

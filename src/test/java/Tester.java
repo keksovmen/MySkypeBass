@@ -7,6 +7,7 @@ import Com.Networking.Protocol.*;
 import Com.Networking.Readers.BaseReader;
 import Com.Networking.Server;
 import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
 import Com.Util.Algorithms;
 
@@ -127,11 +128,11 @@ public class Tester {
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         List<ClientController> clientControllers = new ArrayList<>();
         ClientModel clientModel = new ClientModel();
-        clientModel.setMe(new BaseUser("Unique", 0));
+        clientModel.setMe(new ClientUser("Unique", 0));
         ClientModel clientModel1 = new ClientModel();
-        clientModel1.setMe(new BaseUser("Vasa", 0));
+        clientModel1.setMe(new ClientUser("Vasa", 0));
         ClientModel clientModel2 = new ClientModel();
-        clientModel2.setMe(new BaseUser("Loh", 0));
+        clientModel2.setMe(new ClientUser("Loh", 0));
         ClientProcessor processor = new ClientProcessor();
         ClientController clientController = new ClientController(processor, clientModel);
         System.out.println("Client controller connect");
@@ -200,7 +201,7 @@ public class Tester {
         server.start("Server");
 
         ClientModel model = new ClientModel();
-        model.setMe(new BaseUser("Test", WHO.NO_NAME.getCode()));
+        model.setMe(new ClientUser("Test", WHO.NO_NAME.getCode()));
 
         ClientProcessor processor = new ClientProcessor();
 
@@ -231,7 +232,7 @@ public class Tester {
         for (int i = 0; i < 10; i++) {
 //            service.execute(() -> {
             ClientModel tmpModel = new ClientModel();
-            tmpModel.setMe(new BaseUser("Pidr", WHO.NO_NAME.getCode()));
+            tmpModel.setMe(new ClientUser("Pidr", WHO.NO_NAME.getCode()));
 
             ClientProcessor tmpProcessor = new ClientProcessor();
 
@@ -268,7 +269,7 @@ public class Tester {
     public static void testFullConstruction() throws IOException, InterruptedException {
         Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
         server.start("Server");
-        Client client = new Client(null);
+        Client client = new Client();
 
         Thread.sleep(5_000);
         ExecutorService executorService = Executors.newFixedThreadPool(5);
@@ -276,7 +277,7 @@ public class Tester {
         for (int i = 0; i < 5; i++) {
             executorService.execute(() -> {
                 ClientModel clientModel = new ClientModel();
-                clientModel.setMe(new BaseUser("DUMMY", 0));
+                clientModel.setMe(new ClientUser("DUMMY", 0));
                 ClientProcessor clientProcessor = new ClientProcessor();
                 ClientController clientController = new ClientController(clientProcessor, clientModel);
                 controllers.add(clientController);

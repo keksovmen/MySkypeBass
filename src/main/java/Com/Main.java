@@ -48,7 +48,6 @@ import java.lang.reflect.InvocationTargetException;
 
 public class Main {
 
-    private static ClientModel clientModel;
     private static Client client;
     private static Frame frame;
 
@@ -57,8 +56,7 @@ public class Main {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         AbstractDataPackagePool.init(new DataPackagePool());
-        clientModel = new ClientModel();
-        client = new Client(clientModel);
+        client = new Client();
         try {
             SwingUtilities.invokeAndWait(() -> frame = new Frame());
         } catch (InterruptedException | InvocationTargetException e) {
@@ -66,7 +64,6 @@ public class Main {
             System.err.println("Swing fucked up in thread invocation");
         }
 //        client.init(frame);
-        clientModel.registerListener(frame);
 
         client.registerListener(frame);
 

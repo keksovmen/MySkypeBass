@@ -10,7 +10,7 @@ public class Resources {
 
     static {
         ricardo = new ImageIcon(Resources.class.getResource("/Images/ricardo.png"));
-        onlineIcon = new ImageIcon(Resources.class.getResource("/Images/online.png"));
-        offlineIcon = new ImageIcon(Resources.class.getResource("/Images/offline.png"));
+        onlineIcon = new ImageIcon(Resources.class.getResource("/Images/online16.png"));
+        offlineIcon = new ImageIcon(Resources.class.getResource("/Images/offline16.png"));
     }
 }

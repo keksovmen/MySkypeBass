@@ -101,6 +101,8 @@ public class ServerController extends BaseController {
         processor.getOnDisconnect().setListener(Handlers.onDisconnect(this));
         processor.getOnCall().setListener(Handlers.onCall(this));
         processor.getOnCallAccept().setListener(Handlers.onCallAccept(this));
+        processor.getOnCallCancel().setListener(Handlers.onTransfer(this));
+        processor.getOnCallDeny().setListener(Handlers.onTransfer(this));
 
 //        processor.setListener(ServerHandlerProvider.createUsersRequestListener(this));
 //        processor.setListener(ServerHandlerProvider.createConvHandler(this));

@@ -4,6 +4,12 @@ import java.util.concurrent.Semaphore;
 
 /**
  * Server version of a user
+ *
+ * Lock policy:
+ * Want to do something with thi dude
+ * first call lock()
+ * then do whatever you want
+ * last call release()
  */
 
 public class ServerUser extends BaseUser {
@@ -20,6 +26,10 @@ public class ServerUser extends BaseUser {
 
     private volatile Conversation conversation;
 
+    /**
+     * Work as long term lock
+     */
+
     private final Semaphore semaphore;
 
     public ServerUser(String name, int id) {
@@ -28,6 +38,10 @@ public class ServerUser extends BaseUser {
 //        this.controller = controller;
     }
 
+    /**
+     * Lock for sync purposes
+     */
+
     public void lock(){
         try {
             semaphore.acquire();
@@ -35,16 +49,13 @@ public class ServerUser extends BaseUser {
         }
     }
 
+    /**
+     * Release lock
+     */
+
     public void release(){
         semaphore.release();
-        if (conversation != null){
-            //release semaphore
-        }
     }
-
-//    public ServerController getController() {
-//        return controller;
-//    }
 
     public Conversation getConversation() {
         return conversation;

@@ -1,6 +1,7 @@
 package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.ClientUser;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,7 +14,7 @@ public abstract class UnEditableModel {
 
     final Map<Integer, BaseUser> userMap;
 
-    BaseUser me;
+    ClientUser me;
     /**
      * TreeMap just for easy to find on GUI
      */
@@ -31,7 +32,7 @@ public abstract class UnEditableModel {
         return new TreeMap<>(userMap);
     }
 
-    public BaseUser getMe() {
+    public ClientUser getMe() {
         return me;
     }
 }

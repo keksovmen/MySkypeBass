@@ -1,4 +1,4 @@
-package Com.Networking.Utility;
+package Com.Util;
 
 /**
  * Uses for classes that can start a new thread

@@ -3,16 +3,16 @@ package Com.GUI;
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.GUI.Forms.AudioFormatStats;
+import Com.GUI.Forms.CallDialog;
 import Com.GUI.Forms.EntrancePane;
 import Com.GUI.Forms.MultiplePurposePane;
 import Com.Model.Registration;
 import Com.Model.UnEditableModel;
-import Com.Model.Updater;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
-import Com.Pipeline.BUTTONS;
-import Com.Pipeline.ResponsibleGUI;
 import Com.Pipeline.ActionableLogic;
+import Com.Pipeline.BUTTONS;
+import Com.Pipeline.UpdaterAndGUI;
 import Com.Util.Resources;
 
 import javax.swing.*;
@@ -20,7 +20,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
+public class Frame implements UpdaterAndGUI, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
     public static final int WIDTH = 500;
     public static final int HEIGHT = 300;
@@ -32,6 +32,7 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
     private final EntrancePane entrancePane;
     private final AudioFormatStats serverCreatePane;
     private final MultiplePurposePane purposePane;
+    private final CallDialog callDialog;
 
     public Frame() {
         actionableLogicList = new ArrayList<>();
@@ -41,6 +42,7 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
         entrancePane = new EntrancePane(this, this);
         serverCreatePane = new AudioFormatStats(this, this);
         purposePane = new MultiplePurposePane(this);
+        callDialog = new CallDialog(this);
 
         setSize();
         setIcon();
@@ -105,14 +107,32 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
                     showErrorMessage("Port is out of range, must be in "
                             + stringData + ". But yours is " + intData);
                     break;
-                }case DISCONNECTED:{
+                }
+                case DISCONNECTED: {
                     onDisconnect();
+                    break;
+                }
+                case OUT_CALL: {
+                    onOutCall(from);
+                    break;
+                }
+                case INCOMING_CALL: {
+                    onIncomingCall(from, stringData);
+                    break;
+                }
+                case CALL_DENIED: {
+                    showMessage("Call was denied by " + from.toString());
+                    break;
+                }
+                case CALL_CANCELLED: {
+                    showMessage("Call was cancelled by " + from.toString());
                     break;
                 }
             }
 
             entrancePane.respond(action, from, stringData, bytesData, intData);
             purposePane.respond(action, from, stringData, bytesData, intData);
+            callDialog.respond(action, from, stringData, bytesData, intData);
         });
     }
 
@@ -129,13 +149,14 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
     @Override
     public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
 //        switch (button) { //handle panel changes
+//
 //        }
         actionableLogicList.forEach(warDuty -> warDuty.act(button, plainData, stringData, integerData));
     }
 
     @Override
     public void displayChanges(GUIActions action, Object data) {
-        switch (action){
+        switch (action) {
             case CREATE_SERVER_PANE: {
                 onServerPaneCreate();
                 return;
@@ -158,18 +179,7 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
     }
 
     private void setIcon() {
-//        try {
-//            InputStream ricardo = getClass().getResourceAsStream("/Images/ricardo.png");
-//            if (ricardo == null) {
-//                JOptionPane.showMessageDialog(frame, "Can't find the icon");
-//                return;
-//            }
-//            frame.setIconImage(ImageIO.read(ricardo));
         frame.setIconImage(Resources.ricardo.getImage());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(frame, "Can't set the icon");
-//        }
     }
 
     private void showErrorMessage(String message) {
@@ -200,16 +210,11 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
     }
 
     private void onServerPaneCreate() {
-//        frame.remove(frame.getContentPane());
-//        removeContentPane();
         frame.setContentPane(serverCreatePane.getMainPane());
         repaint();
     }
 
     private void onServerCancel() {
-//        frame.remove(serverCreatePane.getMainPane());
-//        frame.remove(frame.getContentPane());
-//        removeContentPane();
         frame.setContentPane(entrancePane.getPane());
         repaint();
     }
@@ -219,14 +224,21 @@ public class Frame implements Updater, ResponsibleGUI, Registration<ActionableLo
     }
 
     private void onConnected() {
-//        frame.getContentPane().removeAll();
         frame.setContentPane(purposePane.getPane());
         repaint();
     }
 
-    private void onDisconnect(){
+    private void onDisconnect() {
         frame.setContentPane(entrancePane.getPane());
         repaint();
+    }
+
+    private void onOutCall(BaseUser who) {
+        callDialog.showOutcoming(who, frame.getRootPane());
+    }
+
+    private void onIncomingCall(BaseUser who, String dudes) {
+        callDialog.showIncoming(who, dudes, frame.getRootPane());
     }
 
     private void repaint() {

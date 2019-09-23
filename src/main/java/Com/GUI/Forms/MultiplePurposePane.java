@@ -3,12 +3,11 @@ package Com.GUI.Forms;
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Model.UnEditableModel;
-import Com.Model.Updater;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.ResponsibleGUI;
+import Com.Pipeline.UpdaterAndGUI;
 import Com.Util.Resources;
 
 import javax.sound.sampled.FloatControl;
@@ -24,7 +23,7 @@ import java.util.function.BiConsumer;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
+public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
 
     /**
      * Name for conversation tab uses in search cases
@@ -73,6 +72,7 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
     public MultiplePurposePane(ActionableLogic whereToReportActions) {
         tabs = new HashMap<>();
         conferencePane = new ConferencePane();
+
         sendAction = ((s, user) -> whereToReportActions.act(
                 BUTTONS.SEND_MESSAGE,
                 null,
@@ -81,12 +81,9 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
 
         callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
 
-        disconnectButton.addActionListener(e -> whereToReportActions.act(
-                BUTTONS.DISCONNECT,
-                null,
-                null,
-                -1
-        ));
+        disconnectButton.addActionListener(e -> disconnect(whereToReportActions));
+
+        callButton.addActionListener(e -> call(whereToReportActions));
 //
         registerPopUp(whereToReportActions);
 
@@ -114,8 +111,13 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
             case INCOMING_MESSAGE: {
                 showMessage(from, stringData);
                 return;
-            }case DISCONNECTED:{
+            }
+            case DISCONNECTED: {
                 onDisconnect();
+                return;
+            }
+            case CALLED_BUT_BUSY:{
+                onCalledButBusy(from);
                 return;
             }
         }
@@ -127,6 +129,30 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
             String tabName = (String) data;
             closeTab(tabName);
         }
+    }
+
+    private void onCalledButBusy(BaseUser who){
+        showMessage(who, "I called, but you had been calling already, call me back");
+    }
+
+    private void call(ActionableLogic actionableLogic) {
+        if (!selected())
+            return;
+        actionableLogic.act(
+                BUTTONS.CALL,
+                getSelected(),
+                null,
+                -1
+        );
+    }
+
+    private void disconnect(ActionableLogic actionableLogic) {
+        actionableLogic.act(
+                BUTTONS.DISCONNECT,
+                null,
+                null,
+                -1
+        );
     }
 
     public JPanel getPane() {
@@ -269,14 +295,6 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
             return;
         callTable.removeTabAt(indexOfTab);
     }
-//    private Runnable closeSelectedTab() {
-//        return () -> {
-//            int selectedIndex = callTable.getSelectedIndex();
-//            if (selectedIndex == -1)
-//                return;
-//            callTable.removeTabAt(selectedIndex);
-//        };
-//    }
 
     /**
      * Paint a tab which has received a message and not in focus
@@ -303,7 +321,7 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
         callTable.setBackgroundAt(indexOfTab, null);
     }
 
-    private void onDisconnect(){
+    private void onDisconnect() {
         removeAllTabs();
         tabs.clear();
     }
@@ -371,10 +389,6 @@ public class MultiplePurposePane implements Updater, ResponsibleGUI, GUIDuty {
         }
 //        tabs.clear();
 //        model.removeAllElements();
-    }
-
-    public void setNameAndId(String nameAndId) {
-        labelMe.setText(nameAndId);
     }
 
     /**
