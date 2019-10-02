@@ -2,7 +2,7 @@ package Com.Pipeline;
 
 import Com.Networking.Utility.BaseUser;
 
-public interface ResponsibleGUI {
+public interface ActionsHandler {
 
     /**
      * Override but be aware that most of this data

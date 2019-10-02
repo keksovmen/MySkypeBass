@@ -6,7 +6,7 @@ import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.ResponsibleGUI;
+import Com.Pipeline.ActionsHandler;
 import Com.Util.FormatWorker;
 
 import javax.swing.*;
@@ -19,7 +19,7 @@ import java.awt.*;
  * Have some parameters in properties
  */
 
-public class EntrancePane implements ResponsibleGUI {
+public class EntrancePane implements ActionsHandler {
     private JTextField nameField;
     private JTextField ipField;
     private JFormattedTextField portField;

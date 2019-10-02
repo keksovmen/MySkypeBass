@@ -235,7 +235,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void showMessage(final BaseUser from, final String message) {
-        EventQueue.invokeLater(() -> multiplePurposePane.showMessage(from, message));
+//        EventQueue.invokeLater(() -> multiplePurposePane.showMessage(from, message));
     }
 
     /**
@@ -270,7 +270,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void startConversation(String user, FloatControl control) {
-        EventQueue.invokeLater(() -> multiplePurposePane.conversationStart(user, control));
+//        EventQueue.invokeLater(() -> multiplePurposePane.conversationStart(user, control));
     }
 
     /**
@@ -281,7 +281,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void addToConv(String name, FloatControl control) {
-        EventQueue.invokeLater(() -> multiplePurposePane.addToConv(name, control));
+//        EventQueue.invokeLater(() -> multiplePurposePane.addToConv(name, control));
     }
 
     /**
@@ -310,7 +310,7 @@ public class MainFrame extends JFrame implements ErrorHandler {
      */
 
     public void showConferenceMessage(String message, String from) {
-        EventQueue.invokeLater(() -> multiplePurposePane.showConferenceMessage(message, from));
+//        EventQueue.invokeLater(() -> multiplePurposePane.showConferenceMessage(message, from));
     }
 
     @Override

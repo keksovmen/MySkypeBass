@@ -1,7 +1,9 @@
 package Com.GUI.Forms;
 
-import javax.sound.sampled.FloatControl;
+import Com.Networking.Utility.BaseUser;
+
 import javax.swing.*;
+import java.util.function.BiConsumer;
 
 /**
  * Handle volume level of particular user
@@ -13,18 +15,13 @@ class UserSettings {
     private JLabel name;
     private JPanel mainPane;
 
-    UserSettings(String name, FloatControl control) {
-        this.name.setText(name);
+    UserSettings(BaseUser user, BiConsumer<Integer, Integer> changeVolume) {
+        this.name.setText(user.toString());
 
-        /*Checks if speaker is able to give you a volume setting*/
-        if (control != null) {
-            volumeLevel.setMaximum((int) control.getMaximum());
-            volumeLevel.setMinimum((int) control.getMinimum());
-            volumeLevel.setPaintTicks(true);
+        volumeLevel.addChangeListener(e -> changeVolume.accept(user.getId(), volumeLevel.getValue()));
 
-            volumeLevel.addChangeListener(e -> control.setValue(volumeLevel.getValue()));
-        }
-
+        //jst to properly sync volume lvl
+        changeVolume.accept(user.getId(), volumeLevel.getValue());
     }
 
     JPanel getMainPane() {

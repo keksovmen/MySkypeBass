@@ -11,6 +11,7 @@ import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
 import Com.Util.Algorithms;
 
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,14 +39,102 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException {
-        CODE.uniqueIdCheck();
-        WHO.uniqueIdCheck();
-        AbstractDataPackagePool.init(new DataPackagePool());
-//        testPackage();
-//        testServer();
-//        clientTest();
-        testFullConstruction();
+    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException, LineUnavailableException {
+//        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+//            System.out.println(info.toString());
+//            Mixer mixer = AudioSystem.getMixer(info);
+//            System.out.println(mixer.toString());
+//            System.out.println();
+//        }
+//        Mixer mixer = AudioSystem.getMixer(null);
+//        for (Line.Info info : mixer.getSourceLineInfo(new Line.Info(SourceDataLine.class))) {
+//            System.out.println(info);
+//        }
+//        boolean lineSupported = mixer.isLineSupported(new DataLine.Info(
+//                TargetDataLine.class, new AudioFormat(
+//                44_100f, 16, 1, true, true)
+//        ));
+//        System.out.println(lineSupported);
+//        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+//            System.out.println(info);
+//        }
+        AudioFormat audioFormat = new AudioFormat(
+                44_100f,
+                16,
+                1,
+                true,
+                true);
+        DataLine.Info sourceInfo = new DataLine.Info(SourceDataLine.class, audioFormat);
+        DataLine.Info targetInfo = new DataLine.Info(TargetDataLine.class, audioFormat);
+        List<Mixer> sourceMixers = new ArrayList<>();
+        List<Mixer> targetMixers = new ArrayList<>();
+        for (Mixer.Info mixerInfo : AudioSystem.getMixerInfo()) {
+            Mixer mixer = AudioSystem.getMixer(mixerInfo);
+            if (mixer.isLineSupported(sourceInfo)){
+                sourceMixers.add(mixer);
+            }
+            if (mixer.isLineSupported(targetInfo)){
+                targetMixers.add(mixer);
+            }
+        }
+        for (Mixer sourceMixer : sourceMixers) {
+            Mixer.Info mixerInfo = sourceMixer.getMixerInfo();
+            System.out.println(sourceMixer.getMixerInfo());
+            SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(audioFormat, mixerInfo);
+
+        }
+        System.out.println();
+        for (Mixer targetMixer : targetMixers) {
+            System.out.println(targetMixer.getMixerInfo());
+        }
+
+        try{
+            return;
+        }finally {
+            System.out.println("worked");
+        }
+//        sourceMixers.forEach(System.out::println);
+//        System.out.println();
+//        targetMixers.forEach(System.out::println);
+//        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
+//            Mixer mixer = AudioSystem.getMixer(info);
+//            mixer.open();
+//            for (Line.Info info1 : mixer.getSourceLineInfo()) {
+//                Line line = mixer.getLine(info1);
+//                System.out.println(info1);
+//                System.out.println(line);
+//            }
+//            System.out.println();
+//        }
+//        for (int i = 0; i < AudioSystem.getMixerInfo().length; i++) {
+//            Mixer.Info info = AudioSystem.getMixerInfo()[i];
+//            System.out.println(i + "\t" + info);
+//            Mixer mixer = AudioSystem.getMixer(info);
+//            for (int j = 0; j < mixer.getSourceLineInfo().length; j++) {
+//                System.out.println("\t" + j + "\t" + mixer.getSourceLineInfo()[j]);
+//            }
+//            System.out.println();
+//            for (int j = 0; j < mixer.getTargetLineInfo().length; j++) {
+//                System.out.println("\t" + j + "\t" + mixer.getTargetLineInfo()[j]);
+//            }
+//        }
+//        for (Line sourceLine : mixer.getSourceLines()) {
+//            System.out.println(sourceLine);
+//        }
+
+//        System.out.println(mixer.getMixerInfo());
+
+//        System.out.println();
+
+//        AudioSystem.getSourceLineInfo()
+
+//        CODE.uniqueIdCheck();
+//        WHO.uniqueIdCheck();
+//        AbstractDataPackagePool.init(new DataPackagePool());
+////        testPackage();
+////        testServer();
+////        clientTest();
+//        testFullConstruction();
 
 //        int v = ProtocolBitMap.INSTRUCTION_SIZE |
 //                ProtocolBitMap.LENGTH_SIZE | ProtocolBitMap.FROM_SIZE |

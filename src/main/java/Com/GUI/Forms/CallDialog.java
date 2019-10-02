@@ -4,7 +4,7 @@ import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.ResponsibleGUI;
+import Com.Pipeline.ActionsHandler;
 
 import javax.swing.*;
 
@@ -13,7 +13,7 @@ import javax.swing.*;
  * Gives you an opportunity to cancel, deny and approve calls
  */
 
-public class CallDialog extends JDialog implements ResponsibleGUI {
+public class CallDialog extends JDialog implements ActionsHandler {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -89,6 +89,10 @@ public class CallDialog extends JDialog implements ResponsibleGUI {
                 return;
             }
             case CONNECTION_TO_SERVER_FAILED:{
+                dispose();
+                return;
+            }
+            case BOTH_IN_CONVERSATION:{
                 dispose();
                 return;
             }

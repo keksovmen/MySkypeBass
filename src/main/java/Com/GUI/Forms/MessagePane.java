@@ -76,11 +76,9 @@ class MessagePane {
      */
 
     void showMessage(String message, boolean me) {
-//        EventQueue.invokeLater(() -> {
         if (message.length() != 0)
             messageBoard.append((me ? "Me" : nameWho.getText()) + " (" + getTime() + "): " + message + "\n");
         isShown = true;
-//        });
     }
 
     /**

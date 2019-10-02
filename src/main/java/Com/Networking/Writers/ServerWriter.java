@@ -191,10 +191,10 @@ public class ServerWriter extends WriterWithHandler {
         ));
     }
 
-    public void writeBothInConversations(int me) throws IOException {
+    public void writeBothInConversations(int me, int from) throws IOException {
         write(AbstractDataPackagePool.getPackage().initZeroLength(
                 CODE.SEND_BOTH_IN_CONVERSATIONS,
-                WHO.SERVER.getCode(),
+                from,
                 me
         ));
     }

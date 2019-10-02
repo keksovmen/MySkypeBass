@@ -13,5 +13,6 @@ public enum BUTTONS {
     CALL_ACCEPTED, //object is dude who called, string all dudes who is in conversation
     CALL_DENIED, //object is dude who called
     CALL_CANCELLED, // object is user who you tried to call
+    VOLUME_CHANGED, // string data is id, int is volume lvl
 
 }

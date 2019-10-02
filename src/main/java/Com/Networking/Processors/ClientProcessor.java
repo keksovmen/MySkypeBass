@@ -18,6 +18,7 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
 
     private ActionStand onAddUserToList;
     private ActionStand onRemoveUserFromList;
+    private ActionStand onBothInConversation;
     /**
      * Instead of its own thread you have
      * SINGLE THREAD EXECUTOR for not prone purposes
@@ -28,6 +29,7 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
     public ClientProcessor() {
         onAddUserToList = new ActionStand();
         onRemoveUserFromList = new ActionStand();
+        onBothInConversation = new ActionStand();
         executor = Executors.newSingleThreadExecutor();
     }
 
@@ -70,6 +72,10 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
         return onRemoveUserFromList;
     }
 
+    public ActionStand getOnBothInConversation() {
+        return onBothInConversation;
+    }
+
     private void branching(AbstractDataPackage dataPackage) {
         switch (dataPackage.getHeader().getCode()) {
             case SEND_ADD_TO_USER_LIST: {
@@ -78,6 +84,10 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
             }
             case SEND_REMOVE_FROM_USER_LIST: {
                 onRemoveUserFromList.process(dataPackage);
+                return;
+            }
+            case SEND_BOTH_IN_CONVERSATIONS:{
+                onBothInConversation.process(dataPackage);
                 return;
             }
         }

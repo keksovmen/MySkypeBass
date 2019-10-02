@@ -12,7 +12,7 @@ import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.UpdaterAndGUI;
+import Com.Pipeline.UpdaterAndHandler;
 import Com.Util.Resources;
 
 import javax.swing.*;
@@ -20,9 +20,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Frame implements UpdaterAndGUI, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
+public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
-    public static final int WIDTH = 500;
+    public static final int WIDTH = 600;
     public static final int HEIGHT = 300;
 
 

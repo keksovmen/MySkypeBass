@@ -111,7 +111,7 @@ public class ClientController extends BaseController {
                 writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
                 return false;
             }
-            writer.writeAccept(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
+            writer.writeApproveAudioFormat(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
 
             read = reader.read();
             model.setMe(new ClientUser(

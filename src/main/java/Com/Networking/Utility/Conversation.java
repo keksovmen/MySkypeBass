@@ -59,20 +59,17 @@ public class Conversation {
      * Default method for sending a message to every one in this conf
      *
      * @param dataPackage contains message data
-     * @param from        who sent it
      */
 
-    public void sendMessage(AbstractDataPackage dataPackage, int from) {
-//        for (ServerUser user : users) {
-//            if (user.getId() != from) {
-//                ServerController controller = user.getController();
-//                try {
-//                    controller.getWriter().transferMessage(dataPackage);
-//                } catch (IOException e) {
-//                    removeDude(user);
-//                }
-//            }
-//        }
+    public void sendMessage(AbstractDataPackage dataPackage, ServerController me) {
+        for (ServerController user : users) {
+            if (user.equals(me))
+                continue;
+            try {
+                user.getWriter().transferMessage(dataPackage);
+            } catch (IOException ignored) { // His thread will fix it
+            }
+        }
     }
 
     /**

@@ -38,7 +38,7 @@ public class ServerController extends BaseController {
     void cleanUp() {
         //Clean up code
         server.removeController(getId());
-        if (me.inConv()){
+        if (me.inConv()) {
             me.getConversation().removeDude(this);
             me.setConversation(null);
         }
@@ -164,6 +164,16 @@ public class ServerController extends BaseController {
         private static Consumer<AbstractDataPackage> onTransfer(ServerController current) {
             return dataPackage -> {
                 int to = dataPackage.getHeader().getTo();
+                if (to == WHO.CONFERENCE.getCode()) {
+                    Conversation conversation = current.getMe().getConversation();
+                    if (conversation != null) {
+                        conversation.sendMessage(dataPackage, current);
+                    }else {
+                        //tell him that hi is not in conversation
+                    }
+                    return;
+                }
+
                 ServerController receiver = checkedGet(current, to);
                 if (receiver == null)
                     return;
@@ -190,12 +200,21 @@ public class ServerController extends BaseController {
                 try {
                     if (me.inConv() && dude.inConv()) {
                         try {
-                            current.writer.writeBothInConversations(current.getId());
+                            current.writer.writeBothInConversations(current.getId(), receiver.getId());
                         } catch (IOException e) {
                             current.close();
                         }
+                        try {
+                            receiver.writer.writeBothInConversations(receiver.getId(), current.getId());
+                        } catch (IOException ignored) {
+                            //His thread will handle shit
+                        }
+                        return;
                     }
                     try {
+                        if (me.inConv()) {
+                            dataPackage.setData(me.getConversation().getAllToString(current));
+                        }
                         receiver.writer.transferPacket(dataPackage);
                     } catch (IOException e) {
                         //tell that dude is offline
@@ -229,11 +248,13 @@ public class ServerController extends BaseController {
                 if (me.inConv()) {
                     //add dude to conv
                     conversation = me.getConversation();
+                    dataPackage.setData(conversation.getAllToString(current));
                     conversation.addDude(receiver, current);
                     dude.setConversation(conversation);
                 } else if (dude.inConv()) {
                     //add me to dude's conv
                     conversation = dude.getConversation();
+                    dataPackage.setData(conversation.getAllToString(receiver));
                     conversation.addDude(current, receiver);
                     me.setConversation(conversation);
 //                }else if (me.inConv() && dude.inConv()){

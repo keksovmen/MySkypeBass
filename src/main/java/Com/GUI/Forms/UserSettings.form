@@ -20,7 +20,16 @@
         <constraints>
           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties/>
+        <properties>
+          <majorTickSpacing value="20"/>
+          <minorTickSpacing value="5"/>
+          <paintLabels value="true"/>
+          <paintTicks value="true"/>
+          <paintTrack value="true"/>
+          <snapToTicks value="false"/>
+          <value value="80"/>
+          <valueIsAdjusting value="false"/>
+        </properties>
       </component>
       <vspacer id="1a9a2">
         <constraints>

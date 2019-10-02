@@ -1,12 +1,17 @@
 package Com.GUI.Forms;
 
-import Com.Networking.Utility.ErrorHandler;
+import Com.Networking.Utility.BaseUser;
+import Com.Networking.Utility.WHO;
+import Com.Pipeline.ACTIONS;
+import Com.Pipeline.ActionableLogic;
+import Com.Pipeline.ActionsHandler;
+import Com.Pipeline.BUTTONS;
 
-import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Handle adding new users or removing
@@ -14,7 +19,7 @@ import java.util.Map;
  * or mute yourself
  */
 
-class ConferencePane implements ErrorHandler {
+class ConferencePane implements ActionsHandler {
     private JSpinner volume;
     private JButton muteButton;
     private JPanel centerPane;
@@ -23,12 +28,12 @@ class ConferencePane implements ErrorHandler {
     private JTextArea displayPlace;
     private JTextField sender;
 
-    /**
-     * Contains baseUser.toString() - UserSettings
-     * need for add and removal of users
-     */
+//    /**
+//     * Contains baseUser.toString() - UserSettings
+//     * need for add and removal of users
+//     */
 
-    private final Map<String, UserSettings> conferenceMembers;
+    private final Map<BaseUser, UserSettings> conferenceMembers;
 
 //    /**
 //     * All possible actions
@@ -36,21 +41,25 @@ class ConferencePane implements ErrorHandler {
 
 //    private final ConferencePaneActions actions;
 
+    private final BiConsumer<Integer, Integer> changeVolume;
+
 
     /**
      * Default constructor init
      * 1 - actions
      * 2 - spinner model
      * 3 - register actions
-     *
-//     * @param actions all possible actions
+     * <p>
+     * //     * @param actions all possible actions
      */
 
-    ConferencePane() {
+    ConferencePane(ActionableLogic whereToReportActions) {
 //        this.actions = actions;
-        volume.setModel(new SpinnerNumberModel(1d, 1d, 20d, 0.05d));
-
         conferenceMembers = new HashMap<>();
+
+        volume.setModel(new SpinnerNumberModel(1d, 1d, 20d, 0.05d));
+        changeVolume = createVolumeChanger(whereToReportActions);
+//        conferenceMembers = new HashMap<>();
 
 //        endCallButton.addActionListener(e -> actions.endCall().run());
 
@@ -58,7 +67,52 @@ class ConferencePane implements ErrorHandler {
 
 //        volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
 
-        sender.addActionListener(e -> sendMessage(getMessage()));
+        sender.addActionListener(e -> {
+            String message = getMessage();
+            whereToReportActions.act(
+                    BUTTONS.SEND_MESSAGE,
+                    null,
+                    message,
+                    WHO.CONFERENCE.getCode()
+            );
+            sendMessage(message);
+        });
+
+    }
+
+    @Override
+    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+        switch (action) {
+            case CALL_ACCEPTED: {
+                onCallAccepted(from, stringData);
+                return;
+            }
+            case INCOMING_MESSAGE: {
+                if (intData == 1)
+                    onMessage(from, stringData);
+                return;
+            }
+        }
+    }
+
+    private void onCallAccepted(BaseUser from, String dudes) {
+        addUser(from);
+        for (BaseUser user : BaseUser.parseUsers(dudes)) {
+            addUser(user);
+        }
+    }
+
+    private void onMessage(BaseUser from, String message) {
+        showMessage(from, message);
+    }
+
+    private BiConsumer<Integer, Integer> createVolumeChanger(ActionableLogic whereToReportActions) {
+        return (id, value) -> whereToReportActions.act(
+                BUTTONS.VOLUME_CHANGED,
+                null,
+                String.valueOf(id),
+                value
+        );
     }
 
     JPanel getMainPane() {
@@ -70,17 +124,16 @@ class ConferencePane implements ErrorHandler {
      * each time creates new UserSettings if there is no cashed one
      * put him on gui but through GridBagConstraints because
      * they don't want to go beneath each other but from left to right
-     *
-     * @param name         of user to add
-     * @param soundControl his sound volume controller might be null if speaker doesn't work
      */
 
-    void addUser(String name, FloatControl soundControl) {
-        if (conferenceMembers.containsKey(name)) {
+    private void addUser(BaseUser dude) {
+
+        if (conferenceMembers.containsKey(dude)) {//should't happen
             return;
         }
-        UserSettings userSettings = new UserSettings(name, soundControl);
-        conferenceMembers.put(name, userSettings);
+
+        UserSettings userSettings = new UserSettings(dude, changeVolume);
+        conferenceMembers.put(dude, userSettings);
 
         int size = conferenceMembers.size();
         centerPane.add(userSettings.getMainPane(), new GridBagConstraints(0, size, 1, 1, 0, 0,
@@ -98,12 +151,12 @@ class ConferencePane implements ErrorHandler {
      */
 
     void removeUser(String name) {
-        UserSettings remove = conferenceMembers.remove(name);
-        if (remove != null) {
-            centerPane.remove(remove.getMainPane());
-            centerPane.revalidate();
-            centerPane.repaint();
-        }
+//        UserSettings remove = conferenceMembers.remove(name);
+//        if (remove != null) {
+//            centerPane.remove(remove.getMainPane());
+//            centerPane.revalidate();
+//            centerPane.repaint();
+//        }
     }
 
     /**
@@ -111,12 +164,12 @@ class ConferencePane implements ErrorHandler {
      */
 
     void clear() {
-        centerPane.removeAll();
-        conferenceMembers.clear();
-        muteButton.setText("Mute");
-        displayPlace.setText("");
-        sender.setText("");
-        volume.setValue(1d);
+//        centerPane.removeAll();
+//        conferenceMembers.clear();
+//        muteButton.setText("Mute");
+//        displayPlace.setText("");
+//        sender.setText("");
+//        volume.setValue(1d);
     }
 
     /**
@@ -126,23 +179,27 @@ class ConferencePane implements ErrorHandler {
      */
 
     private void reactToMute(boolean resultOfMute) {
-        if (resultOfMute) {
-            muteButton.setText("Un mute");
-        } else {
-            muteButton.setText("Mute");
-        }
+//        if (resultOfMute) {
+//            muteButton.setText("Un mute");
+//        } else {
+//            muteButton.setText("Mute");
+//        }
     }
 
-    void showMessage(String message, String from) {
+    private void showMessage(String from, String message) {
         displayPlace.append(from + " (" + MessagePane.getTime() + "): " + message + "\n");
+    }
+
+    private void showMessage(BaseUser from, String message) {
+        showMessage(from.toString(), message);
     }
 
     private void sendMessage(String message) {
         if (message.length() == 0) {
             return;
         }
-        showMessage(message, "Me");
-//        actions.sendMessageToConference().accept(message);
+        showMessage("Me", message);
+
     }
 
     private String getMessage() {
@@ -151,18 +208,9 @@ class ConferencePane implements ErrorHandler {
         return text;
     }
 
-    boolean containPerson(String user) {
-        return conferenceMembers.containsKey(user);
-    }
+//    boolean containPerson(String user) {
+//        return conferenceMembers.containsKey(user);
+//    }
 
-    @Override
-    public void errorCase() {
-        clear();
-    }
-
-    @Override
-    public ErrorHandler[] getNext() {
-        return null;
-    }
 
 }

@@ -21,7 +21,7 @@ import java.util.List;
  * Include Networking, Audio, GUI
  */
 
-public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, ActionableLogic {
+public class Client implements Registration<UpdaterAndHandler>, ActionsHandler, ActionableLogic {
 
 //    private InitialDataStorage
 
@@ -31,7 +31,7 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
     private final ClientProcessor processor;
     private final ClientController controller;
 
-    private final List<ResponsibleGUI> responsibleGUIList;
+    private final List<ActionsHandler> actionsHandlerList;
 
     //Here goes Audio part and GUI
 //    private Frame frame;
@@ -41,7 +41,7 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
         model = new ClientModel();
         processor = new ClientProcessor();
         controller = new ClientController(processor, model);
-        responsibleGUIList = new ArrayList<>();
+        actionsHandlerList = new ArrayList<>();
 
         init();
     }
@@ -56,18 +56,20 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
         processor.getOnCall().setListener(this::onIncomingCall);
         processor.getOnCallCancel().setListener(this::onCallCanceled);
         processor.getOnCallDeny().setListener(this::onCallDenied);
+        processor.getOnCallAccept().setListener(this::onCallAccepted);
+        processor.getOnBothInConversation().setListener(this::onBothInConversation);
     }
 
     @Override
-    public boolean registerListener(UpdaterAndGUI listener) {
+    public boolean registerListener(UpdaterAndHandler listener) {
         model.registerListener(listener);
-        return responsibleGUIList.add(listener);
+        return actionsHandlerList.add(listener);
     }
 
     @Override
-    public boolean removeListener(UpdaterAndGUI listener) {
+    public boolean removeListener(UpdaterAndHandler listener) {
         model.removeListener(listener);
-        return responsibleGUIList.remove(listener);
+        return actionsHandlerList.remove(listener);
     }
 
     @Override
@@ -105,6 +107,10 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
                 onCancelCall((BaseUser) plainData);
                 return;
             }
+            case CALL_ACCEPTED:{
+                onCallAccepted((BaseUser) plainData, stringData);
+                return;
+            }
 
         }
     }
@@ -115,8 +121,8 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
                         String stringData,
                         byte[] bytesData,
                         int intData) {
-        responsibleGUIList.forEach(
-                responsibleGUI -> responsibleGUI.respond(
+        actionsHandlerList.forEach(
+                actionsHandler -> actionsHandler.respond(
                         action,
                         from,
                         stringData,
@@ -317,6 +323,20 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
         }
     }
 
+    private void onCallAccepted(BaseUser dude, String others){
+        model.getMe().drop();
+        try {
+            controller.getWriter().writeAccept(model.getMe().getId(), dude.getId());
+        } catch (IOException e) {
+            onNetworkException();
+            return;
+        }
+        //Audio tell to add corresponding outputs
+        //tell gui to act
+        respond(ACTIONS.CALL_ACCEPTED, dude, others, null, -1);
+
+    }
+
     /* Listeners on receive here */
 
     void onUsers(AbstractDataPackage dataPackage) {
@@ -341,7 +361,7 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
                 sender,
                 dataPackage.getDataAsString(),
                 null,
-                -1
+                dataPackage.getHeader().getTo() == WHO.CONFERENCE.getCode() ? 1 : 0
         );
     }
 
@@ -374,6 +394,23 @@ public class Client implements Registration<UpdaterAndGUI>, ResponsibleGUI, Acti
         model.getMe().drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         dudeRespond(ACTIONS.CALL_DENIED, baseUser);
+    }
+
+    void onCallAccepted(AbstractDataPackage dataPackage){
+        model.getMe().drop();
+        BaseUser dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        respond(
+                ACTIONS.CALL_ACCEPTED,
+                dude,
+                dataPackage.getDataAsString(),
+                null,
+                -1
+                );
+    }
+
+    void onBothInConversation(AbstractDataPackage dataPackage){
+        dudeRespond(ACTIONS.BOTH_IN_CONVERSATION,
+                model.getUserMap().get(dataPackage.getHeader().getFrom()));
     }
 
     /* Other stuff here */

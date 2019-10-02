@@ -42,8 +42,12 @@ public class ClientWriter extends BaseWriter {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CALL, from, to));
     }
 
-    public void writeAccept(int from, int to) throws IOException {
+    public void writeApproveAudioFormat(int from, int to) throws IOException {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_APPROVE, from, to));
+    }
+
+    public void writeAccept(int from, int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ACCEPT_CALL, from, to));
     }
 
     public void writeDeny(int from, int to) throws IOException {

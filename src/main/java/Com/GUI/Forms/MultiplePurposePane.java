@@ -7,10 +7,9 @@ import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
-import Com.Pipeline.UpdaterAndGUI;
+import Com.Pipeline.UpdaterAndHandler;
 import Com.Util.Resources;
 
-import javax.sound.sampled.FloatControl;
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
@@ -23,7 +22,7 @@ import java.util.function.BiConsumer;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
+public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     /**
      * Name for conversation tab uses in search cases
@@ -71,7 +70,7 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
 
     public MultiplePurposePane(ActionableLogic whereToReportActions) {
         tabs = new HashMap<>();
-        conferencePane = new ConferencePane();
+        conferencePane = new ConferencePane(whereToReportActions);
 
         sendAction = ((s, user) -> whereToReportActions.act(
                 BUTTONS.SEND_MESSAGE,
@@ -106,21 +105,30 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
         switch (action) {
             case CONNECT_SUCCEEDED: {
                 labelMe.setText(stringData);
-                return;
+                break;
             }
             case INCOMING_MESSAGE: {
-                showMessage(from, stringData);
-                return;
+                showMessage(from, stringData, intData == 1);
+                break;
             }
             case DISCONNECTED: {
                 onDisconnect();
-                return;
+                break;
             }
-            case CALLED_BUT_BUSY:{
+            case CALLED_BUT_BUSY: {
                 onCalledButBusy(from);
-                return;
+                break;
+            }
+            case CALL_ACCEPTED: {
+                onCallAccepted();
+                break;
+            }
+            case BOTH_IN_CONVERSATION: {
+                onBothInConv(from);
+                break;
             }
         }
+        conferencePane.respond(action, from, stringData, bytesData, intData);
     }
 
     @Override
@@ -131,9 +139,21 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
         }
     }
 
-    private void onCalledButBusy(BaseUser who){
-        showMessage(who, "I called, but you had been calling already, call me back");
+    /* Actions handlers */
+
+    private void onCallAccepted() {
+        showConversationPane();
     }
+
+    private void onCalledButBusy(BaseUser who) {
+        showMessage(who, "I called, but you had been calling already, call me back", false);
+    }
+
+    private void onBothInConv(BaseUser from) {
+        showMessage(from, "I called, but You and I are in different conversations, call me later", false);
+    }
+
+    /* Actions */
 
     private void call(ActionableLogic actionableLogic) {
         if (!selected())
@@ -239,12 +259,29 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
         return model.get(usersList.getSelectedIndex());
     }
 
+    private boolean isShownAlready(String data) {
+        return callTable.indexOfTab(data) != -1;
+    }
+
     private boolean isShownAlready(BaseUser user) {
-        return callTable.indexOfTab(user.toString()) != -1;
+        return isShownAlready(user.toString());
     }
 
     private boolean isCashed(BaseUser user) {
         return tabs.containsKey(user);
+    }
+
+//    private boolean isConversationPaneShown(){
+//        return callTable.indexOfTab(CONVERSATION_TAB_NAME) != -1;
+//    }
+
+    private void showConversationPane() {
+        callTable.addTab(
+                CONVERSATION_TAB_NAME,
+                Resources.conversationIcon,
+                conferencePane.getMainPane());
+        callTable.revalidate();
+        callTable.repaint();
     }
 
     /**
@@ -269,23 +306,29 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
      * @param message plain text
      */
 
-    public void showMessage(final BaseUser from, final String message) {
+    public void showMessage(final BaseUser from, final String message, boolean toConv) {
         if (from == null) // do nothing when dude is not present in model
             return;
-        if (isShownAlready(from)) {
-            tabs.get(from).showMessage(message, false);
+        String tabName;
+        if (toConv) {
+            tabName = CONVERSATION_TAB_NAME;
         } else {
-            if (isCashed(from)) {
-                MessagePane messagePane = tabs.get(from);
-                callTable.addTab(from.toString(), Resources.onlineIcon, messagePane.getMainPane());
-                messagePane.showMessage(message, false);
+            if (isShownAlready(from)) {
+                tabs.get(from).showMessage(message, false);
             } else {
-                MessagePane pane = createPane(from);
-                callTable.addTab(from.toString(), Resources.onlineIcon, pane.getMainPane());
-                pane.showMessage(message, false);
+                if (isCashed(from)) {
+                    MessagePane messagePane = tabs.get(from);
+                    callTable.addTab(from.toString(), Resources.onlineIcon, messagePane.getMainPane());
+                    messagePane.showMessage(message, false);
+                } else {
+                    MessagePane pane = createPane(from);
+                    callTable.addTab(from.toString(), Resources.onlineIcon, pane.getMainPane());
+                    pane.showMessage(message, false);
+                }
             }
+            tabName = from.toString();
         }
-        colorForMessage(callTable.indexOfTab(from.toString()));
+        colorForMessage(callTable.indexOfTab(tabName));
     }
 
 
@@ -326,32 +369,32 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
         tabs.clear();
     }
 
-    /**
-     * Creates if necessary conferencePane
-     * and add user who called you in
-     *
-     * @param user    who calls you
-     * @param control volume for him
-     */
+//    /**
+//     * Creates if necessary conferencePane
+//     * and add user who called you in
+//     *
+//     * @param user    who calls you
+//     * @param control volume for him
+//     */
 
-    void conversationStart(String user, FloatControl control) {
-        if (conferencePane == null) {
-//            conferencePane = new ConferencePane();
-        }
-        conferencePane.addUser(user, control);
-        callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
-    }
+//    void conversationStart(String user, FloatControl control) {
+//        if (conferencePane == null) {
+////            conferencePane = new ConferencePane();
+//        }
+//        conferencePane.addUser(user, control);
+//        callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
+//    }
 
-    /**
-     * Add some one on conferencePane
-     *
-     * @param name    who to add
-     * @param control sound volume
-     */
+//    /**
+//     * Add some one on conferencePane
+//     *
+//     * @param name    who to add
+//     * @param control sound volume
+//     */
 
-    void addToConv(String name, FloatControl control) {
-        conferencePane.addUser(name, control);
-    }
+//    void addToConv(String name, FloatControl control) {
+//        conferencePane.addUser(name, control);
+//    }
 
     /**
      * Remove fro conferencePane
@@ -391,17 +434,17 @@ public class MultiplePurposePane implements UpdaterAndGUI, GUIDuty {
 //        model.removeAllElements();
     }
 
-    /**
-     * Method for displaying message from conference
-     *
-     * @param message plain text
-     * @param from    BaseUser.toString()
-     */
-
-    void showConferenceMessage(String message, String from) {
-        conferencePane.showMessage(message, from);
-        colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
-    }
+//    /**
+//     * Method for displaying message from conference
+//     *
+//     * @param message plain text
+//     * @param from    BaseUser.toString()
+//     */
+//
+//    void showConferenceMessage(String message, String from) {
+//        conferencePane.showMessage(message, from);
+//        colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
+//    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
