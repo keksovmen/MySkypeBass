@@ -70,7 +70,7 @@ class ConferencePane implements ActionsHandler {
     }
 
     @Override
-    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         switch (action) {
             case CALL_ACCEPTED: {
                 onCallAccepted(from, stringData);

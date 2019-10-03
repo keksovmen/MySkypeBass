@@ -2,6 +2,7 @@ package Com;
 
 import Com.GUI.Frame;
 import Com.Model.ClientModel;
+import Com.Networking.ClientController;
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.CODE;
 import Com.Networking.Protocol.DataPackagePool;
@@ -45,29 +46,33 @@ import java.lang.reflect.InvocationTargetException;
 //
 
 
-
 public class Main {
 
-    private static Client client;
-    private static Frame frame;
 
 
     public static void main(String[] args) {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         AbstractDataPackagePool.init(new DataPackagePool());
-        client = new Client();
         try {
-            SwingUtilities.invokeAndWait(() -> frame = new Frame());
+            SwingUtilities.invokeAndWait(() -> {
+                ClientModel model = new ClientModel();
+                ClientController clientController = new ClientController(model);
+
+                Frame frame = new Frame();
+                clientController.registerListener(frame);
+                //register audio part for package exchange actions
+
+                model.registerListener(frame);
+
+                frame.registerListener(clientController.getController());
+                //register audio part for gui action
+            });
         } catch (InterruptedException | InvocationTargetException e) {
             e.printStackTrace();
             System.err.println("Swing fucked up in thread invocation");
         }
-//        client.init(frame);
 
-        client.registerListener(frame);
-
-        frame.registerListener(client);
     }
 }
 //
@@ -82,7 +87,7 @@ public class Main {
 //
 //    private Main() {
 //        AbstractDataPackagePool.init(new DataPackagePool());
-//        Client client = new Client();
+//        ClientResponder client = new ClientResponder();
 //
 //        audioClient = AudioClient.getInstance();
 //        users = new HashMap<>();

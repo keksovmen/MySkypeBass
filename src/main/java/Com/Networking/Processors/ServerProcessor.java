@@ -5,7 +5,7 @@ import Com.Networking.Protocol.AbstractDataPackagePool;
 
 /**
  * Server implementation of the processor
- * Not uses an Executor like Client version
+ * Not uses an Executor like ClientResponder version
  */
 
 public class ServerProcessor extends BaseProcessor {

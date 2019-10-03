@@ -60,7 +60,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
     }
 
     @Override
-    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         SwingUtilities.invokeLater(() -> { // there will be others thread not swing
             switch (action) {
                 case CONNECT_FAILED: {
@@ -127,16 +127,16 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case CONNECTION_TO_SERVER_FAILED:{
-                    onDisconnect();
+//                    onDisconnect();
                     showErrorMessage("Connection to the server has failed due to network error," +
                             " check your internet connection or server's one");
                     break;
                 }
             }
 
-            entrancePane.respond(action, from, stringData, bytesData, intData);
-            purposePane.respond(action, from, stringData, bytesData, intData);
-            callDialog.respond(action, from, stringData, bytesData, intData);
+            entrancePane.handle(action, from, stringData, bytesData, intData);
+            purposePane.handle(action, from, stringData, bytesData, intData);
+            callDialog.handle(action, from, stringData, bytesData, intData);
         });
     }
 

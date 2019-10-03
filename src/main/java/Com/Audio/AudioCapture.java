@@ -138,7 +138,7 @@ class AudioCapture {
                 readAndProcess();
             }
             onStopCapturing();
-        }, "Client capture").start();
+        }, "ClientResponder capture").start();
 
     }
 

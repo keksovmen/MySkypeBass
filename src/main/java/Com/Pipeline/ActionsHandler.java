@@ -15,7 +15,7 @@ public interface ActionsHandler {
      * @param intData    data as int, -1 mean null
      */
 
-    void respond(
+    void handle(
             ACTIONS action,
             BaseUser from,
             String stringData,

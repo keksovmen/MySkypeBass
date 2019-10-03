@@ -101,7 +101,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     }
 
     @Override
-    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         switch (action) {
             case CONNECT_SUCCEEDED: {
                 labelMe.setText(stringData);
@@ -136,7 +136,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 break;
             }
         }
-        conferencePane.respond(action, from, stringData, bytesData, intData);
+        conferencePane.handle(action, from, stringData, bytesData, intData);
     }
 
     @Override

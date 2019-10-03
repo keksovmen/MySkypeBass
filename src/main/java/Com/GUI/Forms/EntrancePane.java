@@ -80,7 +80,7 @@ public class EntrancePane implements ActionsHandler {
     }
 
     @Override
-    public void respond(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         if (/*action.equals(ACTIONS.CONNECT_SUCCEEDED)*/
                 action.equals(ACTIONS.CONNECT_FAILED) ||
                         action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||

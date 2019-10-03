@@ -99,7 +99,8 @@ public class FormatWorker {
     public static boolean verifyOnlyDigits(String string){
         return string.matches("\\d+");
     }
-//    /**
+
+    //    /**
 //     * Regular expression is a POWER
 //     * mean ((1-3 digits).) 3 times and then just (1-3 digits)
 //     *

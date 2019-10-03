@@ -48,7 +48,7 @@ public class Test {
 //        CODE.uniqueIdCheck();
 //        WHO.uniqueIdCheck();
 //        AbstractDataPackagePool.init(new DataPackagePool());
-//        new Client();
+//        new ClientResponder();
         Body body = new Body();
         Thread t1 = new Thread(() -> {
             body.acquireSam();

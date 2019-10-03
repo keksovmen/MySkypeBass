@@ -1,5 +1,3 @@
-import Com.Client;
-import Com.GUI.Forms.AudioFormatStats;
 import Com.Model.ClientModel;
 import Com.Networking.ClientController;
 import Com.Networking.Processors.ClientProcessor;
@@ -12,7 +10,6 @@ import Com.Networking.Utility.WHO;
 import Com.Util.Algorithms;
 
 import javax.sound.sampled.*;
-import javax.swing.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -213,7 +210,7 @@ public class Tester {
         assert (server.start("Server"));
         assert (!server.start("Server"));
 
-        System.out.println("Creating Client controller");
+        System.out.println("Creating ClientResponder controller");
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         List<ClientController> clientControllers = new ArrayList<>();
         ClientModel clientModel = new ClientModel();
@@ -223,25 +220,27 @@ public class Tester {
         ClientModel clientModel2 = new ClientModel();
         clientModel2.setMe(new ClientUser("Loh", 0));
         ClientProcessor processor = new ClientProcessor();
-        ClientController clientController = new ClientController(processor, clientModel);
-        System.out.println("Client controller connect");
+        ClientController clientController = new ClientController(clientModel);
+        System.out.println("ClientResponder controller connect");
         assert (clientController.connect(
+                "",
                 "127.0.0.1",
                 8188,
                 8192));
-        assert clientController.start("Client controller");
+        assert clientController.start("ClientResponder controller");
         for (int i = 0; i < 20; i++) {
-            ClientController clientController1 = new ClientController(processor, clientModel1);
+            ClientController clientController1 = new ClientController(clientModel1);
             clientControllers.add(clientController1);
-            ClientController clientController2 = new ClientController(processor, clientModel2);
+            ClientController clientController2 = new ClientController(clientModel2);
             executorService.submit(() ->
             {
 //                try {
                 assert clientController1.connect(
+                        "",
                         "127.0.0.1",
                         8188,
                         8192);
-                assert clientController1.start("Client controller");
+                assert clientController1.start("ClientResponder controller");
 //                } catch (IOException e) {
 //                    e.printStackTrace();
 //                    System.exit(-1);
@@ -251,10 +250,11 @@ public class Tester {
             {
 //                try {
                 assert clientController2.connect(
+                        "",
                         "127.0.0.1",
                         8188,
                         8192);
-                assert clientController2.start("Client controller");
+                assert clientController2.start("ClientResponder controller");
                 clientController2.close();
 //                } catch (IOException e) {
 //                    e.printStackTrace();
@@ -306,12 +306,12 @@ public class Tester {
                     model.removeFromModel(dataAsInt);
                 });
 
-        ClientController clientController = new ClientController(processor, model);
+        ClientController clientController = new ClientController(model);
 
         System.out.println("Connecting");
 
-        assert clientController.connect("127.0.0.1", 8188, 8192);
-        assert clientController.start("Client controller");
+        assert clientController.connect("","127.0.0.1", 8188, 8192);
+        assert clientController.start("ClientResponder controller");
         ExecutorService service = Executors.newFixedThreadPool(10);
 
         System.out.println("Connected");
@@ -325,11 +325,11 @@ public class Tester {
 
             ClientProcessor tmpProcessor = new ClientProcessor();
 
-            ClientController tmpClientController = new ClientController(tmpProcessor, tmpModel);
+            ClientController tmpClientController = new ClientController(tmpModel);
             controllers.add(tmpClientController);
 
             service.execute(() -> {
-                assert tmpClientController.connect("127.0.0.1", 8188, 8192);
+                assert tmpClientController.connect("","127.0.0.1", 8188, 8192);
                 tmpClientController.start("Pidr");
             });
 
@@ -358,7 +358,7 @@ public class Tester {
     public static void testFullConstruction() throws IOException, InterruptedException {
         Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
         server.start("Server");
-        Client client = new Client();
+//        ClientResponder clientResponder = new ClientResponder(null);
 
         Thread.sleep(5_000);
         ExecutorService executorService = Executors.newFixedThreadPool(5);
@@ -368,14 +368,15 @@ public class Tester {
                 ClientModel clientModel = new ClientModel();
                 clientModel.setMe(new ClientUser("DUMMY", 0));
                 ClientProcessor clientProcessor = new ClientProcessor();
-                ClientController clientController = new ClientController(clientProcessor, clientModel);
+                ClientController clientController = new ClientController(clientModel);
                 controllers.add(clientController);
                 clientController.connect(
+                        "",
                         "127.0.0.1",
                         8188,
                         8192
                 );
-                clientController.start("Client controller test");
+                clientController.start("ClientResponder controller test");
             });
         }
         System.out.println("GO");
