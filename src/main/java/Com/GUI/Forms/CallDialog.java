@@ -34,35 +34,11 @@ public class CallDialog extends JDialog implements ActionsHandler {
 
     public CallDialog(ActionableLogic whereToReportActions) {
 
-        buttonOK.addActionListener(e -> {
-            whereToReportActions.act(
-                    BUTTONS.CALL_ACCEPTED,
-                    user,
-                    dudes,
-                    -1
-            );
-            dispose();
-        });
+        buttonOK.addActionListener(e -> onOk(whereToReportActions));
 
-        denyButton.addActionListener(e -> {
-            whereToReportActions.act(
-                    BUTTONS.CALL_DENIED,
-                    user,
-                    null,
-                    -1
-            );
-            dispose();
-        });
+        denyButton.addActionListener(e -> onDeny(whereToReportActions));
 
-        buttonCancel.addActionListener(e -> {
-            whereToReportActions.act(
-                    BUTTONS.CALL_CANCELLED,
-                    user,
-                    null,
-                    -1
-            );
-            dispose();
-        });
+        buttonCancel.addActionListener(e -> onCancel(whereToReportActions));
 
         setContentPane(contentPane);
         setModal(true);
@@ -97,6 +73,36 @@ public class CallDialog extends JDialog implements ActionsHandler {
                 return;
             }
         }
+    }
+
+    private void onOk(ActionableLogic whereToReportActions){
+        whereToReportActions.act(
+                BUTTONS.CALL_ACCEPTED,
+                user,
+                dudes,
+                -1
+        );
+        dispose();
+    }
+
+    private void onDeny(ActionableLogic whereToReportActions){
+        whereToReportActions.act(
+                BUTTONS.CALL_DENIED,
+                user,
+                dudes,
+                -1
+        );
+        dispose();
+    }
+
+    private void onCancel(ActionableLogic whereToReportActions){
+        whereToReportActions.act(
+                BUTTONS.CALL_CANCELLED,
+                user,
+                dudes,
+                -1
+        );
+        dispose();
     }
 
     /**

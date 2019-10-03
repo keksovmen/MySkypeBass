@@ -24,6 +24,9 @@ public enum ACTIONS {
     CALLED_BUT_BUSY, // BaseUser is the dude who called
     ALREADY_CALLING_SOMEONE, // no data
     BOTH_IN_CONVERSATION, // user who you called
+    EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
+    REMOVE_DUDE_FROM_CONVERSATION, // user is the dude
+    ADD_DUDE_TO_CONVERSATION, // user is the dude
 
 
 

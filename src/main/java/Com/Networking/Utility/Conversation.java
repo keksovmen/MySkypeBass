@@ -66,7 +66,7 @@ public class Conversation {
             if (user.equals(me))
                 continue;
             try {
-                user.getWriter().transferMessage(dataPackage);
+                user.getWriter().transferPacket(dataPackage);
             } catch (IOException ignored) { // His thread will fix it
             }
         }
@@ -76,9 +76,9 @@ public class Conversation {
      * Add new user(s) to this conference
      */
 
-    public synchronized void addDude(ServerController dude, ServerController me) {
+    public synchronized void addDude(ServerController dude, ServerController except) {
         users.forEach(serverController -> {
-            if (serverController.getId() == me.getId())
+            if (serverController.getId() == except.getId())
                 return;
             try {
                 serverController.getWriter().writeAddToConv(dude.getId(), serverController.getId());
@@ -87,6 +87,7 @@ public class Conversation {
             }
         });
         users.add(dude);
+        dude.getMe().setConversation(this);
     }
 
     /**
@@ -99,6 +100,7 @@ public class Conversation {
 
     public synchronized void removeDude(ServerController user) {
         users.remove(user);
+        user.getMe().setConversation(null);
         users.forEach(serverController -> {
             try {
                 serverController.getWriter().writeRemoveFromConv(user.getId(), serverController.getId());

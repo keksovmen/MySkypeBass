@@ -24,11 +24,11 @@ public enum CODE {
     SEND_CANCEL(9), //when caller cancelled the call
     SEND_SOUND(10), //sends sound data to conference
     SEND_DISCONNECT(11),    //when disconnecting from the server
-    SEND_ADD(12),   //server sendSound it when some one was added to your conversation
-    SEND_REMOVE(13),//server sendSound it when some one was removed to your conversation
+    SEND_ADD_TO_CONVERSATION(12),   //server sendSound it when some one was added to your conversation
+    SEND_REMOVE_FROM_CONVERSATION(13),//server sendSound it when some one was removed to your conversation
     SEND_CONFIRM(14),//not used
     SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
-    SEND_STOP_CONV(16),//when you are last one in conversation server sends it to you
+//    SEND_STOP_CONV(16),//when you are last one in conversation server sends it to you
     SEND_ADD_TO_USER_LIST(17),//when you connected to the server it will tell every one that you are online
     SEND_REMOVE_FROM_USER_LIST(18),//when you disconnect from the server it will tell every one that you are gone
     SEND_ACCEPT_CALL(19),

@@ -58,6 +58,9 @@ public class Client implements Registration<UpdaterAndHandler>, ActionsHandler, 
         processor.getOnCallDeny().setListener(this::onCallDenied);
         processor.getOnCallAccept().setListener(this::onCallAccepted);
         processor.getOnBothInConversation().setListener(this::onBothInConversation);
+        processor.getOnExitConference().setListener(this::onExitConversation);
+        processor.getOnRemoveDudeFromConversation().setListener(this::onRemoveDudeFromConversation);
+        processor.getOnAddDudeToConversation().setListener(this::onAddDudeToConversation);
     }
 
     @Override
@@ -109,6 +112,10 @@ public class Client implements Registration<UpdaterAndHandler>, ActionsHandler, 
             }
             case CALL_ACCEPTED:{
                 onCallAccepted((BaseUser) plainData, stringData);
+                return;
+            }
+            case EXIT_CONFERENCE:{
+                onExitConference();
                 return;
             }
 
@@ -337,6 +344,15 @@ public class Client implements Registration<UpdaterAndHandler>, ActionsHandler, 
 
     }
 
+    private void onExitConference(){
+        try {
+            controller.getWriter().writeDisconnectFromConv(model.getMe().getId());
+            plainRespond(ACTIONS.EXITED_CONVERSATION);
+        } catch (IOException e) {
+            onNetworkException();
+        }
+    }
+
     /* Listeners on receive here */
 
     void onUsers(AbstractDataPackage dataPackage) {
@@ -411,6 +427,24 @@ public class Client implements Registration<UpdaterAndHandler>, ActionsHandler, 
     void onBothInConversation(AbstractDataPackage dataPackage){
         dudeRespond(ACTIONS.BOTH_IN_CONVERSATION,
                 model.getUserMap().get(dataPackage.getHeader().getFrom()));
+    }
+
+    void onExitConversation(AbstractDataPackage dataPackage){
+        plainRespond(ACTIONS.EXITED_CONVERSATION);
+    }
+
+    void onRemoveDudeFromConversation(AbstractDataPackage dataPackage){
+        dudeRespond(
+                ACTIONS.REMOVE_DUDE_FROM_CONVERSATION,
+                model.getUserMap().get(dataPackage.getHeader().getFrom())
+                );
+    }
+
+    void onAddDudeToConversation(AbstractDataPackage dataPackage){
+        dudeRespond(
+                ACTIONS.ADD_DUDE_TO_CONVERSATION,
+                model.getUserMap().get(dataPackage.getHeader().getFrom())
+                );
     }
 
     /* Other stuff here */

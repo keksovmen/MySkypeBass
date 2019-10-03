@@ -1,5 +1,4 @@
-1 - Client accept on GUI and backend
 2 - Full audio
 3 - Server conversation
 4 - Server ConcurrentHashMap with controllers when call send add to all and another thread adds to this collection what will hapend read about types of map
-5 - Client send message to conversation
+5 - Reader and writer buffer size define it

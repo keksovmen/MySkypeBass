@@ -2,8 +2,8 @@ package Com.GUI.Forms;
 
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
-import Com.Pipeline.BUTTONS;
 import Com.Pipeline.ActionableLogic;
+import Com.Pipeline.BUTTONS;
 import Com.Util.FormatWorker;
 
 import javax.swing.*;
@@ -28,34 +28,12 @@ public class AudioFormatStats {
     private JFormattedTextField customRate;
     private JFormattedTextField textFieldPort;
 
-//    /**
-//     * Corresponding set of action
-//     */
-//
-//    private final AudioFormatStatsActions actions;
-
-//    /**
-//     * Need its parent component to set in middle of it
-//     * when shown
-//     */
-//
-//    private final JComponent relativeTo;
-
     /**
      * Firstly load properties set ip sample rate fields
      * register listeners for buttons
      */
 
-    public AudioFormatStats(ActionableLogic actionsForLogic, GUIDuty actionForGui) {
-//        loadProperties();
-
-//        this.actions = actions;
-//        this.relativeTo = relativeTo;
-//        setContentPane(mainPane);
-//        setModal(true);
-//        getRootPane().setDefaultButton(buttonOK);
-
-        //set value of the button to customRate text field
+    public AudioFormatStats(ActionableLogic whereToReportActions, GUIDuty actionForGui) {
         ActionListener actionListener = e -> {
             JRadioButton radioButton = (JRadioButton) e.getSource();
             customRate.setText(radioButton.getText());
@@ -65,88 +43,48 @@ public class AudioFormatStats {
         a44100RadioButton.addActionListener(actionListener);
         a48000RadioButton.addActionListener(actionListener);
 
-        buttonOK.addActionListener(e ->
-                actionsForLogic.act(
-                        BUTTONS.CREATE_SERVER,
-                        new String[]{getPort(), getSampleRate(), getSampleSize()},
-                        null,
-                        -1
-                ));
+        buttonOK.addActionListener(e -> onOK(whereToReportActions));
 
-        buttonCancel.addActionListener(e ->
-                actionForGui.displayChanges(
-                        GUIActions.CANCEL_SERVER_CREATION,
-                        null
-                ));
+        buttonCancel.addActionListener(e -> onCancel(actionForGui));
 
         a44100RadioButton.setSelected(true);
         customRate.setText(a44100RadioButton.getText());
-//        buttonOK.addActionListener(e -> {
-//            actions.createServer().apply(new String[]{getPort(), getSampleRate(), getSampleSize()});
-//            onOK();
-//        });
-
-//        buttonCancel.addActionListener(e -> onCancel());
-
-        // call onCancel() when cross is clicked
-//        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-//        addWindowListener(new WindowAdapter() {
-//            public void windowClosing(WindowEvent e) {
-//                onCancel();
-//            }
-//        });
 
         // call onCancel() on ESCAPE
 //        mainPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
-//        pack();
-//        setTitle("Audio Format Settings");
     }
 
     public JPanel getMainPane() {
         return mainPane;
     }
 
-    /**
-     * Call it from some pane on action when needed
-     */
-
-    void display() {
-//        setLocationRelativeTo(relativeTo);
-//        setVisible(true);
+    private void onOK(ActionableLogic whereToReportActions) {
+        whereToReportActions.act(
+                BUTTONS.CREATE_SERVER,
+                new String[]{getPort(), getSampleRate(), getSampleSize()},
+                null,
+                -1
+        );
     }
 
-    private void onOK() {
-//        dispose();
-    }
-
-    private void onCancel() {
-//        dispose();
+    private void onCancel(GUIDuty actionForGui) {
+        actionForGui.displayChanges(
+                GUIActions.CANCEL_SERVER_CREATION,
+                null
+        );
     }
 
     private String getPort() {
         return textFieldPort.getText().trim();
-//        return textFieldPort.getText().matches("\\d+") ? textFieldPort.getText() : "8188";
     }
 
     private String getSampleRate() {
         return customRate.getText().trim();
-//        return customRate.getText().matches("\\d+") ? customRate.getText() : "44100";
     }
 
     private String getSampleSize() {
         return a8RadioButton.isSelected() ? "8" : "16";
     }
-
-//    /**
-//     * Load some properties
-//     */
-
-//    private void loadProperties() {
-//        Properties defaultStrings = MainFrame.defaultStrings;
-//        textFieldPort.setText(defaultStrings.getProperty("port"));
-//        customRate.setText(defaultStrings.getProperty("rate"));
-//    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here

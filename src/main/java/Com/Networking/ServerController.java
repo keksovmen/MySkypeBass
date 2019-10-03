@@ -28,7 +28,7 @@ public class ServerController extends BaseController {
 
     public ServerController(Socket socket, Server server, int bufferSize) throws IOException {
         reader = new BaseReader(socket.getInputStream(), bufferSize);
-        writer = new ServerWriter(socket.getOutputStream());
+        writer = new ServerWriter(socket.getOutputStream(), bufferSize);
         processor = new Processor();
         this.socket = socket;
         this.server = server;
@@ -40,7 +40,6 @@ public class ServerController extends BaseController {
         server.removeController(getId());
         if (me.inConv()) {
             me.getConversation().removeDude(this);
-            me.setConversation(null);
         }
     }
 
@@ -93,9 +92,7 @@ public class ServerController extends BaseController {
 
     @Override
     void dataInitialisation() {
-//        Thread.currentThread().setName(Thread.currentThread().getName() + me.getId());
         //Add listeners here
-//        Processor processor = new Processor();
         processor.getOnUsers().setListener(Handlers.onUsersRequest(this));
         processor.getOnMessage().setListener(Handlers.onTransfer(this));
         processor.getOnDisconnect().setListener(Handlers.onDisconnect(this));
@@ -103,14 +100,10 @@ public class ServerController extends BaseController {
         processor.getOnCallAccept().setListener(Handlers.onCallAccept(this));
         processor.getOnCallCancel().setListener(Handlers.onTransfer(this));
         processor.getOnCallDeny().setListener(Handlers.onTransfer(this));
+        processor.getOnExitConference().setListener(Handlers.onExitConversation(this));
 
-//        processor.setListener(ServerHandlerProvider.createUsersRequestListener(this));
-//        processor.setListener(ServerHandlerProvider.createConvHandler(this));
-//        processor.setListener(ServerHandlerProvider.createTransferHandler(this));
-//        this.processor = processor;
         server.registerController(this);
         sendUsers();
-        //        reader.start("Server reader - " + getId());
     }
 
     private void sendUsers() {
@@ -246,17 +239,14 @@ public class ServerController extends BaseController {
                 //here goes atomic code
                 Conversation conversation;
                 if (me.inConv()) {
-                    //add dude to conv
+                    //add dude to conv and put all dudes from conf to notify him
                     conversation = me.getConversation();
                     dataPackage.setData(conversation.getAllToString(current));
                     conversation.addDude(receiver, current);
-                    dude.setConversation(conversation);
                 } else if (dude.inConv()) {
-                    //add me to dude's conv
+                    //add me to dude's conv I already know about dudes in conf
                     conversation = dude.getConversation();
-                    dataPackage.setData(conversation.getAllToString(receiver));
                     conversation.addDude(current, receiver);
-                    me.setConversation(conversation);
 //                }else if (me.inConv() && dude.inConv()){
                     //merge conversations
                     /*
@@ -282,15 +272,23 @@ public class ServerController extends BaseController {
                 release.run();
 
                 try {
-                    receiver.getWriter().writeCallAccepted(
-                            me.getId(),
-                            dude.getId(),
-                            conversation.getAllToString(receiver)
+                    receiver.getWriter().transferPacket(
+                            dataPackage
                     );
                 } catch (IOException ignored) {
                     //Dude disconnected before so it's thread will handle
                 }
 
+            };
+        }
+
+        private static Consumer<AbstractDataPackage> onExitConversation(ServerController current) {
+            return dataPackage -> {
+                Conversation conversation = current.getMe().getConversation();
+                //check if it is null because some other thread could make you leave
+                if (conversation == null)
+                    return;
+                conversation.removeDude(current);
             };
         }
 

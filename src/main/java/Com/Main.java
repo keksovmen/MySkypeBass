@@ -627,13 +627,13 @@ public class Main {
 //                        main.audioClient.playAudio(dataPackage.getHeader().getFrom(), dataPackage.getData());
 //                        break;
 //                    }
-//                    case SEND_ADD: {
+//                    case SEND_ADD_TO_CONVERSATION: {
 //                        int from = dataPackage.getHeader().getFrom();
 //                        main.audioClient.add(from);
 //                        main.mainFrame.addToConv(main.users.get(from).toString(), main.audioClient.getSettings(from));
 //                        break;
 //                    }
-//                    case SEND_REMOVE: {
+//                    case SEND_REMOVE_FROM_CONVERSATION: {
 //                        main.audioClient.remove(dataPackage.getHeader().getFrom());
 //                        main.mainFrame.removeFromConv(main.users.get(dataPackage.getHeader().getFrom()).toString());
 //                        break;

@@ -1,5 +1,7 @@
 package Com.GUI.Forms;
 
+import Com.GUI.Forms.ActionHolder.GUIActions;
+import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Networking.Utility.BaseUser;
 import Com.Networking.Utility.WHO;
 import Com.Pipeline.ACTIONS;
@@ -8,7 +10,6 @@ import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -20,26 +21,24 @@ import java.util.function.BiConsumer;
  */
 
 class ConferencePane implements ActionsHandler {
-    private JSpinner volume;
+    private JSpinner bassChanger;
     private JButton muteButton;
-    private JPanel centerPane;
+    private JPanel settingsPane;
     private JButton endCallButton;
     private JPanel mainPane;
-    private JTextArea displayPlace;
-    private JTextField sender;
+    private JTextArea messagesDisplay;
+    private JTextField messageGetter;
 
-//    /**
-//     * Contains baseUser.toString() - UserSettings
-//     * need for add and removal of users
-//     */
+    /**
+     * Contains baseUser - UserSettings
+     * need for add and removal of users
+     */
 
     private final Map<BaseUser, UserSettings> conferenceMembers;
 
-//    /**
-//     * All possible actions
-//     */
-
-//    private final ConferencePaneActions actions;
+    /**
+     * Function to call when need to change volume lvl of a particular dude
+     */
 
     private final BiConsumer<Integer, Integer> changeVolume;
 
@@ -53,30 +52,20 @@ class ConferencePane implements ActionsHandler {
      * //     * @param actions all possible actions
      */
 
-    ConferencePane(ActionableLogic whereToReportActions) {
-//        this.actions = actions;
+    ConferencePane(ActionableLogic whereToReportActions, GUIDuty closeAction) {
         conferenceMembers = new HashMap<>();
 
-        volume.setModel(new SpinnerNumberModel(1d, 1d, 20d, 0.05d));
+        bassChanger.setModel(new SpinnerNumberModel(1, 1, 100, 1));
+
         changeVolume = createVolumeChanger(whereToReportActions);
-//        conferenceMembers = new HashMap<>();
 
-//        endCallButton.addActionListener(e -> actions.endCall().run());
+        endCallButton.addActionListener(e -> disconnectAction(whereToReportActions, closeAction));
 
-//        muteButton.addActionListener(e -> reactToMute(actions.mute().get()));
+        muteButton.addActionListener(e -> mute(whereToReportActions));
 
-//        volume.addChangeListener(e -> actions.changeMultiplier().accept((Double) volume.getValue()));
+        bassChanger.addChangeListener(e -> changeBussBoost(whereToReportActions));
 
-        sender.addActionListener(e -> {
-            String message = getMessage();
-            whereToReportActions.act(
-                    BUTTONS.SEND_MESSAGE,
-                    null,
-                    message,
-                    WHO.CONFERENCE.getCode()
-            );
-            sendMessage(message);
-        });
+        messageGetter.addActionListener(e -> sendMessageAction(whereToReportActions));
 
     }
 
@@ -88,11 +77,35 @@ class ConferencePane implements ActionsHandler {
                 return;
             }
             case INCOMING_MESSAGE: {
-                if (intData == 1)
+                if (intData == 1) // check if it suppose to go in conversation chat
                     onMessage(from, stringData);
                 return;
             }
+            case EXITED_CONVERSATION: {
+                clear();
+                return;
+            }
+            case REMOVE_DUDE_FROM_CONVERSATION: {
+                removeUser(from);
+                return;
+            }
+            case ADD_DUDE_TO_CONVERSATION: {
+                addUser(from);
+                return;
+            }
+            case DISCONNECTED: {
+                clear();
+                return;
+            }
+            case CONNECTION_TO_SERVER_FAILED: {
+                clear();
+                return;
+            }
         }
+    }
+
+    JPanel getMainPane() {
+        return mainPane;
     }
 
     private void onCallAccepted(BaseUser from, String dudes) {
@@ -106,6 +119,32 @@ class ConferencePane implements ActionsHandler {
         showMessage(from, message);
     }
 
+    private void sendMessageAction(ActionableLogic whereToReportActions) {
+        String message = getMessage();
+        whereToReportActions.act(
+                BUTTONS.SEND_MESSAGE,
+                null,
+                message,
+                WHO.CONFERENCE.getCode()
+        );
+        sendMessage(message);
+    }
+
+    private void disconnectAction(ActionableLogic whereToReportActions, GUIDuty guiDuty) {
+        whereToReportActions.act(
+                BUTTONS.EXIT_CONFERENCE,
+                null,
+                null,
+                -1
+        );
+        guiDuty.displayChanges(
+                GUIActions.CLOSE_MESSAGE_PANE,
+                MultiplePurposePane.CONVERSATION_TAB_NAME
+        );
+        //Do some clearing here
+        clear();
+    }
+
     private BiConsumer<Integer, Integer> createVolumeChanger(ActionableLogic whereToReportActions) {
         return (id, value) -> whereToReportActions.act(
                 BUTTONS.VOLUME_CHANGED,
@@ -113,10 +152,6 @@ class ConferencePane implements ActionsHandler {
                 String.valueOf(id),
                 value
         );
-    }
-
-    JPanel getMainPane() {
-        return mainPane;
     }
 
     /**
@@ -127,7 +162,6 @@ class ConferencePane implements ActionsHandler {
      */
 
     private void addUser(BaseUser dude) {
-
         if (conferenceMembers.containsKey(dude)) {//should't happen
             return;
         }
@@ -135,59 +169,56 @@ class ConferencePane implements ActionsHandler {
         UserSettings userSettings = new UserSettings(dude, changeVolume);
         conferenceMembers.put(dude, userSettings);
 
-        int size = conferenceMembers.size();
-        centerPane.add(userSettings.getMainPane(), new GridBagConstraints(0, size, 1, 1, 0, 0,
-                GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
-                new Insets(0, 0, 0, 0), 0, 0));
-        centerPane.revalidate();
-        centerPane.repaint();
+        settingsPane.add(userSettings.getMainPane());
+        settingsPane.revalidate();
+        settingsPane.repaint();
     }
 
     /**
      * Removes a user
      * checks if so was existed at all
      *
-     * @param name user to remove
+     * @param dude user to remove
      */
 
-    void removeUser(String name) {
-//        UserSettings remove = conferenceMembers.remove(name);
-//        if (remove != null) {
-//            centerPane.remove(remove.getMainPane());
-//            centerPane.revalidate();
-//            centerPane.repaint();
-//        }
-    }
-
-    /**
-     * Remove everything that possible
-     */
-
-    void clear() {
-//        centerPane.removeAll();
-//        conferenceMembers.clear();
-//        muteButton.setText("Mute");
-//        displayPlace.setText("");
-//        sender.setText("");
-//        volume.setValue(1d);
+    private void removeUser(BaseUser dude) {
+        UserSettings remove = conferenceMembers.remove(dude);
+        if (remove != null) {
+            settingsPane.remove(remove.getMainPane());
+            settingsPane.revalidate();
+            settingsPane.repaint();
+        }
     }
 
     /**
      * Define what text will be on mute button
-     *
-     * @param resultOfMute action that provides boolean actual state value
      */
 
-    private void reactToMute(boolean resultOfMute) {
-//        if (resultOfMute) {
-//            muteButton.setText("Un mute");
-//        } else {
-//            muteButton.setText("Mute");
-//        }
+    private void mute(ActionableLogic whereToRegisterActions) {
+        whereToRegisterActions.act(
+                BUTTONS.MUTE,
+                null,
+                null,
+                -1
+        );
+        if (muteButton.getText().equals("Mute")) {
+            muteButton.setText("Un Mute");
+        } else {
+            muteButton.setText("Mute");
+        }
+    }
+
+    private void changeBussBoost(ActionableLogic whereToRegisterActions) {
+        whereToRegisterActions.act(
+                BUTTONS.INCREASE_BASS,
+                null,
+                null,
+                (Integer) bassChanger.getValue()
+        );
     }
 
     private void showMessage(String from, String message) {
-        displayPlace.append(from + " (" + MessagePane.getTime() + "): " + message + "\n");
+        messagesDisplay.append(from + " (" + MessagePane.getTime() + "): " + message + "\n");
     }
 
     private void showMessage(BaseUser from, String message) {
@@ -203,14 +234,28 @@ class ConferencePane implements ActionsHandler {
     }
 
     private String getMessage() {
-        String text = sender.getText();
-        sender.setText("");
+        String text = messageGetter.getText();
+        messageGetter.setText("");
         return text;
     }
 
-//    boolean containPerson(String user) {
-//        return conferenceMembers.containsKey(user);
-//    }
+    /**
+     * Remove everything that possible
+     */
 
+    private void clear() {
+        settingsPane.removeAll();
+        conferenceMembers.clear();
+        muteButton.setText("Mute");
+        messagesDisplay.setText("");
+        messageGetter.setText("");
+        bassChanger.setValue(1);
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
+        settingsPane = new JPanel();
+        settingsPane.setLayout(new BoxLayout(settingsPane, BoxLayout.PAGE_AXIS));
+    }
 
 }

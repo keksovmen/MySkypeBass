@@ -29,7 +29,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      * so decided to make it as a variable
      */
 
-    private static final String CONVERSATION_TAB_NAME = "Conversation";
+    static final String CONVERSATION_TAB_NAME = "Conversation";
 
     private JLabel labelMe;
 
@@ -70,7 +70,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     public MultiplePurposePane(ActionableLogic whereToReportActions) {
         tabs = new HashMap<>();
-        conferencePane = new ConferencePane(whereToReportActions);
+        conferencePane = new ConferencePane(whereToReportActions, this);
 
         sendAction = ((s, user) -> whereToReportActions.act(
                 BUTTONS.SEND_MESSAGE,
@@ -127,6 +127,14 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 onBothInConv(from);
                 break;
             }
+            case EXITED_CONVERSATION: {
+                onExitConversation();
+                break;
+            }
+            case CONNECTION_TO_SERVER_FAILED: {
+                onDisconnect();
+                break;
+            }
         }
         conferencePane.respond(action, from, stringData, bytesData, intData);
     }
@@ -153,6 +161,15 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         showMessage(from, "I called, but You and I are in different conversations, call me later", false);
     }
 
+    private void onExitConversation() {
+        closeTab(CONVERSATION_TAB_NAME);
+    }
+
+    private void onDisconnect() {
+        removeAllTabs();
+        tabs.clear();
+    }
+
     /* Actions */
 
     private void call(ActionableLogic actionableLogic) {
@@ -174,6 +191,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 -1
         );
     }
+
+    /* Other stuff */
 
     public JPanel getPane() {
         return mainPane;
@@ -271,10 +290,6 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         return tabs.containsKey(user);
     }
 
-//    private boolean isConversationPaneShown(){
-//        return callTable.indexOfTab(CONVERSATION_TAB_NAME) != -1;
-//    }
-
     private void showConversationPane() {
         callTable.addTab(
                 CONVERSATION_TAB_NAME,
@@ -306,7 +321,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      * @param message plain text
      */
 
-    public void showMessage(final BaseUser from, final String message, boolean toConv) {
+    private void showMessage(final BaseUser from, final String message, boolean toConv) {
         if (from == null) // do nothing when dude is not present in model
             return;
         String tabName;
@@ -364,92 +379,22 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         callTable.setBackgroundAt(indexOfTab, null);
     }
 
-    private void onDisconnect() {
-        removeAllTabs();
-        tabs.clear();
-    }
-
-//    /**
-//     * Creates if necessary conferencePane
-//     * and add user who called you in
-//     *
-//     * @param user    who calls you
-//     * @param control volume for him
-//     */
-
-//    void conversationStart(String user, FloatControl control) {
-//        if (conferencePane == null) {
-////            conferencePane = new ConferencePane();
-//        }
-//        conferencePane.addUser(user, control);
-//        callTable.addTab(CONVERSATION_TAB_NAME, conferencePane.getMainPane());
-//    }
-
-//    /**
-//     * Add some one on conferencePane
-//     *
-//     * @param name    who to add
-//     * @param control sound volume
-//     */
-
-//    void addToConv(String name, FloatControl control) {
-//        conferencePane.addUser(name, control);
-//    }
-
-    /**
-     * Remove fro conferencePane
-     *
-     * @param name to remove
-     */
-
-    void removeFromConf(String name) {
-        conferencePane.removeUser(name);
-    }
-
-    /**
-     * Removes conference tab when is over
-     */
-
-    void stopConversation() {        // CODE SEND_DISCONNECT_FROM_CONV
-        if (conferencePane != null) {
-            int i = callTable.indexOfTab(CONVERSATION_TAB_NAME);
-            conferencePane.clear();
-            if (i != -1) {
-                callTable.removeTabAt(i);
-            }
-            callTable.revalidate();
-        }
-    }
-
     /**
      * Remove all tabs and clear all collections
      * Prepare for new server to connect
      */
 
     private void removeAllTabs() {
-        for (int i = 0; i < callTable.getTabCount(); i++) {
+        for (int i = callTable.getTabCount() - 1; i  >= 0; i--) {
             callTable.removeTabAt(i);
         }
-//        tabs.clear();
-//        model.removeAllElements();
+        callTable.revalidate();
+        callTable.repaint();
     }
-
-//    /**
-//     * Method for displaying message from conference
-//     *
-//     * @param message plain text
-//     * @param from    BaseUser.toString()
-//     */
-//
-//    void showConferenceMessage(String message, String from) {
-//        conferencePane.showMessage(message, from);
-//        colorForMessage(callTable.indexOfTab(CONVERSATION_TAB_NAME));
-//    }
 
     private void createUIComponents() {
         // TODO: place custom component creation code here
         model = new DefaultListModel<>();
         usersList = new JList<>(model);
     }
-//
 }

@@ -1,6 +1,7 @@
 package Com.Util;
 
 import javax.swing.*;
+import java.util.Properties;
 
 public class Resources {
 
@@ -14,5 +15,9 @@ public class Resources {
         onlineIcon = new ImageIcon(Resources.class.getResource("/Images/online16.png"));
         offlineIcon = new ImageIcon(Resources.class.getResource("/Images/offline16.png"));
         conversationIcon = new ImageIcon(Resources.class.getResource("/Images/conversation16.png"));
+
+//        Properties defaultProp = new Properties();
+//        defaultProp.put("Buffer size", 8192);
+//        defaultProp.put()
     }
 }

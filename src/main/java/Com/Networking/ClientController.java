@@ -8,7 +8,6 @@ import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Readers.BaseReader;
-import Com.Networking.Utility.BaseUser;
 import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
 import Com.Networking.Writers.ClientWriter;
@@ -21,13 +20,9 @@ import java.net.Socket;
 
 public class ClientController extends BaseController {
 
-    //    private Socket socket;
     private final ClientProcessor processor;
-    //    private BaseUser me;
     private final ClientModel model;
     private ClientWriter writer;
-
-//    private final ErrorHandler mainErrorHandler;
 
     /**
      * Uses only for holder of network stuff
@@ -35,7 +30,6 @@ public class ClientController extends BaseController {
      */
 
     public ClientController(ClientProcessor processor, ClientModel model) {
-//        this.mainErrorHandler = mainErrorHandler;
         this.processor = processor;
         this.model = model;
     }
@@ -68,15 +62,12 @@ public class ClientController extends BaseController {
             writer = new ClientWriter(socket.getOutputStream(), bufferSize);
             reader = new BaseReader(socket.getInputStream(), bufferSize);
         } catch (IOException e) {
-//            e.printStackTrace();
             try {
                 socket.close();
             } catch (IOException ignored) {
             }
             return false;
         }
-
-//        me = new BaseUser(name, WHO.NO_NAME.getCode());//just want base user to be immutable
 
         return true;
     }
@@ -149,7 +140,7 @@ public class ClientController extends BaseController {
 
     @Override
     void cleanUp() {
-//        processor.close();
+        //Need to notify the whole system
     }
 
     @Override

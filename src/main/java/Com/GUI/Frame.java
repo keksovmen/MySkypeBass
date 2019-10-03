@@ -82,8 +82,6 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case CONNECT_SUCCEEDED: {
-//                    showMessage("Connected!");
-                    //Change pane to new one
                     onConnected();
                     break;
                 }
@@ -128,6 +126,12 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     showMessage("Call was cancelled by " + from.toString());
                     break;
                 }
+                case CONNECTION_TO_SERVER_FAILED:{
+                    onDisconnect();
+                    showErrorMessage("Connection to the server has failed due to network error," +
+                            " check your internet connection or server's one");
+                    break;
+                }
             }
 
             entrancePane.respond(action, from, stringData, bytesData, intData);
@@ -148,9 +152,6 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
 
     @Override
     public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
-//        switch (button) { //handle panel changes
-//
-//        }
         actionableLogicList.forEach(warDuty -> warDuty.act(button, plainData, stringData, integerData));
     }
 
