@@ -14,7 +14,7 @@ public abstract class UnEditableModel {
 
     final Map<Integer, BaseUser> userMap;
 
-    ClientUser me;
+//    ClientUser me;
     /**
      * TreeMap just for easy to find on GUI
      */
@@ -32,7 +32,7 @@ public abstract class UnEditableModel {
         return new TreeMap<>(userMap);
     }
 
-    public ClientUser getMe() {
-        return me;
-    }
+//    public ClientUser getMe() {
+//        return me;
+//    }
 }

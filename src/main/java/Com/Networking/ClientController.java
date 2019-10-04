@@ -99,15 +99,8 @@ public class ClientController extends BaseController implements Registration<Act
         );
     }
 
-    public ClientWriter getWriter() {
-        return writer;
-    }
 
-    public BaseUser getMe() {
-        return me;
-    }
-
-    public int getId() {
+    private int getId() {
         return me.getId();
     }
 
@@ -239,37 +232,37 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onIncomingCall(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        if (model.getMe().isCalling()) {
+        if (me.isCalling()) {
             //Auto deny because you already calling and send some shit
             //that will tell that you wre called
             try {
-                writer.writeDeny(model.getMe().getId(), sender.getId());
+                writer.writeDeny(getId(), sender.getId());
                 dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
             } catch (IOException e) {
                 onNetworkException();
             }
             return;
         }
-        model.getMe().call();
+        me.call();
         String dudesInConv = dataPackage.getDataAsString();
         //Use BaseUser.parse(dudesInConv)
         handle(ACTIONS.INCOMING_CALL, sender, dudesInConv, null, -1);
     }
 
     void onCallCanceled(AbstractDataPackage dataPackage) {
-        model.getMe().drop();
+        me.drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         dudeRespond(ACTIONS.CALL_CANCELLED, baseUser);
     }
 
     void onCallDenied(AbstractDataPackage dataPackage) {
-        model.getMe().drop();
+        me.drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         dudeRespond(ACTIONS.CALL_DENIED, baseUser);
     }
 
     void onCallAccepted(AbstractDataPackage dataPackage) {
-        model.getMe().drop();
+        me.drop();
         BaseUser dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
         handle(
                 ACTIONS.CALL_ACCEPTED,
@@ -488,7 +481,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         private void onUsersRequest() {
             try {
-                getWriter().writeUsersRequest(getId());
+                writer.writeUsersRequest(getId());
             } catch (IOException e) {
                 onNetworkException();
             }
@@ -518,7 +511,7 @@ public class ClientController extends BaseController implements Registration<Act
             close();
             model.clear();
             plainRespond(ACTIONS.DISCONNECTED);
-            //audio close too
+            //audio will close it self too
 
         }
 
@@ -537,9 +530,9 @@ public class ClientController extends BaseController implements Registration<Act
         }
 
         private void onDenyCall(BaseUser user) {
-            model.getMe().drop();
+            me.drop();
             try {
-                writer.writeDeny(model.getMe().getId(), user.getId());
+                writer.writeDeny(getId(), user.getId());
 //            dudeRespond(ACTIONS.CALL_DENIED, user);
             } catch (IOException e) {
                 onNetworkException();
@@ -547,9 +540,9 @@ public class ClientController extends BaseController implements Registration<Act
         }
 
         private void onCancelCall(BaseUser user) {
-            model.getMe().drop();
+            me.drop();
             try {
-                writer.writeCancel(model.getMe().getId(), user.getId());
+                writer.writeCancel(getId(), user.getId());
 //            dudeRespond(ACTIONS.CALL_CANCELLED, user);
             } catch (IOException e) {
                 onNetworkException();
@@ -559,7 +552,7 @@ public class ClientController extends BaseController implements Registration<Act
         private void onCallAccepted(BaseUser dude, String others) {
             me.drop();
             try {
-                writer.writeAccept(model.getMe().getId(), dude.getId());
+                writer.writeAccept(getId(), dude.getId());
             } catch (IOException e) {
                 onNetworkException();
                 return;
@@ -572,7 +565,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         private void onExitConference() {
             try {
-                writer.writeDisconnectFromConv(model.getMe().getId());
+                writer.writeDisconnectFromConv(getId());
                 plainRespond(ACTIONS.EXITED_CONVERSATION);
             } catch (IOException e) {
                 onNetworkException();

@@ -214,11 +214,11 @@ public class Tester {
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         List<ClientController> clientControllers = new ArrayList<>();
         ClientModel clientModel = new ClientModel();
-        clientModel.setMe(new ClientUser("Unique", 0));
+//        clientModel.setMe(new ClientUser("Unique", 0));
         ClientModel clientModel1 = new ClientModel();
-        clientModel1.setMe(new ClientUser("Vasa", 0));
+//        clientModel1.setMe(new ClientUser("Vasa", 0));
         ClientModel clientModel2 = new ClientModel();
-        clientModel2.setMe(new ClientUser("Loh", 0));
+//        clientModel2.setMe(new ClientUser("Loh", 0));
         ClientProcessor processor = new ClientProcessor();
         ClientController clientController = new ClientController(clientModel);
         System.out.println("ClientResponder controller connect");
@@ -265,7 +265,7 @@ public class Tester {
 
         Thread.sleep(3_000);
         System.out.println("Check users");
-        assert (server.getUser(WHO.SIZE).equals(clientModel.getMe()));
+//        assert (server.getUser(WHO.SIZE).equals(clientModel.getMe()));
         int controllersSize = server.getControllersSize();
         assert (controllersSize == 21) : "Controller size is wrong and equal to = " + controllersSize;
         System.out.println("Closing");
@@ -290,7 +290,7 @@ public class Tester {
         server.start("Server");
 
         ClientModel model = new ClientModel();
-        model.setMe(new ClientUser("Test", WHO.NO_NAME.getCode()));
+//        model.setMe(new ClientUser("Test", WHO.NO_NAME.getCode()));
 
         ClientProcessor processor = new ClientProcessor();
 
@@ -321,7 +321,7 @@ public class Tester {
         for (int i = 0; i < 10; i++) {
 //            service.execute(() -> {
             ClientModel tmpModel = new ClientModel();
-            tmpModel.setMe(new ClientUser("Pidr", WHO.NO_NAME.getCode()));
+//            tmpModel.setMe(new ClientUser("Pidr", WHO.NO_NAME.getCode()));
 
             ClientProcessor tmpProcessor = new ClientProcessor();
 
@@ -366,7 +366,7 @@ public class Tester {
         for (int i = 0; i < 5; i++) {
             executorService.execute(() -> {
                 ClientModel clientModel = new ClientModel();
-                clientModel.setMe(new ClientUser("DUMMY", 0));
+//                clientModel.setMe(new ClientUser("DUMMY", 0));
                 ClientProcessor clientProcessor = new ClientProcessor();
                 ClientController clientController = new ClientController(clientModel);
                 controllers.add(clientController);

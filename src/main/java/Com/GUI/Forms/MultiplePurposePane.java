@@ -50,7 +50,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     private DefaultListModel<BaseUser> model;
 
     /**
-     * Need for messaging isCashed entries name - pane
+     * Need for messaging isCashed.
+     * Entries baseUser - pane
      */
 
     private final Map<BaseUser, MessagePane> tabs;
@@ -131,10 +132,11 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 onExitConversation();
                 break;
             }
-            case CONNECTION_TO_SERVER_FAILED: {
-                onDisconnect();
-                break;
-            }
+            //ignore cause first comes this than DISCONNECTED
+//            case CONNECTION_TO_SERVER_FAILED: {
+//                onDisconnect();
+//                break;
+//            }
         }
         conferencePane.handle(action, from, stringData, bytesData, intData);
     }
@@ -256,19 +258,6 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         });
     }
 
-    /**
-     * Display all users
-     * there can be no users mean server is empty
-     *
-     * @param users income users
-     */
-
-    void displayUsers(BaseUser[] users) {
-        model.removeAllElements();
-        for (BaseUser user : users) {
-            model.addElement(user);
-        }
-    }
 
     private boolean selected() {
         return usersList.getSelectedIndex() != -1;
@@ -385,7 +374,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      */
 
     private void removeAllTabs() {
-        for (int i = callTable.getTabCount() - 1; i  >= 0; i--) {
+        for (int i = callTable.getTabCount() - 1; i >= 0; i--) {
             callTable.removeTabAt(i);
         }
         callTable.revalidate();

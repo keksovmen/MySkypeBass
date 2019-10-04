@@ -83,9 +83,9 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
         }
     }
 
-    public void setMe(ClientUser me){
-        this.me = me;
-    }
+//    public void setMe(ClientUser me){
+//        this.me = me;
+//    }
 
     private void notifyListeners() {
         listeners.forEach(updater -> updater.update(this));

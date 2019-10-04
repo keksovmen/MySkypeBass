@@ -128,8 +128,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                 }
                 case CONNECTION_TO_SERVER_FAILED:{
 //                    onDisconnect();
-                    showErrorMessage("Connection to the server has failed due to network error," +
-                            " check your internet connection or server's one");
+                    showInfoMessage("Disconnected from server!");
                     break;
                 }
             }
