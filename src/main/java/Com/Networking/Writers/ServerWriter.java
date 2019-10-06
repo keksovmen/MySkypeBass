@@ -74,11 +74,12 @@ public class ServerWriter extends BaseWriter {
         try {
             if (lock.tryLock(LOCK_TIME, TimeUnit.MILLISECONDS)) {
                 try {
-                    outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header
-                    if (dataPackage.getHeader().getLength() != 0) {
-                        outputStream.write(dataPackage.getData());
-                    }
-                    outputStream.flush();
+                    writeWithoutReturnToPool(dataPackage);
+//                    outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header
+//                    if (dataPackage.getHeader().getLength() != 0) {
+//                        outputStream.write(dataPackage.getData());
+//                    }
+//                    outputStream.flush();
                 } finally {
                     lock.unlock();
                 }

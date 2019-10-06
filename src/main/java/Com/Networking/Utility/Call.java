@@ -1,6 +1,6 @@
 package Com.Networking.Utility;
 
-import Com.Audio.CallNotificator;
+import Com.Audio.Output.CallNotificator;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,12 +53,12 @@ public class Call implements ErrorHandler {
      */
 
     private void setCalling(boolean isIncoming) {
-        if (isIncoming) {
-            sound.playIncoming();
-        } else {
-            sound.playOutComing();
-        }
-        isCalling.set(true);
+//        if (isIncoming) {
+//            sound.playIncoming();
+//        } else {
+//            sound.playOutComing();
+//        }
+//        isCalling.set(true);
     }
 
     public void incomingCall() {
@@ -70,8 +70,8 @@ public class Call implements ErrorHandler {
     }
 
     public void stopCall() {
-        sound.stop();
-        isCalling.set(false);
+//        sound.stop();
+//        isCalling.set(false);
     }
 
     public boolean isCalling() {

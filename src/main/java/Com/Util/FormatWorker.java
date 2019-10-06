@@ -2,6 +2,9 @@ package Com.Util;
 
 import javax.sound.sampled.AudioFormat;
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,7 +14,8 @@ import java.util.regex.Pattern;
 
 public class FormatWorker {
 
-    private FormatWorker(){}
+    private FormatWorker() {
+    }
 
     /**
      * Parse string like this Sample rate = 01...n\nSample size = 01....n
@@ -46,7 +50,7 @@ public class FormatWorker {
                 "Sample size = " + audioFormat.getSampleSizeInBits();
     }
 
-    public static boolean isHostNameCorrect(String hostName){
+    public static boolean isHostNameCorrect(String hostName) {
         Pattern compile = Pattern.compile("^(\\d{1,3}\\.){3}\\d{1,3}$");
         return hostName.matches(compile.pattern());
     }
@@ -55,11 +59,11 @@ public class FormatWorker {
         return port.matches("\\d+?");
     }
 
-    public static boolean portInRange(int port){
+    public static boolean portInRange(int port) {
         return 0 < port && port < 0xFFFF;
     }
 
-    public static boolean checkZeroLength(String data){
+    public static boolean checkZeroLength(String data) {
         return data.length() == 0;
     }
 
@@ -77,11 +81,12 @@ public class FormatWorker {
                 return new JFormattedTextField.AbstractFormatter() {
                     private final int MAX_LENGTH_AS_STRING =
                             String.valueOf(Integer.MAX_VALUE).length() - 1; //-1 just in case ov largest value
+
                     @Override
                     public Object stringToValue(String text) {
                         String result = text.trim();
                         result = result.replaceAll("\\D", "");
-                        int difference = result.length() - MAX_LENGTH_AS_STRING ;
+                        int difference = result.length() - MAX_LENGTH_AS_STRING;
                         if (0 < difference)
                             result = result.substring(0, result.length() - difference);
                         return result.equals("") ? "" : Integer.parseInt(result);
@@ -96,10 +101,26 @@ public class FormatWorker {
         };
     }
 
-    public static boolean verifyOnlyDigits(String string){
+    public static boolean verifyOnlyDigits(String string) {
         return string.matches("\\d+");
     }
 
+    public static List<Integer> retrieveMessageMeta(String message) {
+        Pattern pattern = Pattern.compile("<\\$(\\d+)?>");
+        Matcher matcher = pattern.matcher(message);
+        List<Integer> results = new ArrayList<>();
+
+        while (matcher.find()) {
+            String rawData = matcher.group(1);
+            results.add(Integer.valueOf(rawData));
+        }
+        return results;
+    }
+
+    public static String getTime(){
+        Calendar calendar = Calendar.getInstance();
+        return Resources.dateFormat.format(calendar.getTime());
+    }
     //    /**
 //     * Regular expression is a POWER
 //     * mean ((1-3 digits).) 3 times and then just (1-3 digits)

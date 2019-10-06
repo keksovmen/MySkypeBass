@@ -14,5 +14,7 @@ public enum BUTTONS {
     CALL_DENIED, //object is dude who called
     CALL_CANCELLED, // object is user who you tried to call
     VOLUME_CHANGED, // string data is id, int is volume in % from 0 to 100
+    CHANGE_INPUT, // object is mixer
+    CHANGE_OUTPUT, // object is mixer
 
 }

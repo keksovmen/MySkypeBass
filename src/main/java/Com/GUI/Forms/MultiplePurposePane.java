@@ -1,5 +1,6 @@
 package Com.GUI.Forms;
 
+import Com.Audio.AudioSupplier;
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Model.UnEditableModel;
@@ -12,9 +13,13 @@ import Com.Util.Resources;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Handles messaging, call pane
@@ -86,6 +91,22 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         callButton.addActionListener(e -> call(whereToReportActions));
 //
         registerPopUp(whereToReportActions);
+
+        usersList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    if (e.getClickCount() == 2) {
+                        if (e.isControlDown()){
+                            onSendMessage();
+                        }else {
+                            call(whereToReportActions);
+                        }
+                    }
+                }
+
+            }
+        });
 
     }
 
@@ -210,26 +231,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     private void registerPopUp(ActionableLogic registration) {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
-        sendMessageMenu.addActionListener(e -> {
-            if (!selected())
-                return;
-            BaseUser selected = getSelected();
-//            String s = selected.toString();
-            if (isShownAlready(selected))
-                return;
-            if (isCashed(selected)) {
-                callTable.addTab(
-                        selected.toString(),
-                        Resources.onlineIcon,
-                        tabs.get(selected).getMainPane()
-                );
-            } else {
-                callTable.addTab(
-                        selected.toString(),
-                        Resources.onlineIcon,
-                        createPane(selected).getMainPane());
-            }
-        });
+        sendMessageMenu.addActionListener(e -> onSendMessage());
 
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e ->
@@ -243,6 +245,27 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         popupMenu.add(refresh);
 
         usersList.setComponentPopupMenu(popupMenu);
+    }
+
+    private void onSendMessage(){
+        if (!selected())
+            return;
+        BaseUser selected = getSelected();
+//            String s = selected.toString();
+        if (isShownAlready(selected))
+            return;
+        if (isCashed(selected)) {
+            callTable.addTab(
+                    selected.toString(),
+                    Resources.onlineIcon,
+                    tabs.get(selected).getMainPane()
+            );
+        } else {
+            callTable.addTab(
+                    selected.toString(),
+                    Resources.onlineIcon,
+                    createPane(selected).getMainPane());
+        }
     }
 
     private void changeIconsOfTabs() {

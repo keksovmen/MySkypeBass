@@ -21,7 +21,7 @@ class UserSettings {
         volumeLevel.addChangeListener(e -> changeVolume.accept(user.getId(), volumeLevel.getValue()));
 
         //jst to properly sync volume lvl
-        changeVolume.accept(user.getId(), volumeLevel.getValue());
+//        changeVolume.accept(user.getId(), volumeLevel.getValue());
     }
 
     JPanel getMainPane() {

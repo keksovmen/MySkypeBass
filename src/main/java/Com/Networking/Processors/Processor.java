@@ -16,6 +16,7 @@ public class Processor implements Processable{
     private ActionStand onCallDeny;
     private ActionStand onCallCancel;
     private ActionStand onExitConference;
+    private ActionStand onSendSound;
 
 
     public Processor() {
@@ -27,6 +28,7 @@ public class Processor implements Processable{
         onCallDeny = new ActionStand();
         onCallCancel = new ActionStand();
         onExitConference = new ActionStand();
+        onSendSound = new ActionStand();
     }
 
     public ActionStand getOnUsers() {
@@ -59,6 +61,10 @@ public class Processor implements Processable{
 
     public ActionStand getOnExitConference() {
         return onExitConference;
+    }
+
+    public ActionStand getOnSendSound() {
+        return onSendSound;
     }
 
     @Override
@@ -96,6 +102,10 @@ public class Processor implements Processable{
             }
             case SEND_DISCONNECT_FROM_CONV:{
                 onExitConference.process(dataPackage);
+                return true;
+            }
+            case SEND_SOUND:{
+                onSendSound.process(dataPackage);
                 return true;
             }
             //And so on

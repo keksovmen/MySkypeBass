@@ -39,7 +39,6 @@ public abstract class BaseController implements Starting {
             try {
                 mainLoopAction();
             } catch (IOException e) {
-//                e.printStackTrace();
                 close();
             }
         }
@@ -67,12 +66,14 @@ public abstract class BaseController implements Starting {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         work = false;
+        if (socket.isClosed())
+            return;
         try {
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 }

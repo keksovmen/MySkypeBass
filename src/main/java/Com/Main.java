@@ -1,5 +1,6 @@
 package Com;
 
+import Com.Audio.Audio;
 import Com.GUI.Frame;
 import Com.Model.ClientModel;
 import Com.Networking.ClientController;
@@ -7,6 +8,7 @@ import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.CODE;
 import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Utility.WHO;
+import Com.Util.Resources;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -54,6 +56,7 @@ public class Main {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         AbstractDataPackagePool.init(new DataPackagePool());
+//        String callSongName = Resources.callSongName;
         try {
             SwingUtilities.invokeAndWait(() -> {
                 ClientModel model = new ClientModel();
@@ -66,6 +69,11 @@ public class Main {
                 model.registerListener(frame);
 
                 frame.registerListener(clientController.getController());
+
+                Audio audio = new Audio(clientController.getSendSoundFunction());
+
+                clientController.registerListener(audio);
+                frame.registerListener(audio);
                 //register audio part for gui action
             });
         } catch (InterruptedException | InvocationTargetException e) {

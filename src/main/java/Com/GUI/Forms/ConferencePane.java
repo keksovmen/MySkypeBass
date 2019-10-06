@@ -8,8 +8,12 @@ import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
+import Com.Util.FormatWorker;
+import Com.Util.History.History;
+import Com.Util.History.HistoryFactory;
 
 import javax.swing.*;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -42,6 +46,7 @@ class ConferencePane implements ActionsHandler {
 
     private final BiConsumer<Integer, Integer> changeVolume;
 
+    private final History<String> history;
 
     /**
      * Default constructor init
@@ -55,6 +60,8 @@ class ConferencePane implements ActionsHandler {
     ConferencePane(ActionableLogic whereToReportActions, GUIDuty closeAction) {
         conferenceMembers = new HashMap<>();
 
+        history = HistoryFactory.getStringHistory();
+
         bassChanger.setModel(new SpinnerNumberModel(1, 1, 100, 1));
 
         changeVolume = createVolumeChanger(whereToReportActions);
@@ -67,15 +74,17 @@ class ConferencePane implements ActionsHandler {
 
         messageGetter.addActionListener(e -> sendMessageAction(whereToReportActions));
 
+        messageGetter.registerKeyboardAction(e -> onUp(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
+                JComponent.WHEN_FOCUSED);
+        messageGetter.registerKeyboardAction(e -> onDown(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
+                JComponent.WHEN_FOCUSED);
     }
 
     @Override
     public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
         switch (action) {
-            case CALL_ACCEPTED: {
-                onCallAccepted(from, stringData);
-                return;
-            }
             case INCOMING_MESSAGE: {
                 if (intData == 1) // check if it suppose to go in conversation chat
                     onMessage(from, stringData);
@@ -108,26 +117,20 @@ class ConferencePane implements ActionsHandler {
         return mainPane;
     }
 
-    private void onCallAccepted(BaseUser from, String dudes) {
-        addUser(from);
-        for (BaseUser user : BaseUser.parseUsers(dudes)) {
-            addUser(user);
-        }
-    }
-
     private void onMessage(BaseUser from, String message) {
         showMessage(from, message);
     }
 
     private void sendMessageAction(ActionableLogic whereToReportActions) {
         String message = getMessage();
+        if (!sendMessage(message))
+            return;
         whereToReportActions.act(
                 BUTTONS.SEND_MESSAGE,
                 null,
                 message,
                 WHO.CONFERENCE.getCode()
         );
-        sendMessage(message);
     }
 
     private void disconnectAction(ActionableLogic whereToReportActions, GUIDuty guiDuty) {
@@ -170,8 +173,7 @@ class ConferencePane implements ActionsHandler {
         conferenceMembers.put(dude, userSettings);
 
         settingsPane.add(userSettings.getMainPane());
-        settingsPane.revalidate();
-        settingsPane.repaint();
+        repaint();
     }
 
     /**
@@ -185,8 +187,7 @@ class ConferencePane implements ActionsHandler {
         UserSettings remove = conferenceMembers.remove(dude);
         if (remove != null) {
             settingsPane.remove(remove.getMainPane());
-            settingsPane.revalidate();
-            settingsPane.repaint();
+            repaint();
         }
     }
 
@@ -218,18 +219,20 @@ class ConferencePane implements ActionsHandler {
     }
 
     private void showMessage(String from, String message) {
-        messagesDisplay.append(from + " (" + MessagePane.getTime() + "): " + message + "\n");
+        messagesDisplay.append(from + " (" + FormatWorker.getTime() + "): " + message + "\n");
     }
 
     private void showMessage(BaseUser from, String message) {
         showMessage(from.toString(), message);
     }
 
-    private void sendMessage(String message) {
+    private boolean sendMessage(String message) {
         if (message.length() == 0) {
-            return;
+            return false;
         }
+        history.push(message);
         showMessage("Me", message);
+        return true;
 
     }
 
@@ -250,6 +253,20 @@ class ConferencePane implements ActionsHandler {
         messagesDisplay.setText("");
         messageGetter.setText("");
         bassChanger.setValue(1);
+        repaint();
+    }
+
+    private void onUp() {
+        messageGetter.setText(history.getNext());
+    }
+
+    private void onDown() {
+        messageGetter.setText("");
+    }
+
+    private void repaint(){
+        mainPane.revalidate();
+        mainPane.repaint();
     }
 
     private void createUIComponents() {

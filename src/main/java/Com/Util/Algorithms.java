@@ -102,4 +102,12 @@ public class Algorithms {
         result &= 0xffff;
         return result;
     }
+
+    public static int mean(int min, int max, int percentage){
+        int difference = max - min;
+        float percent = difference / 100f;
+        float value = percent * percentage;
+        int result = (int) (min + value);
+        return result;
+    }
 }

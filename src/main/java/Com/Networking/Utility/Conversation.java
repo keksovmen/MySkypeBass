@@ -43,16 +43,15 @@ public class Conversation {
      */
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
-//        for (ServerUser user : users) {
-//            if (user.getId() != from /*&& user.isCanHear()*/) {
-////                ServerController controller = user.getController();
-////                try {
-////                    controller.getWriter().transferAudio(dataPackage);
-////                } catch (IOException e) {
-////                    removeDude(user);
-////                }
-//            }
-//        }
+        for (ServerController user : users) {
+            if (user.getId() == from)
+                continue;
+            try {
+                user.getWriter().transferAudio(dataPackage);
+            } catch (IOException ignored) {
+                //His thread will fix it
+            }
+        }
     }
 
     /**

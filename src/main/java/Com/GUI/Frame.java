@@ -1,5 +1,6 @@
 package Com.GUI;
 
+import Com.Audio.AudioSupplier;
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.GUI.Forms.AudioFormatStats;
@@ -19,11 +20,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
     public static final int WIDTH = 600;
-    public static final int HEIGHT = 300;
+    public static final int HEIGHT = 450;
 
 
     private final List<ActionableLogic> actionableLogicList;
@@ -48,7 +50,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         setIcon();
 
         frame.setContentPane(entrancePane.getPane());
-
+//        frame.setJMenuBar(produceMenuBar(this));
         frame.setVisible(true);
     }
 
@@ -126,7 +128,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     showMessage("Call was cancelled by " + from.toString());
                     break;
                 }
-                case CONNECTION_TO_SERVER_FAILED:{
+                case CONNECTION_TO_SERVER_FAILED: {
 //                    onDisconnect();
                     showInfoMessage("Disconnected from server!");
                     break;
@@ -182,6 +184,51 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         frame.setIconImage(Resources.ricardo.getImage());
     }
 
+    private JMenuBar produceMenuBar(ActionableLogic registration) {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu speakerMenu = new JMenu("Speaker");
+        JMenu micMenu = new JMenu("Microphone");
+        fillMenu(
+                speakerMenu,
+                AudioSupplier.getSourceLines(),
+                info -> registration.act(
+                        BUTTONS.CHANGE_OUTPUT,
+                        info,
+                        null,
+                        -1
+                ),
+                AudioSupplier.getDefaultForOutput()
+        );
+
+        fillMenu(
+                micMenu,
+                AudioSupplier.getTargetLines(),
+                info -> registration.act(
+                        BUTTONS.CHANGE_INPUT,
+                        info,
+                        null,
+                        -1
+                ),
+                AudioSupplier.getDefaultForInput()
+        );
+
+        menuBar.add(speakerMenu);
+        menuBar.add(micMenu);
+        return menuBar;
+    }
+
+    private <T> void fillMenu(JMenu menu, List<T> data, Consumer<T> action, T defaultForSelect) {
+        ButtonGroup group = new ButtonGroup();
+        for (T datum : data) {
+            JRadioButtonMenuItem button = new JRadioButtonMenuItem(datum.toString());
+            button.addActionListener(e -> action.accept(datum));
+            menu.add(button);
+            group.add(button);
+            if (datum.equals(defaultForSelect))
+                button.setSelected(true);
+        }
+    }
+
     private void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(
                 frame,
@@ -225,11 +272,13 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
 
     private void onConnected() {
         frame.setContentPane(purposePane.getPane());
+        frame.setJMenuBar(produceMenuBar(this));
         repaint();
     }
 
     private void onDisconnect() {
         frame.setContentPane(entrancePane.getPane());
+        frame.setJMenuBar(null);
         repaint();
     }
 

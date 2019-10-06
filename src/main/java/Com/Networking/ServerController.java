@@ -77,6 +77,7 @@ public class ServerController extends BaseController {
             writer.writeId(id);
 
             me = new ServerUser(name, id);
+            Thread.currentThread().setName(Thread.currentThread().getName() + id);
 //            server.registerController(me);
 
         } catch (IOException e) {
@@ -101,6 +102,7 @@ public class ServerController extends BaseController {
         processor.getOnCallCancel().setListener(Handlers.onTransfer(this));
         processor.getOnCallDeny().setListener(Handlers.onTransfer(this));
         processor.getOnExitConference().setListener(Handlers.onExitConversation(this));
+        processor.getOnSendSound().setListener(Handlers.onSendSound(this));
 
         server.registerController(this);
         sendUsers();
@@ -289,6 +291,15 @@ public class ServerController extends BaseController {
                 if (conversation == null)
                     return;
                 conversation.removeDude(current);
+            };
+        }
+
+        private static Consumer<AbstractDataPackage> onSendSound(ServerController current){
+            return dataPackage -> {
+                Conversation conversation = current.getMe().getConversation();
+                if (conversation == null)
+                    return;
+                conversation.sendSound(dataPackage, current.getId());
             };
         }
 

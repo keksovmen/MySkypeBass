@@ -1,4 +1,6 @@
-package Com.Audio;
+package Com.Audio.Output;
+
+import Com.Util.Resources;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.SourceDataLine;
@@ -8,7 +10,7 @@ import java.io.IOException;
  * Contains static methods for play audio
  */
 
-class Player {
+public class Player {
 
     private Player() {
     }
@@ -23,8 +25,8 @@ class Player {
      * @throws IOException if can't read from input stream
      */
 
-    static void playLoop(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
-        byte[] data = new byte[AudioClient.CAPTURE_SIZE];
+    public static void playLoop(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
+        byte[] data = new byte[Resources.CAPTURE_SIZE];
         int amount;
         int j;
         int frameSize = sourceDataLine.getFormat().getFrameSize();
@@ -49,8 +51,8 @@ class Player {
      * @throws IOException if can't read from file
      */
 
-    static int playOnce(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
-        byte[] data = new byte[AudioClient.CAPTURE_SIZE];
+    public static int playOnce(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
+        byte[] data = new byte[Resources.CAPTURE_SIZE];
         int frameSize = sourceDataLine.getFormat().getFrameSize();
         int amount = inputStream.read(data);
         if (amount == -1) {

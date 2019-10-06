@@ -18,15 +18,16 @@ public enum ACTIONS {
     DISCONNECTED, // no data
     OUT_CALL, // BaseUser who you calling to
     INCOMING_CALL, // BaseUser who called you string data is dudes in conversation with him
-    CALL_ACCEPTED, // BaseUser main dude string ochres in a conversation, int amount of users in the conversation
+    CALL_ACCEPTED, // no info, all dudes will be send through ADD_TO_CONVERSATION
     CALL_DENIED, // BaseUser main dude
     CALL_CANCELLED, // BaseUser main dude
     CALLED_BUT_BUSY, // BaseUser is the dude who called
     ALREADY_CALLING_SOMEONE, // no data
     BOTH_IN_CONVERSATION, // user who you called
     EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
-    REMOVE_DUDE_FROM_CONVERSATION, // user is the dude
+    REMOVE_DUDE_FROM_CONVERSATION, // user is the dude, int his id
     ADD_DUDE_TO_CONVERSATION, // user is the dude
+    INCOMING_SOUND, // byte [] sound, int id of the dude who sent it
 
 
 
