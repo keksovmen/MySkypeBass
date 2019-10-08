@@ -8,6 +8,7 @@ import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
 import Com.Util.FormatWorker;
+import Com.Util.Resources;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,6 +46,10 @@ public class EntrancePane implements ActionsHandler {
                         GUIActions.CREATE_SERVER_PANE,
                         null
                 ));
+
+        nameField.setText(Resources.getDefaultName());
+        ipField.setText(Resources.getDefaultIP());
+        portField.setText(Resources.getDefaultPort());
     }
 
     @Override

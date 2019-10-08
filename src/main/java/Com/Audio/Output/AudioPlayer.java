@@ -1,6 +1,8 @@
 package Com.Audio.Output;
 
 import Com.Audio.AudioSupplier;
+import Com.Model.BaseUnEditableModel;
+import Com.Networking.Utility.BaseUser;
 import Com.Util.Algorithms;
 import Com.Util.Checker;
 import Com.Util.Resources;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playable {
@@ -34,10 +37,9 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
         callNotificator.changeOutput(outputInfo);
     }
 
-    @Override
-    public synchronized void addOutput(int id) {
-        if (outputs.containsKey(id))
-            return;
+    private synchronized void addOutput(int id) {
+//        if (outputs.containsKey(id))
+//            return;
         try {
             outputs.put(id, AudioSupplier.getOutput(outputInfo));
         } catch (LineUnavailableException e) {
@@ -52,8 +54,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
         }
     }
 
-    @Override
-    public synchronized void removeOutput(int id) {
+    private synchronized void removeOutput(int id) {
         SourceDataLine remove = outputs.remove(id);
         if (remove == null)
             return;
@@ -81,23 +82,23 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     @Override
     public synchronized void playSound(int from, byte[] data) {
         SourceDataLine sourceDataLine = outputs.get(from);
-        if (sourceDataLine == null){
-            addOutput(from);
-            sourceDataLine = outputs.get(from);
+        if (sourceDataLine == null) {
+            //Just ignore it until update is occurs
+            return;
 //            throw new NullPointerException("There is no such output " + from);
-            }
+        }
         playData(sourceDataLine, data);
     }
 
     @Override
     public void playMessage() {
-        int track = ThreadLocalRandom.current().nextInt(0, Resources.messagePath.size());
+        int track = ThreadLocalRandom.current().nextInt(0, Resources.getMessagePaths().size());
         playMessage(track);
     }
 
     @Override
     public void playMessage(int track) {
-        List<String> messagePath = Resources.messagePath;
+        List<String> messagePath = Resources.getMessagePaths();
         if (messagePath.size() <= track || track < 0) {
             playMessage(); //Play random one
             return;
@@ -126,10 +127,32 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
         outputs.clear();
     }
 
+    @Override
+    public synchronized void update(BaseUnEditableModel model) {
+        Set<BaseUser> conversation = model.getConversation();
+        Map<Integer, BaseUser> userMap = model.getUserMap();
+
+        Map<Integer, SourceDataLine> tmp = new HashMap<>();
+
+        outputs.forEach((integer, sourceDataLine) -> {
+            if (conversation.contains(userMap.get(integer)))
+                tmp.put(integer, sourceDataLine);
+            else
+                sourceDataLine.close();
+        });
+        outputs.clear();
+        outputs.putAll(tmp);
+
+        conversation.forEach(user -> {
+            if (!outputs.containsKey(user.getId()))
+                addOutput(user.getId());
+        });
+    }
+
     /**
      * LISTEN UP FOLKS:
      * IF YOU SWAP 2 LINES - SourceDataLine and AudioInputStream
-     * YOU WILL GET EXCEPTION INT AudioSupplier.getOutputForFile();
+     * YOU WILL GET EXCEPTION IN AudioSupplier.getOutputForFile();
      * SOMEHOW AUDIO SYSTEM RUINS PREVIOUS INPUT STREAM AND IT COUNTS AS INVALID
      * BE AWARE
      *
@@ -138,7 +161,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
 
     private void playMessageSound(int track) {
         try (BufferedInputStream inputStream = new BufferedInputStream(
-                Checker.getCheckedInput(Resources.messagePath.get(track)));
+                Checker.getCheckedInput(Resources.getMessagePaths().get(track)));
              SourceDataLine sourceDataLine = AudioSupplier.getOutputForFile(outputInfo, inputStream);
              AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream)) {
 

@@ -25,8 +25,7 @@ public enum ACTIONS {
     ALREADY_CALLING_SOMEONE, // no data
     BOTH_IN_CONVERSATION, // user who you called
     EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
-    REMOVE_DUDE_FROM_CONVERSATION, // user is the dude, int his id
-    ADD_DUDE_TO_CONVERSATION, // user is the dude
+    REMOVE_DUDE_CAUSE_IS_MISSING, // user is the dude, int his id
     INCOMING_SOUND, // byte [] sound, int id of the dude who sent it
 
 

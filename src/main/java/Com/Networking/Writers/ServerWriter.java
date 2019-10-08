@@ -4,6 +4,7 @@ import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.CODE;
 import Com.Networking.Utility.WHO;
+import Com.Util.Resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,20 +32,12 @@ public class ServerWriter extends BaseWriter {
      * but half a second is sound package so need to make it more reasonable
      */
 
-    private static final int LOCK_TIME = 300; //default 300
-
-    /*
-        Reads LOCK_TIME from property map
-        You can change it there
-     */
-
-//    static {
-//        LOCK_TIME = Integer.parseInt(Server.serverProp.getProperty("lock_time"));
-//    }
+    private final int LOCK_TIME; //default 300
 
     public ServerWriter(OutputStream outputStream, int bufferSize) {
         super(outputStream, bufferSize);
         lock = new ReentrantLock();
+        LOCK_TIME = Resources.getLockTime();
     }
 
 

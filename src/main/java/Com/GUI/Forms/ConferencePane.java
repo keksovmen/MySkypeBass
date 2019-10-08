@@ -2,12 +2,10 @@ package Com.GUI.Forms;
 
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
+import Com.Model.BaseUnEditableModel;
 import Com.Networking.Utility.BaseUser;
 import Com.Networking.Utility.WHO;
-import Com.Pipeline.ACTIONS;
-import Com.Pipeline.ActionableLogic;
-import Com.Pipeline.ActionsHandler;
-import Com.Pipeline.BUTTONS;
+import Com.Pipeline.*;
 import Com.Util.FormatWorker;
 import Com.Util.History.History;
 import Com.Util.History.HistoryFactory;
@@ -16,6 +14,7 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 /**
@@ -24,7 +23,7 @@ import java.util.function.BiConsumer;
  * or mute yourself
  */
 
-class ConferencePane implements ActionsHandler {
+class ConferencePane implements UpdaterAndHandler {
     private JSpinner bassChanger;
     private JButton muteButton;
     private JPanel settingsPane;
@@ -94,14 +93,6 @@ class ConferencePane implements ActionsHandler {
                 clear();
                 return;
             }
-            case REMOVE_DUDE_FROM_CONVERSATION: {
-                removeUser(from);
-                return;
-            }
-            case ADD_DUDE_TO_CONVERSATION: {
-                addUser(from);
-                return;
-            }
             case DISCONNECTED: {
                 clear();
                 return;
@@ -111,6 +102,28 @@ class ConferencePane implements ActionsHandler {
                 return;
             }
         }
+    }
+
+    @Override
+    public void update(BaseUnEditableModel model) {
+        Set<BaseUser> conversation = model.getConversation();
+
+        Map<BaseUser, UserSettings> tmp = new HashMap<>();
+
+        conferenceMembers.forEach((user, userSettings) -> {
+            if (!conversation.contains(user))
+                tmp.put(user, userSettings);
+        });
+
+        tmp.keySet().forEach(this::removeUser);
+        tmp.clear();
+
+        conversation.forEach(user -> {
+            if (!conferenceMembers.containsKey(user))
+                addUser(user);
+        });
+
+        repaint();
     }
 
     JPanel getMainPane() {

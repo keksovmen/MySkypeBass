@@ -1,9 +1,8 @@
 package Com.GUI.Forms;
 
-import Com.Audio.AudioSupplier;
 import Com.GUI.Forms.ActionHolder.GUIActions;
 import Com.GUI.Forms.ActionHolder.GUIDuty;
-import Com.Model.UnEditableModel;
+import Com.Model.BaseUnEditableModel;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
@@ -16,10 +15,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 /**
  * Handles messaging, call pane
@@ -96,14 +93,16 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
+                    if (e.isShiftDown()) {
+                        onSendMessage();
+                        e.consume();
+                        return;
+                    }
                     if (e.getClickCount() == 2) {
-                        if (e.isControlDown()){
-                            onSendMessage();
-                        }else {
-                            call(whereToReportActions);
-                        }
+                        call(whereToReportActions);
                     }
                 }
+                e.consume();
 
             }
         });
@@ -111,15 +110,18 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     }
 
     @Override
-    public void update(UnEditableModel model) {
+    public void update(BaseUnEditableModel model) {
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
         //Go through tabs and set online or offline icons, except CONFERENCE
         changeIconsOfTabs();
 
+        conferencePane.update(model);
+
         mainPane.revalidate();
         mainPane.repaint();
+
     }
 
     @Override
@@ -247,7 +249,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         usersList.setComponentPopupMenu(popupMenu);
     }
 
-    private void onSendMessage(){
+    private void onSendMessage() {
         if (!selected())
             return;
         BaseUser selected = getSelected();
@@ -257,13 +259,13 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         if (isCashed(selected)) {
             callTable.addTab(
                     selected.toString(),
-                    Resources.onlineIcon,
+                    Resources.getOnlineIcon(),
                     tabs.get(selected).getMainPane()
             );
         } else {
             callTable.addTab(
                     selected.toString(),
-                    Resources.onlineIcon,
+                    Resources.getOnlineIcon(),
                     createPane(selected).getMainPane());
         }
     }
@@ -274,7 +276,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 if (!model.contains(user)) {
                     callTable.setIconAt(
                             callTable.indexOfTab(user.toString()),
-                            Resources.offlineIcon
+                            Resources.getOfflineIcon()
                     );
                 }
             }
@@ -305,7 +307,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     private void showConversationPane() {
         callTable.addTab(
                 CONVERSATION_TAB_NAME,
-                Resources.conversationIcon,
+                Resources.getConversationIcon(),
                 conferencePane.getMainPane());
         callTable.revalidate();
         callTable.repaint();
@@ -345,11 +347,11 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
             } else {
                 if (isCashed(from)) {
                     MessagePane messagePane = tabs.get(from);
-                    callTable.addTab(from.toString(), Resources.onlineIcon, messagePane.getMainPane());
+                    callTable.addTab(from.toString(), Resources.getOnlineIcon(), messagePane.getMainPane());
                     messagePane.showMessage(message, false);
                 } else {
                     MessagePane pane = createPane(from);
-                    callTable.addTab(from.toString(), Resources.onlineIcon, pane.getMainPane());
+                    callTable.addTab(from.toString(), Resources.getOnlineIcon(), pane.getMainPane());
                     pane.showMessage(message, false);
                 }
             }

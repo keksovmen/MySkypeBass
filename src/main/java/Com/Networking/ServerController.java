@@ -118,9 +118,9 @@ public class ServerController extends BaseController {
         }
     }
 
-    private void onDudeIsMissing(int whoIsMissing) {
+    private void onDudeIsMissing() {
         try {
-            writer.writeDudeIsOffline(WHO.SERVER.getCode(), getId(), String.valueOf(whoIsMissing));
+            writer.writeRemoveFromUserList(WHO.SERVER.getCode(), getId());
         } catch (IOException e) {
             close();
         }
@@ -176,7 +176,7 @@ public class ServerController extends BaseController {
                     receiver.writer.transferPacket(dataPackage);
                 } catch (IOException e) {
                     //tell that dude is offline
-                    current.onDudeIsMissing(to);
+                    current.onDudeIsMissing();
                 }
             };
         }
@@ -213,7 +213,7 @@ public class ServerController extends BaseController {
                         receiver.writer.transferPacket(dataPackage);
                     } catch (IOException e) {
                         //tell that dude is offline
-                        current.onDudeIsMissing(to);
+                        current.onDudeIsMissing();
                     }
                 } finally {
                     release.run();
@@ -306,7 +306,7 @@ public class ServerController extends BaseController {
         private static ServerController checkedGet(ServerController current, int who) {
             ServerController receiver = current.server.getController(who);
             if (receiver == null) {
-                current.onDudeIsMissing(who);
+                current.onDudeIsMissing();
             }
             return receiver;
         }

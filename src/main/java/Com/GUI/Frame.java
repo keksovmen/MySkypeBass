@@ -7,8 +7,8 @@ import Com.GUI.Forms.AudioFormatStats;
 import Com.GUI.Forms.CallDialog;
 import Com.GUI.Forms.EntrancePane;
 import Com.GUI.Forms.MultiplePurposePane;
-import Com.Model.Registration;
-import Com.Model.UnEditableModel;
+import Com.Model.BaseUnEditableModel;
+import Com.Util.Registration;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
@@ -55,7 +55,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
     }
 
     @Override
-    public void update(UnEditableModel model) {
+    public void update(BaseUnEditableModel model) {
         SwingUtilities.invokeLater(() -> {
             purposePane.update(model);
         });
@@ -181,7 +181,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
     }
 
     private void setIcon() {
-        frame.setIconImage(Resources.ricardo.getImage());
+        frame.setIconImage(Resources.getMainIcon().getImage());
     }
 
     private JMenuBar produceMenuBar(ActionableLogic registration) {

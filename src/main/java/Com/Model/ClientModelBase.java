@@ -1,7 +1,7 @@
 package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.ClientUser;
+import Com.Util.Registration;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -11,7 +11,7 @@ import java.util.Set;
  * And can register and remove them
  */
 
-public class ClientModel extends UnEditableModel implements Registration<Updater> {
+public class ClientModelBase extends BaseUnEditableModel implements Registration<Updater>, ChangableModel{
 
     private final Set<Updater> listeners;
 
@@ -19,7 +19,7 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * LinkedHashSet because want order dependency, just in case
      */
 
-    public ClientModel() {
+    public ClientModelBase() {
         listeners = new LinkedHashSet<>();//Because of put in order
     }
 
@@ -41,7 +41,8 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param users to put
      */
 
-    public synchronized void updateModel(BaseUser users[]) {
+    @Override
+    public synchronized void addToModel(BaseUser users[]) {
         userMap.clear();
         for (BaseUser user : users) {
             userMap.put(user.getId(), user);
@@ -55,6 +56,7 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param user the dude
      */
 
+    @Override
     public synchronized void addToModel(BaseUser user) {
         userMap.put(user.getId(), user);
         notifyListeners();
@@ -66,26 +68,52 @@ public class ClientModel extends UnEditableModel implements Registration<Updater
      * @param user the dude
      */
 
+    @Override
     public synchronized void removeFromModel(BaseUser user) {
         removeFromModel(user.getId());
     }
 
+    @Override
     public synchronized void removeFromModel(int user) {
         BaseUser remove = userMap.remove(user);
-        if (remove != null)
-            notifyListeners();
-    }
-
-    public synchronized void clear(){
-        if (!userMap.isEmpty()) {
-            userMap.clear();
+        if (remove != null) {
+            conversation.remove(remove);
             notifyListeners();
         }
     }
 
-//    public void setMe(ClientUser me){
-//        this.me = me;
-//    }
+    @Override
+    public synchronized void clear(){
+        conversation.clear();
+        if (!userMap.isEmpty()) {
+            userMap.clear();
+            notifyListeners();
+        }
+
+    }
+
+
+    @Override
+    public synchronized void addToConversation(BaseUser dude){
+        if (conversation.add(dude)) {
+            notifyListeners();
+        }
+    }
+
+    @Override
+    public synchronized void removeFromConversation(BaseUser dude){
+        if (conversation.remove(dude)) {
+            notifyListeners();
+        }
+    }
+
+    @Override
+    public synchronized void clearConversation(){
+        if (conversation.isEmpty())
+            return;
+        conversation.clear();
+        notifyListeners();
+    }
 
     private void notifyListeners() {
         listeners.forEach(updater -> updater.update(this));

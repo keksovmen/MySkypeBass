@@ -26,7 +26,7 @@ public class Player {
      */
 
     public static void playLoop(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
-        byte[] data = new byte[Resources.CAPTURE_SIZE];
+        byte[] data = new byte[Resources.getAudioFragmentSize()];
         int amount;
         int j;
         int frameSize = sourceDataLine.getFormat().getFrameSize();
@@ -52,7 +52,7 @@ public class Player {
      */
 
     public static int playOnce(AudioInputStream inputStream, SourceDataLine sourceDataLine) throws IOException {
-        byte[] data = new byte[Resources.CAPTURE_SIZE];
+        byte[] data = new byte[Resources.getAudioFragmentSize()];
         int frameSize = sourceDataLine.getFormat().getFrameSize();
         int amount = inputStream.read(data);
         if (amount == -1) {

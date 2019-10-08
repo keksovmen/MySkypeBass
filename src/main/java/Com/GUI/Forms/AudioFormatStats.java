@@ -5,6 +5,7 @@ import Com.GUI.Forms.ActionHolder.GUIDuty;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
 import Com.Util.FormatWorker;
+import Com.Util.Resources;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
@@ -48,7 +49,10 @@ public class AudioFormatStats {
         buttonCancel.addActionListener(e -> onCancel(actionForGui));
 
         a44100RadioButton.setSelected(true);
-        customRate.setText(a44100RadioButton.getText());
+//        customRate.setText(a44100RadioButton.getText());
+
+        customRate.setText(Resources.getDefaultRate());
+        textFieldPort.setText(Resources.getDefaultPort());
 
         // call onCancel() on ESCAPE
 //        mainPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);

@@ -8,7 +8,6 @@ import Com.Util.Resources;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +20,7 @@ public class Capture implements DefaultMic, ChangeableInput {
 
     private final Consumer<byte[]> sendData;
 
-    private TargetDataLine mic = null;
+    private volatile TargetDataLine mic = null;
     private Mixer.Info mixer = null;
 
     private volatile boolean muted = false;
@@ -37,7 +36,7 @@ public class Capture implements DefaultMic, ChangeableInput {
     }
 
     @Override
-    public synchronized void changeInput(Mixer.Info mixer) {
+    public void changeInput(Mixer.Info mixer) {
         if (mixer == null /*&& this.mixer == null*/)
             mixer = AudioSupplier.getDefaultForInput();
         this.mixer = mixer;
@@ -72,8 +71,15 @@ public class Capture implements DefaultMic, ChangeableInput {
             return false;
         work = true;
         muted = false;
-        if (mic == null)
-            return false;
+        if (mic == null || !mic.isOpen()) {
+            try {
+                mic = AudioSupplier.getInput(mixer);
+            } catch (LineUnavailableException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         executorService = getDefaultOne();
         new Thread(() -> {
             while (work) {
@@ -106,6 +112,7 @@ public class Capture implements DefaultMic, ChangeableInput {
         if (executorService != null && !executorService.isShutdown())
             executorService.shutdown();
         mic.close();
+        bassLvl = 1f;
         this.notify();
     }
 
@@ -114,7 +121,7 @@ public class Capture implements DefaultMic, ChangeableInput {
         changeInput(null);
     }
 
-    private synchronized byte[] readFromMic() {
+    private byte[] readFromMic() {
         byte[] bytes = new byte[AudioSupplier.getMicCaptureSize()];
         mic.read(bytes, 0, bytes.length);
         return bytes;
@@ -135,6 +142,6 @@ public class Capture implements DefaultMic, ChangeableInput {
                 1,
                 30,
                 TimeUnit.SECONDS,
-                new ArrayBlockingQueueWithWait<>(Resources.QUEUE_SIZE));
+                new ArrayBlockingQueueWithWait<>(Resources.getMicQueueSize()));
     }
 }

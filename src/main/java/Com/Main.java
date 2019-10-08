@@ -2,13 +2,12 @@ package Com;
 
 import Com.Audio.Audio;
 import Com.GUI.Frame;
-import Com.Model.ClientModel;
+import Com.Model.ClientModelBase;
 import Com.Networking.ClientController;
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Protocol.CODE;
 import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Utility.WHO;
-import Com.Util.Resources;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -17,7 +16,7 @@ import java.lang.reflect.InvocationTargetException;
 //import Com.Audio.AudioClient;
 //import Com.GUI.ActionsBox;
 //import Com.GUI.Forms.MainFrame;
-//import Com.Model.ClientModel;
+//import Com.Model.ClientModelBase;
 //import Com.Networking.ClientController;
 //import Com.Networking.Protocol.AbstractDataPackage;
 //import Com.Networking.Protocol.AbstractDataPackagePool;
@@ -51,7 +50,6 @@ import java.lang.reflect.InvocationTargetException;
 public class Main {
 
 
-
     public static void main(String[] args) {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
@@ -59,7 +57,7 @@ public class Main {
 //        String callSongName = Resources.callSongName;
         try {
             SwingUtilities.invokeAndWait(() -> {
-                ClientModel model = new ClientModel();
+                ClientModelBase model = new ClientModelBase();
                 ClientController clientController = new ClientController(model);
 
                 Frame frame = new Frame();
@@ -74,6 +72,7 @@ public class Main {
 
                 clientController.registerListener(audio);
                 frame.registerListener(audio);
+                model.registerListener(audio);
                 //register audio part for gui action
             });
         } catch (InterruptedException | InvocationTargetException e) {
@@ -101,7 +100,7 @@ public class Main {
 //        users = new HashMap<>();
 //        callDialog = new Call();
 //        actionsBox = new ActionsBox();
-//        controller = new ClientController(null, new ClientModel());
+//        controller = new ClientController(null, new ClientModelBase());
 //
 //        initialInitForActions();
 //        EventQueue.invokeLater(() -> {

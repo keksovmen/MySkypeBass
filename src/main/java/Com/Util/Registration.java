@@ -1,4 +1,4 @@
-package Com.Model;
+package Com.Util;
 
 public interface Registration<T> {
 

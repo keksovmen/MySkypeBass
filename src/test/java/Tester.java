@@ -1,11 +1,10 @@
-import Com.Model.ClientModel;
+import Com.Model.ClientModelBase;
 import Com.Networking.ClientController;
 import Com.Networking.Processors.ClientProcessor;
 import Com.Networking.Protocol.*;
 import Com.Networking.Readers.BaseReader;
 import Com.Networking.Server;
 import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.ClientUser;
 import Com.Networking.Utility.WHO;
 import Com.Util.Algorithms;
 
@@ -213,11 +212,11 @@ public class Tester {
         System.out.println("Creating ClientResponder controller");
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         List<ClientController> clientControllers = new ArrayList<>();
-        ClientModel clientModel = new ClientModel();
+        ClientModelBase clientModel = new ClientModelBase();
 //        clientModel.setMe(new ClientUser("Unique", 0));
-        ClientModel clientModel1 = new ClientModel();
+        ClientModelBase clientModel1 = new ClientModelBase();
 //        clientModel1.setMe(new ClientUser("Vasa", 0));
-        ClientModel clientModel2 = new ClientModel();
+        ClientModelBase clientModel2 = new ClientModelBase();
 //        clientModel2.setMe(new ClientUser("Loh", 0));
         ClientProcessor processor = new ClientProcessor();
         ClientController clientController = new ClientController(clientModel);
@@ -225,8 +224,7 @@ public class Tester {
         assert (clientController.connect(
                 "",
                 "127.0.0.1",
-                8188,
-                8192));
+                8188));
         assert clientController.start("ClientResponder controller");
         for (int i = 0; i < 20; i++) {
             ClientController clientController1 = new ClientController(clientModel1);
@@ -238,8 +236,7 @@ public class Tester {
                 assert clientController1.connect(
                         "",
                         "127.0.0.1",
-                        8188,
-                        8192);
+                        8188);
                 assert clientController1.start("ClientResponder controller");
 //                } catch (IOException e) {
 //                    e.printStackTrace();
@@ -252,8 +249,7 @@ public class Tester {
                 assert clientController2.connect(
                         "",
                         "127.0.0.1",
-                        8188,
-                        8192);
+                        8188);
                 assert clientController2.start("ClientResponder controller");
                 clientController2.close();
 //                } catch (IOException e) {
@@ -289,7 +285,7 @@ public class Tester {
 
         server.start("Server");
 
-        ClientModel model = new ClientModel();
+        ClientModelBase model = new ClientModelBase();
 //        model.setMe(new ClientUser("Test", WHO.NO_NAME.getCode()));
 
         ClientProcessor processor = new ClientProcessor();
@@ -310,7 +306,7 @@ public class Tester {
 
         System.out.println("Connecting");
 
-        assert clientController.connect("","127.0.0.1", 8188, 8192);
+        assert clientController.connect("","127.0.0.1", 8188);
         assert clientController.start("ClientResponder controller");
         ExecutorService service = Executors.newFixedThreadPool(10);
 
@@ -320,7 +316,7 @@ public class Tester {
 
         for (int i = 0; i < 10; i++) {
 //            service.execute(() -> {
-            ClientModel tmpModel = new ClientModel();
+            ClientModelBase tmpModel = new ClientModelBase();
 //            tmpModel.setMe(new ClientUser("Pidr", WHO.NO_NAME.getCode()));
 
             ClientProcessor tmpProcessor = new ClientProcessor();
@@ -329,7 +325,7 @@ public class Tester {
             controllers.add(tmpClientController);
 
             service.execute(() -> {
-                assert tmpClientController.connect("","127.0.0.1", 8188, 8192);
+                assert tmpClientController.connect("","127.0.0.1", 8188);
                 tmpClientController.start("Pidr");
             });
 
@@ -365,7 +361,7 @@ public class Tester {
         List<ClientController> controllers = Collections.synchronizedList(new ArrayList<>());
         for (int i = 0; i < 5; i++) {
             executorService.execute(() -> {
-                ClientModel clientModel = new ClientModel();
+                ClientModelBase clientModel = new ClientModelBase();
 //                clientModel.setMe(new ClientUser("DUMMY", 0));
                 ClientProcessor clientProcessor = new ClientProcessor();
                 ClientController clientController = new ClientController(clientModel);
@@ -373,8 +369,7 @@ public class Tester {
                 clientController.connect(
                         "",
                         "127.0.0.1",
-                        8188,
-                        8192
+                        8188
                 );
                 clientController.start("ClientResponder controller test");
             });

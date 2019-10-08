@@ -7,6 +7,6 @@ public class HistoryFactory {
     private HistoryFactory(){}
 
     public static History<String> getStringHistory(){
-        return new StringHistory(Resources.historySize);
+        return new StringHistory(Resources.getHistorySize());
     }
 }

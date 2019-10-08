@@ -4,11 +4,12 @@ import Com.Audio.Input.Capture;
 import Com.Audio.Input.DefaultMic;
 import Com.Audio.Output.AudioPlayer;
 import Com.Audio.Output.Playable;
+import Com.Model.BaseUnEditableModel;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
-import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
+import Com.Pipeline.UpdaterAndHandler;
 import Com.Util.FormatWorker;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-public class Audio implements ActionsHandler, ActionableLogic {
+public class Audio implements UpdaterAndHandler, ActionableLogic {
 
     private final Playable player;
     private final DefaultMic mic;
@@ -51,6 +52,10 @@ public class Audio implements ActionsHandler, ActionableLogic {
                 player.playCall();
                 return;
             }
+            case OUT_CALL: {
+                player.playCall();
+                return;
+            }
             case CALL_ACCEPTED: {
                 onCallAccepted();
                 return;
@@ -68,14 +73,6 @@ public class Audio implements ActionsHandler, ActionableLogic {
                 mic.init();
                 return;
             }
-            case REMOVE_DUDE_FROM_CONVERSATION: {
-                player.removeOutput(intData);
-                return;
-            }
-            case ADD_DUDE_TO_CONVERSATION: {
-                player.addOutput(from.getId());
-                return;
-            }
             case INCOMING_SOUND: {
                 player.playSound(intData, bytesData);
                 return;
@@ -88,7 +85,16 @@ public class Audio implements ActionsHandler, ActionableLogic {
                 onExitConversation();
                 return;
             }
+            case BOTH_IN_CONVERSATION: {
+                dropCallAction();
+                return;
+            }
         }
+    }
+
+    @Override
+    public void update(BaseUnEditableModel model) {
+        player.update(model);
     }
 
     @Override
@@ -100,10 +106,6 @@ public class Audio implements ActionsHandler, ActionableLogic {
             }
             case CALL_DENIED: {
                 dropCallAction();
-                break;
-            }
-            case CALL: {
-                player.playCall();
                 break;
             }
             case EXIT_CONFERENCE: {
@@ -137,16 +139,11 @@ public class Audio implements ActionsHandler, ActionableLogic {
     }
 
     private void onCallAccepted(/*BaseUser dude, String others*/) {
-//        player.addOutput(dude.getId());
-//        for (BaseUser baseUser : BaseUser.parseUsers(others)) {
-//            player.addOutput(baseUser.getId());
-//        }
         dropCallAction();
         mic.start("Microphone capture");
     }
 
-    private void onExitConversation(){
-        player.close();
+    private void onExitConversation() {
         mic.close();
     }
 }

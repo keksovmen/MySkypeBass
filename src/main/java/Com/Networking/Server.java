@@ -2,6 +2,7 @@ package Com.Networking;
 
 import Com.Networking.Protocol.AbstractDataPackagePool;
 import Com.Networking.Utility.ServerUser;
+import Com.Util.Resources;
 import Com.Util.Starting;
 import Com.Networking.Utility.WHO;
 import Com.Util.Checker;
@@ -24,27 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 public class Server implements Starting, Executor {
-
-    public static final Properties serverProp;
-
-    /*
-      Load of default properties for server parts
-     */
-
-    static {
-        Properties defaultProp = new Properties();
-        defaultProp.setProperty("lock_time", "300");
-        defaultProp.setProperty("bufferSize", "32");
-        serverProp = new Properties(defaultProp);
-        try {
-            InputStream resourceAsStream = Checker.getCheckedInput("/properties/Server.properties.properties");
-            serverProp.load(resourceAsStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-            //Ignore because you already have default one
-        }
-
-    }
 
     /**
      * The socket
@@ -84,7 +64,7 @@ public class Server implements Starting, Executor {
 
     private final ExecutorService executor;
 
-    private final int BUFFER_SIZE_FOR_IO = 32 * 1024;
+    private final int BUFFER_SIZE_FOR_IO;
 
 //    private final int usersAmount;
 
@@ -124,6 +104,8 @@ public class Server implements Starting, Executor {
                 30,
                 TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>());
+
+        BUFFER_SIZE_FOR_IO = Resources.getBufferSize() * 1024;
 //        this.usersAmount = usersAmount;
 //        controllerList = new ArrayList<>(usersAmount);
     }

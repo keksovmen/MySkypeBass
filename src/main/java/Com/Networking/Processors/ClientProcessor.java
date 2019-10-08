@@ -21,6 +21,7 @@ public class ClientProcessor extends Processor implements Executor, Closeable {
     private ActionStand onBothInConversation;
     private ActionStand onRemoveDudeFromConversation;
     private ActionStand onAddDudeToConversation;
+
     /**
      * Instead of its own thread you have
      * SINGLE THREAD EXECUTOR for not prone purposes

@@ -17,7 +17,7 @@ public class Test {
 //        List<ClientController> controllers = new ArrayList<>(size);
 //        CountDownLatch countDownLatch = new CountDownLatch(1);
 //        for (int i = 0; i < size ; i++) {
-//            ClientController clientController = new ClientController(null, new ClientModel());
+//            ClientController clientController = new ClientController(null, new ClientModelBase());
 //            controllers.add(clientController);
 ////            clientController.getProcessor().setListener(dataPackage -> {
 ////                if (dataPackage.getHeader().getCode().equals(CODE.SEND_CALL)){

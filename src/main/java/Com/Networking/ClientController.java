@@ -1,8 +1,7 @@
 package Com.Networking;
 
 import Com.Audio.AudioSupplier;
-import Com.Model.ClientModel;
-import Com.Model.Registration;
+import Com.Model.ChangableModel;
 import Com.Networking.Processors.ClientProcessor;
 import Com.Networking.Processors.Processable;
 import Com.Networking.Protocol.AbstractDataPackage;
@@ -18,6 +17,8 @@ import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
 import Com.Util.FormatWorker;
+import Com.Util.Registration;
+import Com.Util.Resources;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.util.function.Consumer;
 public class ClientController extends BaseController implements Registration<ActionsHandler>, ActionsHandler {
 
     private final ClientProcessor processor;
-    private final ClientModel model;
+    private final ChangableModel model;
     private final ClientResponder clientResponder;
 
     private final List<ActionsHandler> handlerList;
@@ -44,7 +45,7 @@ public class ClientController extends BaseController implements Registration<Act
      * and handle networking
      */
 
-    public ClientController(ClientModel model) {
+    public ClientController(ChangableModel model) {
         this.model = model;
         processor = new ClientProcessor();
         clientResponder = new ClientResponder();
@@ -54,14 +55,12 @@ public class ClientController extends BaseController implements Registration<Act
     /**
      * Try to establish a TCP connection
      *
-     * @param hostName   ip address
-     * @param port       to connect
-     * @param bufferSize buffer size for reader and writer
+     * @param hostName ip address
+     * @param port     to connect
      * @return true if connected to the server
      */
 
-    public boolean connect(String myName, final String hostName,
-                           final int port, final int bufferSize) {
+    public boolean connect(String myName, final String hostName, final int port) {
         if (socket != null &&
                 !socket.isClosed()) {
             throw new IllegalStateException("ClientResponder's socket is already opened. " +
@@ -76,6 +75,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         try {
             socket.connect(new InetSocketAddress(hostName, port), 7_000); // timeOut as property
+            int bufferSize = Resources.getBufferSize() * 1024;
             writer = new ClientWriter(socket.getOutputStream(), bufferSize);
             reader = new BaseReader(socket.getInputStream(), bufferSize);
         } catch (IOException e) {
@@ -90,13 +90,11 @@ public class ClientController extends BaseController implements Registration<Act
         return true;
     }
 
-    public boolean connect(String myName, final String hostName,
-                           final String port, final String bufferSize) {
+    public boolean connect(String myName, final String hostName, final String port) {
         return connect(
                 myName,
                 hostName,
-                Integer.parseInt(port),
-                Integer.parseInt(bufferSize)
+                Integer.parseInt(port)
         );
     }
 
@@ -219,7 +217,7 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onUsers(AbstractDataPackage dataPackage) {
         String users = dataPackage.getDataAsString();
-        model.updateModel(BaseUser.parseUsers(users));
+        model.addToModel(BaseUser.parseUsers(users));
     }
 
     void onAddUserToList(AbstractDataPackage dataPackage) {
@@ -245,18 +243,20 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onIncomingCall(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        if (me.isCalling()) {
-            //Auto deny because you already calling and send some shit
-            //that will tell that you wre called
-            try {
-                writer.writeDeny(getId(), sender.getId());
-                dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
-            } catch (IOException e) {
-                onNetworkException();
+        synchronized (me) {
+            if (me.isCalling()) {
+                //Auto deny because you already calling and send some shit
+                //that will tell that you wre called
+                try {
+                    writer.writeDeny(getId(), sender.getId());
+                    dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
+                } catch (IOException e) {
+//                onNetworkException();
+                }
+                return;
             }
-            return;
+            me.call();
         }
-        me.call();
         String dudesInConv = dataPackage.getDataAsString();
         //Use BaseUser.parse(dudesInConv)
         handle(ACTIONS.INCOMING_CALL, sender, dudesInConv, null, -1);
@@ -288,23 +288,28 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onExitConversation(AbstractDataPackage dataPackage) {
         plainRespond(ACTIONS.EXITED_CONVERSATION);
+        model.clearConversation();
     }
 
     void onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
-        handle(
-                ACTIONS.REMOVE_DUDE_FROM_CONVERSATION,
-                model.getUserMap().get(dataPackage.getHeader().getFrom()),
-                null,
-                null,
-                dataPackage.getHeader().getFrom()
-        );
+        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+//        handle(
+//                ACTIONS.REMOVE_DUDE_FROM_CONVERSATION,
+//                baseUser,
+//                null,
+//                null,
+//                dataPackage.getHeader().getFrom()
+//        );
+        model.removeFromConversation(baseUser);
     }
 
     void onAddDudeToConversation(AbstractDataPackage dataPackage) {
-        dudeRespond(
-                ACTIONS.ADD_DUDE_TO_CONVERSATION,
-                model.getUserMap().get(dataPackage.getHeader().getFrom())
-        );
+        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+//        dudeRespond(
+//                ACTIONS.ADD_DUDE_TO_CONVERSATION,
+//                baseUser
+//        );
+        model.addToConversation(baseUser);
     }
 
     void onSendSound(AbstractDataPackage dataPackage) {
@@ -336,9 +341,11 @@ public class ClientController extends BaseController implements Registration<Act
 
     private void callAcceptRoutine(BaseUser dude, String others) {
         plainRespond(ACTIONS.CALL_ACCEPTED);
-        dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, dude);
+//        dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, dude);
+        model.addToConversation(dude);
         for (BaseUser baseUser : BaseUser.parseUsers(others)) {
-            dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, baseUser);
+//            dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, baseUser);
+            model.addToConversation(baseUser);
         }
     }
 
@@ -428,7 +435,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         void onConnect(String hostName, int port, String name) {
 //        model.setMe(new ClientUser(name, WHO.NO_NAME.getCode()));
-            boolean connect = connect(name, hostName, port, 8192);//Load buffer size from properties
+            boolean connect = connect(name, hostName, port);//Load buffer size from properties
             if (!connect) {
                 //tell gui to show that can't connect to the server
                 plainRespond(ACTIONS.CONNECT_FAILED);
@@ -520,7 +527,6 @@ public class ClientController extends BaseController implements Registration<Act
             try {
                 writer.writeMessage(getId(), to, message);
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
 
             }
@@ -544,14 +550,19 @@ public class ClientController extends BaseController implements Registration<Act
         }
 
         private void onCallSomeOne(BaseUser baseUser) {
-            if (me.isCalling()) {
-                plainRespond(ACTIONS.ALREADY_CALLING_SOMEONE);
-                return;
+            synchronized (me) {
+                if (me.isCalling()) {
+                    plainRespond(ACTIONS.ALREADY_CALLING_SOMEONE);
+                    return;
+                }
+                if (model.inConversationWith(baseUser))
+                    return;
+                me.call();
             }
-            me.call();
             try {
                 writer.writeCall(getId(), baseUser.getId());
                 dudeRespond(ACTIONS.OUT_CALL, baseUser);
+//                model.addToConversation(baseUser);
             } catch (IOException e) {
 //                onNetworkException();
                 //reader will fix all problems
@@ -600,6 +611,7 @@ public class ClientController extends BaseController implements Registration<Act
         private void onExitConference() {
             try {
                 writer.writeDisconnectFromConv(getId());
+                model.clearConversation();
                 plainRespond(ACTIONS.EXITED_CONVERSATION);
             } catch (IOException e) {
 //                onNetworkException();

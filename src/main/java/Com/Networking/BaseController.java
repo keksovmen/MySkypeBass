@@ -13,7 +13,6 @@ public abstract class BaseController implements Starting {
 
     Socket socket;
     BaseReader reader;
-    //    Processable processor;
     volatile boolean work;
 
     public BaseController() {

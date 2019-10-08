@@ -28,7 +28,7 @@ public class CallNotificator implements Starting, ChangeOutput {
 
         new Thread(() -> {
             while (work) {
-                playOneFile("/sound/callNotification/" + Resources.callSongName);
+                playOneFile("/sound/callNotification/Call.WAV");
             }
         }, name).start();
 

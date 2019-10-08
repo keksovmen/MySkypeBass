@@ -12,5 +12,5 @@ public interface Updater {
      * @param model where you can get copy of map
      */
 
-    void update(UnEditableModel model);
+    void update(BaseUnEditableModel model);
 }
