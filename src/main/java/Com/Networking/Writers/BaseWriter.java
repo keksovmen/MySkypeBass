@@ -10,6 +10,7 @@ import java.io.OutputStream;
 
 /**
  * Base writer that only can write AbstractDataPackage or its children
+ * Thread safe can call write methods then will be sent sequentially
  */
 
 public class BaseWriter {
@@ -19,12 +20,6 @@ public class BaseWriter {
      */
 
     final DataOutputStream outputStream;
-
-    /**
-     * You can use only write() method
-     *
-     * @param outputStream where to write
-     */
 
     BaseWriter(OutputStream outputStream, int bufferSize) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));

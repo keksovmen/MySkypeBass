@@ -2,7 +2,11 @@ package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
 
-public interface ChangableModel extends UnEditableModel {
+/**
+ * Interface for model that can change its values
+ */
+
+public interface ChangeableModel extends UnEditableModel {
 
     void addToModel(BaseUser user);
 

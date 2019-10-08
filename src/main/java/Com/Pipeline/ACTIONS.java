@@ -1,5 +1,10 @@
 package Com.Pipeline;
 
+/**
+ * Contain all possible actions that can occur
+ * on the logic part of this program
+ */
+
 public enum ACTIONS {
     CONNECT_FAILED, // doesn't contain any data
     CONNECT_SUCCEEDED, //string data is your BaseUser.toString();
@@ -25,7 +30,6 @@ public enum ACTIONS {
     ALREADY_CALLING_SOMEONE, // no data
     BOTH_IN_CONVERSATION, // user who you called
     EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
-    REMOVE_DUDE_CAUSE_IS_MISSING, // user is the dude, int his id
     INCOMING_SOUND, // byte [] sound, int id of the dude who sent it
 
 

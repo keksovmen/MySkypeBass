@@ -13,6 +13,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/**
+ * Represents a microphone
+ * Can be muted
+ * And bass boosted
+ */
+
 public class Capture implements DefaultMic, ChangeableInput {
 
     private static final float MIN_BASS_LVL = 1f;
@@ -21,15 +27,20 @@ public class Capture implements DefaultMic, ChangeableInput {
     private final Consumer<byte[]> sendData;
 
     private volatile TargetDataLine mic = null;
-    private Mixer.Info mixer = null;
+    private volatile Mixer.Info mixer = null;
 
     private volatile boolean muted = false;
-
     private volatile boolean work = false;
 
     private volatile float bassLvl = 1f;
 
+    /**
+     * For not stopping mic to do send action
+     * without it can cause some glitches in mic recording
+     */
+
     private volatile ExecutorService executorService;
+
 
     public Capture(Consumer<byte[]> sendData) {
         this.sendData = sendData;
@@ -62,33 +73,26 @@ public class Capture implements DefaultMic, ChangeableInput {
 
     @Override
     public void IncreaseBass(int percentage) {
-        bassLvl = Algorithms.mean((int) MIN_BASS_LVL, (int) MAX_BASS_LVL, percentage);
+        bassLvl = Algorithms.findPercentage((int) MIN_BASS_LVL, (int) MAX_BASS_LVL, percentage);
     }
 
     @Override
     public synchronized boolean start(String name) {
         if (work)
             return false;
-        work = true;
-        muted = false;
-        if (mic == null || !mic.isOpen()) {
-            try {
-                mic = AudioSupplier.getInput(mixer);
-            } catch (LineUnavailableException e) {
-                e.printStackTrace();
-                return false;
-            }
+        try {
+            onStart();
+        } catch (LineUnavailableException e) {
+            return false;
         }
 
-        executorService = getDefaultOne();
         new Thread(() -> {
             while (work) {
                 if (muted) {
                     synchronized (this) {
                         try {
                             this.wait();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                        } catch (InterruptedException ignored) {
                         }
                     }
                 }
@@ -104,6 +108,14 @@ public class Capture implements DefaultMic, ChangeableInput {
         }, name).start();
 
         return true;
+    }
+
+    private void onStart() throws LineUnavailableException {
+        work = true;
+        muted = false;
+        if (mic == null || !mic.isOpen())
+            mic = AudioSupplier.getInput(mixer);
+        executorService = getDefaultOne();
     }
 
     @Override

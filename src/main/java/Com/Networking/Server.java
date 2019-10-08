@@ -1,19 +1,16 @@
 package Com.Networking;
 
 import Com.Networking.Protocol.AbstractDataPackagePool;
-import Com.Networking.Utility.ServerUser;
-import Com.Util.Resources;
-import Com.Util.Starting;
+import Com.Networking.Protocol.ProtocolBitMap;
 import Com.Networking.Utility.WHO;
-import Com.Util.Checker;
 import Com.Util.FormatWorker;
+import Com.Util.Interfaces.Starting;
+import Com.Util.Resources;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Properties;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * but I too lazy to implement it
  */
 
-public class Server implements Starting, Executor {
+public class Server implements Starting {
 
     /**
      * The socket
@@ -66,19 +63,6 @@ public class Server implements Starting, Executor {
 
     private final int BUFFER_SIZE_FOR_IO;
 
-//    private final int usersAmount;
-
-//    private final List<ServerController> controllerList;
-
-//    private static final int AMOUNT_OF_HELPER_THREADS = 10;
-
-//    private static final Logger logger = Logger.getLogger("MyLogger");
-
-//    static {
-//        logger.setLevel(Level.FINE);
-//    }
-
-
     /**
      * Creates server with give parameters
      *
@@ -106,8 +90,6 @@ public class Server implements Starting, Executor {
                 new LinkedBlockingQueue<>());
 
         BUFFER_SIZE_FOR_IO = Resources.getBufferSize() * 1024;
-//        this.usersAmount = usersAmount;
-//        controllerList = new ArrayList<>(usersAmount);
     }
 
     /**
@@ -119,7 +101,7 @@ public class Server implements Starting, Executor {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, final int usersAmount) throws IOException {
+    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
         return new Server(
                 port,
                 sampleRate,
@@ -163,12 +145,11 @@ public class Server implements Starting, Executor {
                     Socket socket = serverSocket.accept();
                     executor.execute(() -> {
                         try {
-                            ServerController serverController = new ServerController(
+                            Starting serverController = new ServerController(
                                     socket,
                                     this,
                                     BUFFER_SIZE_FOR_IO
                             );
-//                            controllerList.add(serverController);
                             serverController.start("Server controller - ");
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -179,9 +160,7 @@ public class Server implements Starting, Executor {
                         }
                     });
                 } catch (IOException e) {
-//                    e.printStackTrace();
                     close();
-//                    work = false;
                 }
             }
         }, name).start();
@@ -189,7 +168,7 @@ public class Server implements Starting, Executor {
     }
 
     @Override
-    public synchronized void close() {
+    public void close() {
         if (!work)
             return;
         work = false;
@@ -200,7 +179,6 @@ public class Server implements Starting, Executor {
             e.printStackTrace();
 
         }
-//        return true;
     }
 
     /**
@@ -210,7 +188,12 @@ public class Server implements Starting, Executor {
      */
 
     int getIdAndIncrement() {
-        return id.getAndIncrement();
+        int i = id.getAndIncrement();
+        if (ProtocolBitMap.MAX_VALUE < i) {
+            System.err.println("Max limit of IDs is exceeded! System shutting down!");
+            System.exit(1);
+        }
+        return i;
     }
 
     /**
@@ -222,7 +205,6 @@ public class Server implements Starting, Executor {
 
     public void registerController(ServerController serverController) {
         users.put(serverController.getId(), serverController);
-//        System.out.println("Added = " + serverController.getMe());
         if (work)
             sendAddDude(serverController);
     }
@@ -237,7 +219,6 @@ public class Server implements Starting, Executor {
 
     public void removeController(int id) {
         users.remove(id);
-//        System.out.println("Removed = " + id + " " + Thread.currentThread().getName());
         if (work)
             sendRemoveDude(id);
         AbstractDataPackagePool.clearStorage();
@@ -250,7 +231,7 @@ public class Server implements Starting, Executor {
      */
 
     public String getAudioFormat() {
-        return FormatWorker.getAudioFormat(audioFormat);
+        return FormatWorker.getAudioFormatAsString(audioFormat);
     }
 
 
@@ -261,7 +242,7 @@ public class Server implements Starting, Executor {
      * @return all others users
      */
 
-    public synchronized String getUsers(final int exclusiveId) {
+    public String getUsers(final int exclusiveId) {
         StringBuilder stringBuilder = new StringBuilder(50);
         users.forEach((integer, serverController) -> {
             if (integer != exclusiveId) {
@@ -269,25 +250,10 @@ public class Server implements Starting, Executor {
             }
         });
         return stringBuilder.toString();
-//        return null;
     }
 
     public int getControllersSize() {
         return users.size();
-    }
-
-    /**
-     * Check for null pointer
-     *
-     * @param id as key for the map
-     * @return null or base user
-     */
-
-    public ServerUser getUser(int id) {
-        ServerController serverController = users.get(id);
-        if (serverController != null)
-            return serverController.getMe();
-        return null;
     }
 
     /**
@@ -298,10 +264,6 @@ public class Server implements Starting, Executor {
      */
 
     public ServerController getController(int who) {
-//        ServerUser serverUser = users.get(who);
-//        if (serverUser != null) {
-//            return serverUser.getController();
-//        }
         return users.get(who);
     }
 
@@ -322,7 +284,6 @@ public class Server implements Starting, Executor {
                                     dudesController.getMe().toString()
                             );
                         } catch (IOException ignored) {
-//                            ignored.printStackTrace();
                             //If exception with io, is must be handled by corresponding thread not yours
                         }
                     });
@@ -352,8 +313,4 @@ public class Server implements Starting, Executor {
         );
     }
 
-    @Override
-    public void execute(Runnable command) {
-        executor.execute(command);
-    }
 }

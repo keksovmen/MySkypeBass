@@ -2,36 +2,36 @@ package Com.Util;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class Resources {
+/**
+ * Contain resources that can be got directly
+ * Or from suitable static functions - preferred!
+ */
 
-    public static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+public class Resources {
 
     private final static Resources instance = new Resources();
 
     private final List<String> messagePath = new ArrayList<>();
+    private final List<String> descriptions = new ArrayList<>();
     private final Properties properties;
 
 
     private Resources() {
-//        ricardo = new ImageIcon(Resources.class.getResource("/Images/ricardo.png"));
-//        onlineIcon = new ImageIcon(Resources.class.getResource("/Images/online16.png"));
-//        offlineIcon = new ImageIcon(Resources.class.getResource("/Images/offline16.png"));
-//        conversationIcon = new ImageIcon(Resources.class.getResource("/Images/conversation16.png"));
-
         XMLWorker.retrieveNames("/sound/Notifications.xml").
-                forEach(s -> messagePath.add("/sound/messageNotification/" + s));
+                forEach(pair -> {
+                    messagePath.add("/sound/messageNotification/" + pair.getFirst());
+                    descriptions.add(pair.getSecond());
+                });
 
         properties = new Properties(getDefault());
 
         try {
             properties.load(Resources.class.getResourceAsStream("/properties/CustomProperties.properties"));
         } catch (IOException e) {
-//            e.printStackTrace();
             System.err.println("Cant load custom properties, default one will be used!");
         }
     }
@@ -51,6 +51,7 @@ public class Resources {
         properties.put("ReaderWriterBuffer", 32); //in kB
 
         properties.put("WriterLockTime", 300);
+        properties.put("TimeOut", 10);
 
         properties.put("DefaultName", "");
         properties.put("DefaultIP", "127.0.0.1");
@@ -86,6 +87,11 @@ public class Resources {
         return instance.messagePath;
     }
 
+    public static List<String> getDescriptions() {
+        return instance.descriptions;
+    }
+
+
     public static int getAudioFragmentSize() {
         return Integer.parseInt(instance.properties.getProperty("AudioFragmentSize"));
     }
@@ -102,8 +108,12 @@ public class Resources {
         return Integer.parseInt(instance.properties.getProperty("ReaderWriterBuffer"));
     }
 
-    public static int getLockTime(){
+    public static int getLockTime() {
         return Integer.parseInt(instance.properties.getProperty("WriterLockTime"));
+    }
+
+    public static int getTimeOut() {
+        return Integer.parseInt(instance.properties.getProperty("TimeOut"));
     }
 
     public static String getDefaultName() {

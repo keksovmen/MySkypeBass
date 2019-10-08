@@ -40,12 +40,6 @@ public interface ProtocolBitMap {
     int TO_SIZE = 2;
 
     /**
-     * Defines allowed negative values or not
-     */
-
-    boolean SIGNED_ALLOW = false;
-
-    /**
      * Max possible value to be put in any part of packet except the data
      *
      * Will throw exception division by zero if the conditions are not complied

@@ -2,8 +2,7 @@ package Com.Audio.Output;
 
 import Com.Audio.AudioSupplier;
 import Com.Util.Checker;
-import Com.Util.Resources;
-import Com.Util.Starting;
+import Com.Util.Interfaces.Starting;
 
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
@@ -16,7 +15,7 @@ import java.io.IOException;
 public class CallNotificator implements Starting, ChangeOutput {
 
 
-    private Mixer.Info mixer;
+    private volatile Mixer.Info mixer;
     private volatile boolean work;
 
 

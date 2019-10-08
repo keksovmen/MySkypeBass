@@ -87,7 +87,7 @@
               <component id="7c5cd" class="javax.swing.JTextArea" binding="messagesDisplay">
                 <constraints/>
                 <properties>
-                  <editable value="true"/>
+                  <editable value="false"/>
                   <lineWrap value="true"/>
                   <rows value="6"/>
                   <wrapStyleWord value="true"/>

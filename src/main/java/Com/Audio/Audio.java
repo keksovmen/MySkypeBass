@@ -83,6 +83,7 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
             }
             case DISCONNECTED: {
                 onExitConversation();
+                player.stopCall();
                 return;
             }
             case BOTH_IN_CONVERSATION: {

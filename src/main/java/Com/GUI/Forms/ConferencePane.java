@@ -79,6 +79,9 @@ class ConferencePane implements UpdaterAndHandler {
         messageGetter.registerKeyboardAction(e -> onDown(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
+
+        MessagePane.registerPopUp(messagesDisplay, messageGetter);
+        MessagePane.registerPopUp(messageGetter, messageGetter);
     }
 
     @Override

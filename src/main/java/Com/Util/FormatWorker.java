@@ -2,6 +2,7 @@ package Com.Util;
 
 import javax.sound.sampled.AudioFormat;
 import javax.swing.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -14,27 +15,32 @@ import java.util.regex.Pattern;
 
 public class FormatWorker {
 
+    public static final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+
     private FormatWorker() {
     }
 
     /**
-     * Parse string like this Sample rate = 01...n\nSample size = 01....n
+     * Parse string like this:
+     *      Sample rate = 01...n
+     *      Sample size = 01...n
      * retrieve from them digits
      * <p>
-     * MUST MATCH getAudioFormat() !
      *
-     * @param data got from the server
-     * @return default audio format
+     * @param data contain audio format
+     * @return parsed audio format
      */
 
     public static AudioFormat parseAudioFormat(String data) {
         String[] strings = data.split("\n");
         Pattern pattern = Pattern.compile("\\d+?\\b");
         Matcher matcher = pattern.matcher(strings[0]);
-        matcher.find();
+        if (!matcher.find())
+            throw new IllegalArgumentException("Given string doesn't contain proper audio format! " + data);
         int sampleRate = Integer.valueOf(matcher.group());
         matcher = pattern.matcher(strings[1]);
-        matcher.find();
+        if (!matcher.find())
+            throw new IllegalArgumentException("Given string doesn't contain proper audio format! " + data);
         int sampleSize = Integer.valueOf(matcher.group());
         return new AudioFormat(sampleRate, sampleSize, 1, true, true);
     }
@@ -45,7 +51,7 @@ public class FormatWorker {
      * @return data enough to represent audio format for client
      */
 
-    public static String getAudioFormat(AudioFormat audioFormat) {
+    public static String getAudioFormatAsString(AudioFormat audioFormat) {
         return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
                 "Sample size = " + audioFormat.getSampleSizeInBits();
     }
@@ -55,9 +61,12 @@ public class FormatWorker {
         return hostName.matches(compile.pattern());
     }
 
-    public static boolean verifyPortFormat(String port) {
-        return port.matches("\\d+?");
-    }
+    /**
+     * Checks if a port in the range (2 unsigned bytes)
+     *
+     * @param port to check
+     * @return true if in the range
+     */
 
     public static boolean portInRange(int port) {
         return 0 < port && port < 0xFFFF;
@@ -101,9 +110,25 @@ public class FormatWorker {
         };
     }
 
+    /**
+     * Checks if the string consist only from digits
+     *
+     * @param string data
+     * @return true if correct
+     */
+
     public static boolean verifyOnlyDigits(String string) {
         return string.matches("\\d+");
     }
+
+    /**
+     * Give List with numbers from a string
+     * To retrieve numbers they should be packed as
+     * <$DIGITS>
+     *
+     * @param message that contain digits or not
+     * @return zero or not length list
+     */
 
     public static List<Integer> retrieveMessageMeta(String message) {
         Pattern pattern = Pattern.compile("<\\$(\\d+)?>");
@@ -117,20 +142,9 @@ public class FormatWorker {
         return results;
     }
 
-    public static String getTime(){
+    public static String getTime() {
         Calendar calendar = Calendar.getInstance();
-        return Resources.dateFormat.format(calendar.getTime());
+        return dateFormat.format(calendar.getTime());
     }
-    //    /**
-//     * Regular expression is a POWER
-//     * mean ((1-3 digits).) 3 times and then just (1-3 digits)
-//     *
-//     * @param ip to verify
-//     * @return true if has an appropriate format
-//     */
-//
-//    public static boolean verifyIp(String ip) {
-//        String digitAndDotThenDigits = "((\\d){1,3}\\.){3}(\\d{1,3})";
-//        return Pattern.compile(digitAndDotThenDigits).matcher(ip.trim()).matches();
-//    }
+
 }

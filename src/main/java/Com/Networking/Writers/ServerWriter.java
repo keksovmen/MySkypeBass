@@ -22,14 +22,13 @@ public class ServerWriter extends BaseWriter {
      * Need for conference writing
      */
 
-    private Lock lock;
+    private final Lock lock;
 
     /**
      * If internet of one of the users is garbage
      * it will skip him through this time
      * <p>
-     * in millis, not calculated,
-     * but half a second is sound package so need to make it more reasonable
+     * in millis, not calculated
      */
 
     private final int LOCK_TIME; //default 300
@@ -68,11 +67,6 @@ public class ServerWriter extends BaseWriter {
             if (lock.tryLock(LOCK_TIME, TimeUnit.MILLISECONDS)) {
                 try {
                     writeWithoutReturnToPool(dataPackage);
-//                    outputStream.write(dataPackage.getHeader().getRawHeader());//     uses already calculated header
-//                    if (dataPackage.getHeader().getLength() != 0) {
-//                        outputStream.write(dataPackage.getData());
-//                    }
-//                    outputStream.flush();
                 } finally {
                     lock.unlock();
                 }
@@ -126,15 +120,6 @@ public class ServerWriter extends BaseWriter {
 
     public void transferPacket(AbstractDataPackage dataPackage) throws IOException {
         writeWithoutReturnToPool(dataPackage);
-    }
-
-    public void writeDudeIsOffline(int from, int to, String whoIsMissing) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(
-                CODE.SEND_DUDE_IS_OFFLINE,
-                from,
-                to,
-                whoIsMissing
-        ));
     }
 
     public void writeBothInConversations(int me, int from) throws IOException {

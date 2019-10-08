@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.NoSuchElementException;
 
 /**
- * Instruction your handlers reaction depends on its values
+ * Contain all possible instruction that can be send to each other
  * <p>
  * Must be numerated
  * There can't be 2 identical id
@@ -16,26 +16,24 @@ public enum CODE {
     SEND_NAME(1),   //Uses when first time connect to server
     SEND_AUDIO_FORMAT(2),//sends audio format
     SEND_APPROVE(3),//when audio format is appropriate or call accepted
-    SEND_DENY(4),   //when audio format is not appropriate or call denied
+    SEND_DENY(4),   // not used
     SEND_ID(5),     //server sends your unique id
     SEND_USERS(6),  //sendSound request or response with users on server
     SEND_MESSAGE(7),//When client sendSound message to another client, or to conference
     SEND_CALL(8),   //when client call someone
-    SEND_CANCEL(9), //when caller cancelled the call
+    SEND_CANCEL(9), // not used
     SEND_SOUND(10), //sends sound data to conference
     SEND_DISCONNECT(11),    //when disconnecting from the server
     SEND_ADD_TO_CONVERSATION(12),   //server sendSound it when some one was added to your conversation
     SEND_REMOVE_FROM_CONVERSATION(13),//server sendSound it when some one was removed to your conversation
-    SEND_CONFIRM(14),//not used
+    SEND_CONFIRM(14), // not used
     SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
-//    SEND_STOP_CONV(16),//when you are last one in conversation server sends it to you
-    SEND_ADD_TO_USER_LIST(17),//when you connected to the server it will tell every one that you are online
-    SEND_REMOVE_FROM_USER_LIST(18),//when you disconnect from the server it will tell every one that you are gone
-    SEND_ACCEPT_CALL(19),
-    SEND_DENY_CALL(20),
-    SEND_CANCEL_CALL(21),
-    SEND_DUDE_IS_OFFLINE(22), // when you send message or call to some one and he suddenly disconnects, he exist on your list but not on the server one so ask to cancel your last action
-    SEND_BOTH_IN_CONVERSATIONS(23); // when you trying to call some one but you both in conversations
+    SEND_ADD_TO_USER_LIST(16),//when you connected to the server it will tell every one that you are online
+    SEND_REMOVE_FROM_USER_LIST(17),//when you disconnect from the server it will tell every one that you are gone
+    SEND_ACCEPT_CALL(18), // when dude accepts an incoming call
+    SEND_DENY_CALL(19), // when dude denies an incoming call
+    SEND_CANCEL_CALL(20), // when dude cancel an out coming call
+    SEND_BOTH_IN_CONVERSATIONS(21); // when you trying to call some one but you both in conversations
 
     private static boolean checked = false;
 

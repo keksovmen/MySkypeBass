@@ -108,7 +108,6 @@ public class BaseUser implements Cloneable {
      */
 
     public static BaseUser[] parseUsers(String data) {
-//        if (data.length() == 0) return new BaseUser[0];
         String[] split = data.split("\n");
         return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }

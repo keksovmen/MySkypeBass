@@ -27,7 +27,7 @@ public class DataPackageHeader extends AbstractHeader {
 
     /**
      * Length of data that was sent
-     * if 0 mean no data was sent
+     * if 0 findPercentage no data was sent
      * <p>
      * NOT INCLUDES INITIAL_SIZE
      * <p>

@@ -1,24 +1,37 @@
 package Com.Networking.Utility;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+/**
+ * Represent client side user
+ */
 
 public class ClientUser extends BaseUser {
-    private final AtomicBoolean isCalling;
+
+    public static final int NO_ONE = -1;
+//    private final AtomicBoolean isCalling;
+    private int whoCalling = NO_ONE;
 
     public ClientUser(String name, int id) {
         super(name, id);
-        isCalling = new AtomicBoolean(false);
+//        isCalling = new AtomicBoolean(false);
     }
 
-    public void call(){
-        isCalling.set(true);
+    /**
+     * When you calling some one
+     */
+
+    public synchronized void call(int id){
+        whoCalling = id;
     }
 
-    public void drop(){
-        isCalling.set(false);
+    /**
+     * When you stop calling
+     */
+
+    public synchronized void drop(){
+        whoCalling = NO_ONE;
     }
 
-    public boolean isCalling(){
-        return isCalling.get();
+    public int isCalling(){
+        return whoCalling;
     }
 }

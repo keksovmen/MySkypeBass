@@ -4,7 +4,7 @@ import Com.Networking.Processors.Processable;
 import Com.Networking.Protocol.AbstractDataPackage;
 import Com.Networking.Protocol.DataPackagePool;
 import Com.Networking.Readers.BaseReader;
-import Com.Util.Starting;
+import Com.Util.Interfaces.Starting;
 
 import java.io.IOException;
 import java.net.Socket;

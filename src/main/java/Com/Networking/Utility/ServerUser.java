@@ -14,12 +14,6 @@ import java.util.concurrent.Semaphore;
 
 public class ServerUser extends BaseUser {
 
-//    /**
-//     * Who created you
-//     */
-
-//    private final ServerController controller;
-
     /**
      * Shows in conversation you are or not
      */
@@ -45,7 +39,7 @@ public class ServerUser extends BaseUser {
     public void lock(){
         try {
             semaphore.acquire();
-        } catch (InterruptedException ignored) {// interaction is not used
+        } catch (InterruptedException ignored) {// is not used
         }
     }
 
@@ -68,16 +62,5 @@ public class ServerUser extends BaseUser {
     public boolean inConv() {
         return conversation != null;
     }
-
-    /*
-    For debug only
-     */
-//    public String getString() {
-//        return "ServerUser{" +
-//                "controller=" + controller +
-//                ", conversation=" + conversation +
-//                '}';
-//    }
-
 
 }

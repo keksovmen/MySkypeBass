@@ -78,7 +78,6 @@ public class ServerController extends BaseController {
 
             me = new ServerUser(name, id);
             Thread.currentThread().setName(Thread.currentThread().getName() + id);
-//            server.registerController(me);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,7 +112,6 @@ public class ServerController extends BaseController {
         try {
             writer.writeUsers(getId(), users);
         } catch (IOException e) {
-            //dude was disconnected
             close();
         }
     }
@@ -165,6 +163,11 @@ public class ServerController extends BaseController {
                         conversation.sendMessage(dataPackage, current);
                     }else {
                         //tell him that hi is not in conversation
+                        try {
+                            current.writer.writeStopConv(current.getId());
+                        } catch (IOException e) {
+                            current.close();
+                        }
                     }
                     return;
                 }
@@ -222,10 +225,7 @@ public class ServerController extends BaseController {
         }
 
         private static Consumer<AbstractDataPackage> onDisconnect(ServerController current) {
-            return dataPackage -> {
-                current.close();
-                //check conversation cleanup
-            };
+            return dataPackage -> current.close();
         }
 
         private static Consumer<AbstractDataPackage> onCallAccept(ServerController current) {
@@ -274,9 +274,7 @@ public class ServerController extends BaseController {
                 release.run();
 
                 try {
-                    receiver.getWriter().transferPacket(
-                            dataPackage
-                    );
+                    receiver.getWriter().transferPacket(dataPackage);
                 } catch (IOException ignored) {
                     //Dude disconnected before so it's thread will handle
                 }

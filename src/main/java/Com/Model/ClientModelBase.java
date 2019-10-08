@@ -1,7 +1,7 @@
 package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
-import Com.Util.Registration;
+import Com.Util.Interfaces.Registration;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -11,7 +11,7 @@ import java.util.Set;
  * And can register and remove them
  */
 
-public class ClientModelBase extends BaseUnEditableModel implements Registration<Updater>, ChangableModel{
+public class ClientModelBase extends BaseUnEditableModel implements Registration<Updater>, ChangeableModel {
 
     private final Set<Updater> listeners;
 
@@ -52,6 +52,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     /**
      * When one dude is added
+     * Notifies listeners
      *
      * @param user the dude
      */
@@ -64,6 +65,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     /**
      * For removing one dude
+     * Notifies listeners
      *
      * @param user the dude
      */
@@ -72,6 +74,13 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     public synchronized void removeFromModel(BaseUser user) {
         removeFromModel(user.getId());
     }
+
+    /**
+     * Removing from user map
+     * and if succeed notifies listeners
+     *
+     * @param user id to remove
+     */
 
     @Override
     public synchronized void removeFromModel(int user) {
@@ -91,7 +100,6 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
         }
 
     }
-
 
     @Override
     public synchronized void addToConversation(BaseUser dude){

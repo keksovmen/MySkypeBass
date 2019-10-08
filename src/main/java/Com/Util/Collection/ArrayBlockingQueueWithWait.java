@@ -8,6 +8,14 @@ public class ArrayBlockingQueueWithWait<Q> extends ArrayBlockingQueue<Q> {
         super(capacity);
     }
 
+    /**
+     * Instead of dropping q
+     * will wait for available space
+     *
+     * @param q to put into
+     * @return false only if concurrent exception
+     */
+
     @Override
     public boolean offer(Q q) {
         try {

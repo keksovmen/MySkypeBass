@@ -103,11 +103,21 @@ public class Algorithms {
         return result;
     }
 
-    public static int mean(int min, int max, int percentage){
+    /**
+     * Find value corresponding to percentage
+     *
+     * @param min        possible value
+     * @param max        possible value
+     * @param percentage between 0 - 100
+     * @return value between min and max equal to the percentage
+     */
+
+    public static int findPercentage(int min, int max, int percentage) {
+        if (percentage < 0 || 100 < percentage)
+            throw new IllegalArgumentException("Percentage can't be more than 100 or less than 0! " + percentage);
         int difference = max - min;
         float percent = difference / 100f;
         float value = percent * percentage;
-        int result = (int) (min + value);
-        return result;
+        return (int) (min + value);
     }
 }

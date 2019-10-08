@@ -35,7 +35,7 @@ public class Tester {
     }
 
 
-    public static void main(String[] args) throws IOException, InterruptedException, InvocationTargetException, LineUnavailableException {
+    public static void main(String[] args) throws LineUnavailableException {
 //        for (Mixer.Info info : AudioSystem.getMixerInfo()) {
 //            System.out.println(info.toString());
 //            Mixer mixer = AudioSystem.getMixer(info);
@@ -202,8 +202,8 @@ public class Tester {
         Server server = Server.getFromIntegers(
                 8188,
                 32_000,
-                16,
-                10);
+                16
+        );
 
         System.out.println("Server start checks");
         assert (server.start("Server"));
@@ -279,8 +279,7 @@ public class Tester {
         Server server = Server.getFromIntegers(
                 8188,
                 32000,
-                16,
-                12
+                16
         );
 
         server.start("Server");
@@ -352,7 +351,7 @@ public class Tester {
     }
 
     public static void testFullConstruction() throws IOException, InterruptedException {
-        Server server = Server.getFromIntegers(8188, 32_000, 16, 12);
+        Server server = Server.getFromIntegers(8188, 32_000, 16);
         server.start("Server");
 //        ClientResponder clientResponder = new ClientResponder(null);
 

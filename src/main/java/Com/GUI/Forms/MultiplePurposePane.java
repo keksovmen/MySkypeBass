@@ -155,11 +155,6 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 onExitConversation();
                 break;
             }
-            //ignore cause first comes this than DISCONNECTED
-//            case CONNECTION_TO_SERVER_FAILED: {
-//                onDisconnect();
-//                break;
-//            }
         }
         conferencePane.handle(action, from, stringData, bytesData, intData);
     }
@@ -253,7 +248,6 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         if (!selected())
             return;
         BaseUser selected = getSelected();
-//            String s = selected.toString();
         if (isShownAlready(selected))
             return;
         if (isCashed(selected)) {

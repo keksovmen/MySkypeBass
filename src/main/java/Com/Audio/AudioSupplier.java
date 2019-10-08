@@ -104,9 +104,11 @@ public class AudioSupplier {
         int i = (int) ((format.getSampleRate() / 8) *
                 (format.getSampleSizeInBits() / 8));
         i = i - i % (format.getSampleSizeInBits() / 8);
-        if (i > ProtocolBitMap.MAX_VALUE)
+        if (i > ProtocolBitMap.MAX_VALUE) {
+            System.exit(2);
             throw new IllegalArgumentException("Capture size can't be more than protocol can handle!\n" +
                     i + " <= " + ProtocolBitMap.MAX_VALUE);
+        }
         return i;
     }
 }

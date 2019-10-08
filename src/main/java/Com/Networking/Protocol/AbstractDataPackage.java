@@ -8,12 +8,6 @@ package Com.Networking.Protocol;
 
 public abstract class AbstractDataPackage {
 
-
-//    protected AbstractHeader header;
-
-
-//    protected byte[] data;
-
     /**
      * Default package private constructor
      * Access to this instances goes through AbstractDataPackagePool

@@ -1,4 +1,4 @@
-package Com.Util;
+package Com.Util.Interfaces;
 
 /**
  * Use with classes that at some point need to be initialised

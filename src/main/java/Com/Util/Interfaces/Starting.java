@@ -1,8 +1,9 @@
-package Com.Util;
+package Com.Util.Interfaces;
 
 /**
  * Uses for classes that can start a new thread
  */
+
 public interface Starting {
 
 

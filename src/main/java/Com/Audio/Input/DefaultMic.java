@@ -1,7 +1,7 @@
 package Com.Audio.Input;
 
-import Com.Util.Initialising;
-import Com.Util.Starting;
+import Com.Util.Interfaces.Initialising;
+import Com.Util.Interfaces.Starting;
 
 public interface DefaultMic extends Starting, Initialising {
 

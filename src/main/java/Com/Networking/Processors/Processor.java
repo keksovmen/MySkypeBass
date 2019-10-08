@@ -8,15 +8,15 @@ import Com.Networking.Protocol.AbstractDataPackage;
 
 public class Processor implements Processable{
 
-    private ActionStand onUsers;
-    private ActionStand onMessage;
-    private ActionStand onCall;
-    private ActionStand onDisconnect;
-    private ActionStand onCallAccept;
-    private ActionStand onCallDeny;
-    private ActionStand onCallCancel;
-    private ActionStand onExitConference;
-    private ActionStand onSendSound;
+    private final ActionStand onUsers;
+    private final ActionStand onMessage;
+    private final ActionStand onCall;
+    private final ActionStand onDisconnect;
+    private final ActionStand onCallAccept;
+    private final ActionStand onCallDeny;
+    private final ActionStand onCallCancel;
+    private final ActionStand onExitConference;
+    private final ActionStand onSendSound;
 
 
     public Processor() {
@@ -66,6 +66,13 @@ public class Processor implements Processable{
     public ActionStand getOnSendSound() {
         return onSendSound;
     }
+
+    /**
+     * Route the data package to an appropriate handler
+     *
+     * @param dataPackage to route
+     * @return true if routed false otherwise
+     */
 
     @Override
     public boolean process(AbstractDataPackage dataPackage) {

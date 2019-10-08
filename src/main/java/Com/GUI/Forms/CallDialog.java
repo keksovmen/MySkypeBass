@@ -3,8 +3,8 @@ package Com.GUI.Forms;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
-import Com.Pipeline.BUTTONS;
 import Com.Pipeline.ActionsHandler;
+import Com.Pipeline.BUTTONS;
 
 import javax.swing.*;
 
@@ -51,31 +51,32 @@ public class CallDialog extends JDialog implements ActionsHandler {
 
     @Override
     public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
-        switch (action){
-            case CALL_DENIED:{
+        switch (action) {
+            case CALL_DENIED: {
                 dispose();
                 return;
             }
-            case CALL_ACCEPTED:{
+            case CALL_ACCEPTED: {
                 dispose();
                 return;
             }
-            case CALL_CANCELLED:{
+            case CALL_CANCELLED: {
                 dispose();
                 return;
             }
-            case CONNECTION_TO_SERVER_FAILED:{
+            case CONNECTION_TO_SERVER_FAILED: {
                 dispose();
                 return;
             }
-            case BOTH_IN_CONVERSATION:{
-                dispose();
+            case BOTH_IN_CONVERSATION: {
+                if (from.equals(user))
+                    dispose();
                 return;
             }
         }
     }
 
-    private void onOk(ActionableLogic whereToReportActions){
+    private void onOk(ActionableLogic whereToReportActions) {
         whereToReportActions.act(
                 BUTTONS.CALL_ACCEPTED,
                 user,
@@ -85,7 +86,7 @@ public class CallDialog extends JDialog implements ActionsHandler {
         dispose();
     }
 
-    private void onDeny(ActionableLogic whereToReportActions){
+    private void onDeny(ActionableLogic whereToReportActions) {
         whereToReportActions.act(
                 BUTTONS.CALL_DENIED,
                 user,
@@ -95,7 +96,7 @@ public class CallDialog extends JDialog implements ActionsHandler {
         dispose();
     }
 
-    private void onCancel(ActionableLogic whereToReportActions){
+    private void onCancel(ActionableLogic whereToReportActions) {
         whereToReportActions.act(
                 BUTTONS.CALL_CANCELLED,
                 user,

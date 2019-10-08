@@ -12,15 +12,16 @@ import java.util.concurrent.Executors;
  * Main purpose is to have registered listeners
  * and feed them with dataPackages
  * Also return to home the packages
+ * And do it in some other thread not in readers one
  */
 
 public class ClientProcessor extends Processor implements Executor, Closeable {
 
-    private ActionStand onAddUserToList;
-    private ActionStand onRemoveUserFromList;
-    private ActionStand onBothInConversation;
-    private ActionStand onRemoveDudeFromConversation;
-    private ActionStand onAddDudeToConversation;
+    private final ActionStand onAddUserToList;
+    private final ActionStand onRemoveUserFromList;
+    private final ActionStand onBothInConversation;
+    private final ActionStand onRemoveDudeFromConversation;
+    private final ActionStand onAddDudeToConversation;
 
     /**
      * Instead of its own thread you have

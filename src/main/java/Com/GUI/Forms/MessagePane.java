@@ -6,9 +6,15 @@ import Com.Networking.Utility.BaseUser;
 import Com.Util.FormatWorker;
 import Com.Util.History.History;
 import Com.Util.History.HistoryFactory;
+import Com.Util.Resources;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
+import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseListener;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
@@ -61,6 +67,8 @@ class MessagePane {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
 
+        registerPopUp(messageBoard, messageGetter);
+        registerPopUp(messageGetter, messageGetter);
     }
 
     JPanel getMainPane() {
@@ -111,6 +119,19 @@ class MessagePane {
 
     private void onDown() {
         messageGetter.setText("");
+    }
+
+    static void registerPopUp(JComponent component, JTextField textField){
+        JPopupMenu popupMenu = new JPopupMenu("Sounds");
+        List<String> getDescriptions = Resources.getDescriptions();
+
+        for (int i = 0; i < getDescriptions.size(); i++) {
+            JMenuItem menuItem = new JMenuItem(getDescriptions.get(i));
+            int j = i;
+            menuItem.addActionListener(e -> textField.setText(textField.getText() + "<$" + j + ">"));
+            popupMenu.add(menuItem);
+        }
+        component.setComponentPopupMenu(popupMenu);
     }
 
 }

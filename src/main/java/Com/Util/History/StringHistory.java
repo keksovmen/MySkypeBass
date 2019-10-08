@@ -1,14 +1,33 @@
 package Com.Util.History;
 
+/**
+ * String implementation of History
+ * Can be accessed from factory method only
+ */
+
 public class StringHistory implements History<String> {
 
     private String[] history;
+
+    /**
+     * Current index of get
+     */
+
     private int index;
+
+    /**
+     * Current index of push
+     */
+
     private int pushIndex;
+
+    /**
+     * For traversal purposes
+     */
 
     private int initialIndex;
 
-    public StringHistory(int size) {
+    StringHistory(int size) {
         if (size <= 0)
             throw new IllegalArgumentException("Size can't be negative or zero! " + size);
         history = new String[size];
@@ -21,15 +40,16 @@ public class StringHistory implements History<String> {
     public String getNext() {
         initialIndex = index;
         return getNextThroughLoop();
-//        index = checkIndex(index);
-//        String result = history[index];
-//        index--;
-//        if (result == null)
-//            return getNext();
-//        return result;
     }
 
-    private String getNextThroughLoop(){
+    /**
+     * Recursive search until initialIndex != index
+     * index is changing with each iteration
+     *
+     * @return stored or empty string
+     */
+
+    private String getNextThroughLoop() {
         index = checkIndex(index);
         String result = history[index];
         index--;
@@ -40,16 +60,6 @@ public class StringHistory implements History<String> {
         return result;
     }
 
-//    @Override
-//    public String getPrevious() {
-//        checkIndex();
-//        String result = history[index];
-//        index--;
-//        if (result == null)
-//            return "";
-//        return result;
-//    }
-
     @Override
     public void push(String data) {
         index = pushIndex;
@@ -59,10 +69,17 @@ public class StringHistory implements History<String> {
             pushIndex = 0;
     }
 
+    /**
+     * check index on appropriate state
+     *
+     * @param index to check
+     * @return index or max or min value possible
+     */
+
     private int checkIndex(int index) {
         if (index >= history.length) {
             return 0;
-        }else if (index < 0){
+        } else if (index < 0) {
             return history.length - 1;
         }
         return index;

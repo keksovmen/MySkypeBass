@@ -12,7 +12,7 @@ public interface ActionsHandler {
      * @param from       who made an action
      * @param stringData data as string
      * @param bytesData  data as bytes
-     * @param intData    data as int, -1 mean null
+     * @param intData    data as int, -1 findPercentage null
      */
 
     void handle(

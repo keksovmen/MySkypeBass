@@ -8,12 +8,12 @@ import Com.GUI.Forms.CallDialog;
 import Com.GUI.Forms.EntrancePane;
 import Com.GUI.Forms.MultiplePurposePane;
 import Com.Model.BaseUnEditableModel;
-import Com.Util.Registration;
 import Com.Networking.Utility.BaseUser;
 import Com.Pipeline.ACTIONS;
 import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.BUTTONS;
 import Com.Pipeline.UpdaterAndHandler;
+import Com.Util.Interfaces.Registration;
 import Com.Util.Resources;
 
 import javax.swing.*;
@@ -24,8 +24,8 @@ import java.util.function.Consumer;
 
 public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
-    public static final int WIDTH = 600;
-    public static final int HEIGHT = 450;
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 450;
 
 
     private final List<ActionableLogic> actionableLogicList;
@@ -50,15 +50,12 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         setIcon();
 
         frame.setContentPane(entrancePane.getPane());
-//        frame.setJMenuBar(produceMenuBar(this));
         frame.setVisible(true);
     }
 
     @Override
     public void update(BaseUnEditableModel model) {
-        SwingUtilities.invokeLater(() -> {
-            purposePane.update(model);
-        });
+        SwingUtilities.invokeLater(() -> purposePane.update(model));
     }
 
     @Override
@@ -129,7 +126,6 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case CONNECTION_TO_SERVER_FAILED: {
-//                    onDisconnect();
                     showInfoMessage("Disconnected from server!");
                     break;
                 }

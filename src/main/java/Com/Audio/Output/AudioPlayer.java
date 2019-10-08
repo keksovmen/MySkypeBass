@@ -20,12 +20,11 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
 
     private final Map<Integer, SourceDataLine> outputs;
     private final CallNotificator callNotificator;
-    private Mixer.Info outputInfo;
+    private volatile Mixer.Info outputInfo;
 
     public AudioPlayer() {
         outputs = new HashMap<>();
         callNotificator = new CallNotificator();
-//        outputInfo =
     }
 
     @Override
@@ -38,8 +37,6 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     }
 
     private synchronized void addOutput(int id) {
-//        if (outputs.containsKey(id))
-//            return;
         try {
             outputs.put(id, AudioSupplier.getOutput(outputInfo));
         } catch (LineUnavailableException e) {
@@ -75,7 +72,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     private void changeVolume(FloatControl control, int percentage) {
         int minimum = (int) Math.ceil(control.getMinimum());
         int maximum = (int) Math.floor(control.getMaximum());
-        int mean = Algorithms.mean(minimum, maximum, percentage);
+        int mean = Algorithms.findPercentage(minimum, maximum, percentage);
         control.setValue(mean);
     }
 
@@ -85,7 +82,6 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
         if (sourceDataLine == null) {
             //Just ignore it until update is occurs
             return;
-//            throw new NullPointerException("There is no such output " + from);
         }
         playData(sourceDataLine, data);
     }

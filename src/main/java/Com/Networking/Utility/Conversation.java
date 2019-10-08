@@ -72,7 +72,11 @@ public class Conversation {
     }
 
     /**
-     * Add new user(s) to this conference
+     * Add new user to this conference
+     * and link this conversation to his field
+     *
+     * @param dude who to add
+     * @param except who must not receive message about adding dude
      */
 
     public synchronized void addDude(ServerController dude, ServerController except) {
@@ -90,7 +94,7 @@ public class Conversation {
     }
 
     /**
-     * Remove user(s) from this conference
+     * Remove user from this conference
      * Also when there is last dude, it tells him that conversation is ended
      * and terminate all links
      *
@@ -116,16 +120,6 @@ public class Conversation {
                 //Ignore this dude's thread will handle the mess
             }
         }
-    }
-
-    /**
-     * Collect info about users
-     *
-     * @return all users that is in the conversation
-     */
-
-    public synchronized ServerUser[] getAll() {
-        return users.toArray(new ServerUser[0]);
     }
 
     /**

@@ -1,7 +1,7 @@
 package Com.Networking;
 
 import Com.Audio.AudioSupplier;
-import Com.Model.ChangableModel;
+import Com.Model.ChangeableModel;
 import Com.Networking.Processors.ClientProcessor;
 import Com.Networking.Processors.Processable;
 import Com.Networking.Protocol.AbstractDataPackage;
@@ -17,7 +17,7 @@ import Com.Pipeline.ActionableLogic;
 import Com.Pipeline.ActionsHandler;
 import Com.Pipeline.BUTTONS;
 import Com.Util.FormatWorker;
-import Com.Util.Registration;
+import Com.Util.Interfaces.Registration;
 import Com.Util.Resources;
 
 import javax.sound.sampled.AudioFormat;
@@ -28,10 +28,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Uses only as holder of network stuff
+ * and handle networking
+ * Changes model
+ */
+
 public class ClientController extends BaseController implements Registration<ActionsHandler>, ActionsHandler {
 
     private final ClientProcessor processor;
-    private final ChangableModel model;
+    private final ChangeableModel model;
     private final ClientResponder clientResponder;
 
     private final List<ActionsHandler> handlerList;
@@ -40,12 +46,7 @@ public class ClientController extends BaseController implements Registration<Act
     private ClientUser me;
 
 
-    /**
-     * Uses only for holder of network stuff
-     * and handle networking
-     */
-
-    public ClientController(ChangableModel model) {
+    public ClientController(ChangeableModel model) {
         this.model = model;
         processor = new ClientProcessor();
         clientResponder = new ClientResponder();
@@ -74,7 +75,7 @@ public class ClientController extends BaseController implements Registration<Act
         socket = new Socket();
 
         try {
-            socket.connect(new InetSocketAddress(hostName, port), 7_000); // timeOut as property
+            socket.connect(new InetSocketAddress(hostName, port), Resources.getTimeOut() * 1000);
             int bufferSize = Resources.getBufferSize() * 1024;
             writer = new ClientWriter(socket.getOutputStream(), bufferSize);
             reader = new BaseReader(socket.getInputStream(), bufferSize);
@@ -180,7 +181,6 @@ public class ClientController extends BaseController implements Registration<Act
         try {
             getProcessor().process(reader.read());
         } catch (IOException e) {
-//            plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
             onNetworkException();
             throw e;
         }
@@ -208,6 +208,7 @@ public class ClientController extends BaseController implements Registration<Act
     void cleanUp() {
         //Need to notify the whole system
         plainRespond(ACTIONS.DISCONNECTED);
+        me.drop();
     }
 
     @Override
@@ -244,18 +245,17 @@ public class ClientController extends BaseController implements Registration<Act
     void onIncomingCall(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
         synchronized (me) {
-            if (me.isCalling()) {
+            if (me.isCalling() != ClientUser.NO_ONE) {
                 //Auto deny because you already calling and send some shit
                 //that will tell that you wre called
                 try {
                     writer.writeDeny(getId(), sender.getId());
                     dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
-                } catch (IOException e) {
-//                onNetworkException();
+                } catch (IOException ignored) {
                 }
                 return;
             }
-            me.call();
+            me.call(sender.getId());
         }
         String dudesInConv = dataPackage.getDataAsString();
         //Use BaseUser.parse(dudesInConv)
@@ -282,6 +282,8 @@ public class ClientController extends BaseController implements Registration<Act
     }
 
     void onBothInConversation(AbstractDataPackage dataPackage) {
+        if (me.isCalling() == dataPackage.getHeader().getFrom())
+            me.drop();
         dudeRespond(ACTIONS.BOTH_IN_CONVERSATION,
                 model.getUserMap().get(dataPackage.getHeader().getFrom()));
     }
@@ -289,26 +291,16 @@ public class ClientController extends BaseController implements Registration<Act
     void onExitConversation(AbstractDataPackage dataPackage) {
         plainRespond(ACTIONS.EXITED_CONVERSATION);
         model.clearConversation();
+        AbstractDataPackagePool.clearStorage();
     }
 
     void onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-//        handle(
-//                ACTIONS.REMOVE_DUDE_FROM_CONVERSATION,
-//                baseUser,
-//                null,
-//                null,
-//                dataPackage.getHeader().getFrom()
-//        );
         model.removeFromConversation(baseUser);
     }
 
     void onAddDudeToConversation(AbstractDataPackage dataPackage) {
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-//        dudeRespond(
-//                ACTIONS.ADD_DUDE_TO_CONVERSATION,
-//                baseUser
-//        );
         model.addToConversation(baseUser);
     }
 
@@ -324,7 +316,6 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onNetworkException() {
         plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
-//        close();
     }
 
     private void plainRespond(ACTIONS action) {
@@ -341,10 +332,8 @@ public class ClientController extends BaseController implements Registration<Act
 
     private void callAcceptRoutine(BaseUser dude, String others) {
         plainRespond(ACTIONS.CALL_ACCEPTED);
-//        dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, dude);
         model.addToConversation(dude);
         for (BaseUser baseUser : BaseUser.parseUsers(others)) {
-//            dudeRespond(ACTIONS.ADD_DUDE_TO_CONVERSATION, baseUser);
             model.addToConversation(baseUser);
         }
     }
@@ -496,7 +485,7 @@ public class ClientController extends BaseController implements Registration<Act
         }
 
         private boolean checkPort(String port) {
-            if (!FormatWorker.verifyPortFormat(port)) {
+            if (!FormatWorker.verifyOnlyDigits(port)) {
                 stringRespond(ACTIONS.WRONG_PORT_FORMAT, port);
                 return false;
             }
@@ -518,7 +507,6 @@ public class ClientController extends BaseController implements Registration<Act
             try {
                 writer.writeUsersRequest(getId());
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
             }
         }
@@ -528,13 +516,7 @@ public class ClientController extends BaseController implements Registration<Act
                 writer.writeMessage(getId(), to, message);
             } catch (IOException e) {
                 //reader will fix all problems
-
             }
-        }
-
-        private void onNetworkException() {
-            plainRespond(ACTIONS.CONNECTION_TO_SERVER_FAILED);
-            close();
         }
 
         private void onDisconnect() {
@@ -545,28 +527,23 @@ public class ClientController extends BaseController implements Registration<Act
             close();
             model.clear();
             plainRespond(ACTIONS.DISCONNECTED);
-            //audio will close it self too
-
         }
 
         private void onCallSomeOne(BaseUser baseUser) {
             synchronized (me) {
-                if (me.isCalling()) {
+                if (me.isCalling() != ClientUser.NO_ONE) {
                     plainRespond(ACTIONS.ALREADY_CALLING_SOMEONE);
                     return;
                 }
                 if (model.inConversationWith(baseUser))
                     return;
-                me.call();
+                me.call(baseUser.getId());
             }
             try {
                 writer.writeCall(getId(), baseUser.getId());
                 dudeRespond(ACTIONS.OUT_CALL, baseUser);
-//                model.addToConversation(baseUser);
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
-
             }
         }
 
@@ -574,11 +551,8 @@ public class ClientController extends BaseController implements Registration<Act
             me.drop();
             try {
                 writer.writeDeny(getId(), user.getId());
-//            dudeRespond(ACTIONS.CALL_DENIED, user);
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
-
             }
         }
 
@@ -586,9 +560,7 @@ public class ClientController extends BaseController implements Registration<Act
             me.drop();
             try {
                 writer.writeCancel(getId(), user.getId());
-//            dudeRespond(ACTIONS.CALL_CANCELLED, user);
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
             }
         }
@@ -598,12 +570,9 @@ public class ClientController extends BaseController implements Registration<Act
             try {
                 writer.writeAccept(getId(), dude.getId());
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
                 return;
             }
-            //Audio tell to add corresponding outputs
-            //tell gui to act
             callAcceptRoutine(dude, others);
 
         }
@@ -614,9 +583,9 @@ public class ClientController extends BaseController implements Registration<Act
                 model.clearConversation();
                 plainRespond(ACTIONS.EXITED_CONVERSATION);
             } catch (IOException e) {
-//                onNetworkException();
                 //reader will fix all problems
             }
+            AbstractDataPackagePool.clearStorage();
         }
 
     }

@@ -7,6 +7,9 @@ import Com.Pipeline.BUTTONS;
 
 import javax.sound.sampled.Mixer;
 
+/**
+ * Change outputs and input
+ */
 public class AudioSettings implements ActionableLogic {
 
     private final ChangeableInput input;

@@ -102,8 +102,7 @@ public class EntrancePane implements ActionsHandler {
      */
 
     private String getIp() {
-        String ip = ipField.getText().trim();
-        return ip;
+        return ipField.getText().trim();
     }
 
     /**
@@ -113,8 +112,7 @@ public class EntrancePane implements ActionsHandler {
      */
 
     private String getPort() {
-        String port = portField.getText().trim();
-        return port;
+        return portField.getText().trim();
     }
 
 

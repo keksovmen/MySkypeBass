@@ -51,7 +51,7 @@ public class XMLWorker {
      * @return empty if exception or filled list with names
      */
 
-    public static List<String> retrieveNames(String resourceName) {
+    public static List<Pair<String, String>> retrieveNames(String resourceName) {
         Document document;
         try {
             document = getDocument(resourceName);
@@ -96,16 +96,17 @@ public class XMLWorker {
      * @return List filled with sound names
      */
 
-    private static List<String> getFromProperDocument(Element root) {
+    private static List<Pair<String, String>> getFromProperDocument(Element root) {
         NodeList childNodes = root.getChildNodes();
-        List<String> result = new ArrayList<>(childNodes.getLength());
+        List<Pair<String, String>> result = new ArrayList<>(childNodes.getLength());
         for (int i = 0; i < childNodes.getLength(); i++) {
             Element file = (Element) childNodes.item(i);
             if (file.getAttribute("enabled").equals("false")) {
                 continue;
             }
             Element name = (Element) file.getFirstChild();
-            result.add(name.getTextContent());
+            Element description = (Element) file.getLastChild();
+            result.add(new Pair<>(name.getTextContent(), description.getTextContent()));
         }
         return result;
     }

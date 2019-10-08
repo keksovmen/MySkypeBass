@@ -1,7 +1,6 @@
 package Com.Model;
 
 import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.ClientUser;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.TreeMap;
 
 /**
  * Contain underlying layer with users on client side
+ * and in a conversation
  */
 
 public abstract class BaseUnEditableModel implements UnEditableModel{
@@ -18,12 +18,11 @@ public abstract class BaseUnEditableModel implements UnEditableModel{
 
     final Set<BaseUser> conversation;
 
-//    ClientUser me;
     /**
      * TreeMap just for easy to find on GUI
      */
 
-    public BaseUnEditableModel() {
+    BaseUnEditableModel() {
         userMap = new TreeMap<>();
         conversation = new HashSet<>();
     }

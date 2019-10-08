@@ -1,6 +1,7 @@
 package Com.Networking.Processors;
 
 import Com.Networking.Protocol.AbstractDataPackage;
+import Com.Util.Interfaces.Registration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,17 +14,13 @@ import java.util.function.Consumer;
  * Not thread safe
  */
 
-public abstract class BaseProcessor {
+public abstract class BaseProcessor implements Registration<Consumer<AbstractDataPackage>> {
 
     /**
      * Where all listeners are live
      */
 
-    final List<Consumer<AbstractDataPackage>> listeners;
-
-    BaseProcessor() {
-        listeners = new ArrayList<>();
-    }
+    final List<Consumer<AbstractDataPackage>> listeners = new ArrayList<>();
 
     /**
      * How to register actions
@@ -31,9 +28,9 @@ public abstract class BaseProcessor {
      * @param listener actions
      */
 
-//    @Override
-    public void setListener(Consumer<AbstractDataPackage> listener) {
-        listeners.add(listener);
+    @Override
+    public boolean registerListener(Consumer<AbstractDataPackage> listener) {
+        return listeners.add(listener);
     }
 
     /**
@@ -42,16 +39,15 @@ public abstract class BaseProcessor {
      * @param listener to remove
      */
 
-//    @Override
-    public void removeListener(Consumer<AbstractDataPackage> listener) {
-        listeners.remove(listener);
+    @Override
+    public boolean removeListener(Consumer<AbstractDataPackage> listener) {
+        return listeners.remove(listener);
     }
 
     /**
      * Removes all listeners
      */
 
-//    @Override
     public void clear() {
         listeners.clear();
     }

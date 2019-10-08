@@ -186,7 +186,7 @@ public class Main {
 //                    if (!mic) {
 //                        s += "Mic can't capture the format\n";
 //                    }
-//                    s += audioClient.getAudioFormat().toString();
+//                    s += audioClient.getAudioFormatAsString().toString();
 //                    mainFrame.showDialog(s);
 //                }
 //            }

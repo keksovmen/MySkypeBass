@@ -1,7 +1,7 @@
 package Com.Audio.Output;
 
 import Com.Model.Updater;
-import Com.Util.Initialising;
+import Com.Util.Interfaces.Initialising;
 
 public interface Playable extends Initialising, Updater {
 
@@ -14,10 +14,6 @@ public interface Playable extends Initialising, Updater {
     void playCall();
 
     void stopCall();
-
-//    void removeOutput(int id);
-//
-//    void addOutput(int id);
 
     void close();
 }
