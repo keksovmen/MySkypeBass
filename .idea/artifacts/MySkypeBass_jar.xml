@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="MySkypeBass:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/MySkypeBass_jar</output-path>
-    <root id="archive" name="MySkypeBass.jar">
-      <element id="module-output" name="MySkypeBass" />
-    </root>
-  </artifact>
-</component>

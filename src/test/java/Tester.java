@@ -1,17 +1,16 @@
-import Com.Model.ClientModelBase;
-import Com.Networking.ClientController;
-import Com.Networking.Processors.ClientProcessor;
-import Com.Networking.Protocol.*;
-import Com.Networking.Readers.BaseReader;
-import Com.Networking.Server;
-import Com.Networking.Utility.BaseUser;
-import Com.Networking.Utility.WHO;
-import Com.Util.Algorithms;
+import com.Model.ClientModelBase;
+import com.Networking.ClientController;
+import com.Networking.Processors.ClientProcessor;
+import com.Networking.Protocol.*;
+import com.Networking.Readers.BaseReader;
+import com.Networking.Server;
+import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.WHO;
+import com.Util.Algorithms;
 
 import javax.sound.sampled.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
