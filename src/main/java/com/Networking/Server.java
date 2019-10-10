@@ -2,6 +2,7 @@ package com.Networking;
 
 import com.Networking.Protocol.AbstractDataPackagePool;
 import com.Networking.Protocol.ProtocolBitMap;
+import com.Networking.Utility.ProtocolValueException;
 import com.Networking.Utility.WHO;
 import com.Util.FormatWorker;
 import com.Util.Interfaces.Starting;
@@ -43,6 +44,12 @@ public class Server implements Starting {
     private final AudioFormat audioFormat;
 
     /**
+     * Must be less or equal ProtocolBitMap.MAX_VALUE
+     */
+
+    private final int MIC_CAPTURE_SIZE;
+
+    /**
      * Place where you get your unique id
      * Must starts from WHO. last index + 1
      */
@@ -70,9 +77,10 @@ public class Server implements Starting {
      * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
      * @throws IOException if port already in use
+     * @throws ProtocolValueException if mic capture size is grater than possible length of the protocol
      */
 
-    private Server(final int port, final int sampleRate, final int sampleSizeInBits /*final int usersAmount*/) throws IOException {
+    private Server(final int port, final int sampleRate, final int sampleSizeInBits /*final int usersAmount*/) throws IOException, ProtocolValueException {
         serverSocket = new ServerSocket(port);
         audioFormat = new AudioFormat(
                 sampleRate,
@@ -80,6 +88,12 @@ public class Server implements Starting {
                 1,
                 true,
                 true);
+        try {
+            MIC_CAPTURE_SIZE = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
+        } catch (ProtocolValueException e) {
+            serverSocket.close();
+            throw e;
+        }
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
         users = new ConcurrentHashMap<>();//change to one of concurrent maps
         executor = new ThreadPoolExecutor(
@@ -101,7 +115,7 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException {
+    public static Server getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits) throws IOException, ProtocolValueException {
         return new Server(
                 port,
                 sampleRate,
@@ -118,7 +132,7 @@ public class Server implements Starting {
      * @throws IOException if port already in use
      */
 
-    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException {
+    public static Server getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits) throws IOException, ProtocolValueException {
         return new Server(
                 Integer.valueOf(port),
                 Integer.valueOf(sampleRate),
@@ -226,12 +240,13 @@ public class Server implements Starting {
 
     /**
      * Format for transferring audio data
+     * and mic capture size for not violating protocol length
      *
      * @return data enough to represent audio format for client
      */
 
     public String getAudioFormat() {
-        return FormatWorker.getAudioFormatAsString(audioFormat);
+        return FormatWorker.getFullAudioPackage(audioFormat, MIC_CAPTURE_SIZE);
     }
 
 
@@ -311,6 +326,15 @@ public class Server implements Starting {
                     }
                 })
         );
+    }
+
+    private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
+        int i = (sampleRate / Resources.getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
+        i = i - i % (sampleSizeInBits / 8);
+        if (ProtocolBitMap.MAX_VALUE < i)
+            throw new ProtocolValueException("Audio capture size is larger than length of the protocol! " +
+                    i + " must be " + "<= " + ProtocolBitMap.MAX_VALUE);
+        return i;
     }
 
 }

@@ -45,6 +45,7 @@ public class Resources {
 
         properties.put("AudioFragmentSize", 8192);
         properties.put("MicQueueSize", 10);
+        properties.put("MicCaptureSizeDivider", 8);
 
         properties.put("HistorySize", 10);
 
@@ -96,12 +97,16 @@ public class Resources {
         return Integer.parseInt(instance.properties.getProperty("AudioFragmentSize"));
     }
 
-    public static int getHistorySize() {
-        return Integer.parseInt(instance.properties.getProperty("HistorySize"));
-    }
-
     public static int getMicQueueSize() {
         return Integer.parseInt(instance.properties.getProperty("MicQueueSize"));
+    }
+
+    public static int getMiCaptureSizeDivider() {
+        return Integer.parseInt(instance.properties.getProperty("MicCaptureSizeDivider"));
+    }
+
+    public static int getHistorySize() {
+        return Integer.parseInt(instance.properties.getProperty("HistorySize"));
     }
 
     public static int getBufferSize() {

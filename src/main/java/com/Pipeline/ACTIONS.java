@@ -31,7 +31,7 @@ public enum ACTIONS {
     BOTH_IN_CONVERSATION, // user who you called
     EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
     INCOMING_SOUND, // byte [] sound, int id of the dude who sent it
-
+    INVALID_AUDIO_FORMAT, // string is message
 
 
 }

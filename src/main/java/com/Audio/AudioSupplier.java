@@ -1,7 +1,5 @@
 package com.Audio;
 
-import com.Networking.Protocol.ProtocolBitMap;
-
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -60,14 +58,14 @@ public class AudioSupplier {
         return MIC_CAPTURE_SIZE;
     }
 
-    public static boolean setAudioFormat(AudioFormat format) {
+    public static boolean setAudioFormat(AudioFormat format, int micSize) {
         sourceLines.clear();
         targetLines.clear();
         boolean result = isLineExist(format, SourceDataLine.class) &&
                 isLineExist(format, TargetDataLine.class);
         if (result) {
             audioFormat = format;
-            MIC_CAPTURE_SIZE = calculateMicCaptureSize(audioFormat);
+            MIC_CAPTURE_SIZE = micSize;
         }
         return result;
     }
@@ -100,15 +98,4 @@ public class AudioSupplier {
         return result;
     }
 
-    private static int calculateMicCaptureSize(AudioFormat format) {
-        int i = (int) ((format.getSampleRate() / 8) *
-                (format.getSampleSizeInBits() / 8));
-        i = i - i % (format.getSampleSizeInBits() / 8);
-        if (i > ProtocolBitMap.MAX_VALUE) {
-            System.exit(2);
-            throw new IllegalArgumentException("Capture size can't be more than protocol can handle!\n" +
-                    i + " <= " + ProtocolBitMap.MAX_VALUE);
-        }
-        return i;
-    }
 }

@@ -129,6 +129,10 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     showInfoMessage("Disconnected from server!");
                     break;
                 }
+                case INVALID_AUDIO_FORMAT:{
+                    showErrorMessage(stringData);
+                    break;
+                }
             }
 
             entrancePane.handle(action, from, stringData, bytesData, intData);

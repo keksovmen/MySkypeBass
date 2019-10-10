@@ -10,6 +10,7 @@ import com.Networking.Protocol.DataPackagePool;
 import com.Networking.Readers.BaseReader;
 import com.Networking.Utility.BaseUser;
 import com.Networking.Utility.ClientUser;
+import com.Networking.Utility.ProtocolValueException;
 import com.Networking.Utility.WHO;
 import com.Networking.Writers.ClientWriter;
 import com.Pipeline.ACTIONS;
@@ -148,10 +149,11 @@ public class ClientController extends BaseController implements Registration<Act
 
             AbstractDataPackage read = reader.read();
             AudioFormat audioFormat = FormatWorker.parseAudioFormat(read.getDataAsString());
+            int micCaptureSize = FormatWorker.parseMicCaptureSize(read.getDataAsString());
             DataPackagePool.returnPackage(read);
 
             //sets audio format and tell the server can speaker play format or not
-            if (!AudioSupplier.setAudioFormat(audioFormat)) {
+            if (!AudioSupplier.setAudioFormat(audioFormat, micCaptureSize)) {
                 writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
                 return false;
             }
@@ -430,7 +432,7 @@ public class ClientController extends BaseController implements Registration<Act
                 plainRespond(ACTIONS.CONNECT_FAILED);
                 return;
             }
-            boolean audioFormatAccepted = start("ClientResponder Reader");
+            boolean audioFormatAccepted = start("Client Reader");
             if (!audioFormatAccepted) {
                 //tell gui to show that audio format can't be set
                 stringRespond(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED,
@@ -472,8 +474,10 @@ public class ClientController extends BaseController implements Registration<Act
             try {
                 server = Server.getFromStrings(port, sampleRate, sampleSize);
             } catch (IOException e) {
-                server = null;
                 stringRespond(ACTIONS.PORT_ALREADY_BUSY, port);
+                return;
+            } catch (ProtocolValueException e) {
+                stringRespond(ACTIONS.INVALID_AUDIO_FORMAT, e.getMessage());
                 return;
             }
             boolean start = this.server.start("Server");

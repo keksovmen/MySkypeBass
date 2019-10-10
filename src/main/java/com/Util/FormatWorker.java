@@ -32,17 +32,22 @@ public class FormatWorker {
      */
 
     public static AudioFormat parseAudioFormat(String data) {
-        String[] strings = data.split("\n");
-        Pattern pattern = Pattern.compile("\\d+?\\b");
-        Matcher matcher = pattern.matcher(strings[0]);
+        Pattern pattern = Pattern.compile("Sample rate = (\\d+)\n" +
+                "Sample size = (\\d+)");
+        Matcher matcher = pattern.matcher(data);
         if (!matcher.find())
             throw new IllegalArgumentException("Given string doesn't contain proper audio format! " + data);
-        int sampleRate = Integer.valueOf(matcher.group());
-        matcher = pattern.matcher(strings[1]);
-        if (!matcher.find())
-            throw new IllegalArgumentException("Given string doesn't contain proper audio format! " + data);
-        int sampleSize = Integer.valueOf(matcher.group());
+        int sampleRate = Integer.parseInt(matcher.group(1));
+        int sampleSize = Integer.parseInt(matcher.group(2));
         return new AudioFormat(sampleRate, sampleSize, 1, true, true);
+    }
+
+    public static int parseMicCaptureSize(String data){
+        Pattern compile = Pattern.compile("Mic capture size = (\\d+)");
+        Matcher matcher = compile.matcher(data);
+        if (!matcher.find())
+            throw new IllegalArgumentException("Given string doesn't contain proper mic capture size! " + data);
+        return Integer.parseInt(matcher.group(1));
     }
 
     /**
@@ -52,8 +57,16 @@ public class FormatWorker {
      */
 
     public static String getAudioFormatAsString(AudioFormat audioFormat) {
-        return "Sample rate = " + audioFormat.getSampleRate() + "\n" +
+        return "Sample rate = " + (int) audioFormat.getSampleRate() + "\n" +
                 "Sample size = " + audioFormat.getSampleSizeInBits();
+    }
+
+    public static String getMicCaptureSizeAsString(int micCaptureSize){
+        return "Mic capture size = " + micCaptureSize;
+    }
+
+    public static String getFullAudioPackage(AudioFormat format, int micCaptureSize){
+        return getAudioFormatAsString(format) + "\n" + getMicCaptureSizeAsString(micCaptureSize);
     }
 
     public static boolean isHostNameCorrect(String hostName) {

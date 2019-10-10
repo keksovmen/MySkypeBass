@@ -5,6 +5,7 @@ import com.Networking.Protocol.*;
 import com.Networking.Readers.BaseReader;
 import com.Networking.Server;
 import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.ProtocolValueException;
 import com.Networking.Utility.WHO;
 import com.Util.Algorithms;
 
@@ -194,7 +195,7 @@ public class Tester {
         assert (read.getHeader().getTo() == 255);
     }
 
-    private static void testServer() throws InterruptedException, IOException {
+    private static void testServer() throws InterruptedException, IOException, ProtocolValueException {
         System.out.println("SERVER TEST BEGINS");
 
         System.out.println("Creating server");
@@ -273,7 +274,7 @@ public class Tester {
         System.out.println("SERVER TEST ENDS");
     }
 
-    private static void clientTest() throws IOException, InterruptedException {
+    private static void clientTest() throws IOException, InterruptedException, ProtocolValueException {
         System.out.println("CLIENT TEST BEGINS");
         Server server = Server.getFromIntegers(
                 8188,
@@ -349,7 +350,7 @@ public class Tester {
         System.out.println("CLIENT TEST ENDS");
     }
 
-    public static void testFullConstruction() throws IOException, InterruptedException {
+    public static void testFullConstruction() throws IOException, InterruptedException, ProtocolValueException {
         Server server = Server.getFromIntegers(8188, 32_000, 16);
         server.start("Server");
 //        ClientResponder clientResponder = new ClientResponder(null);
