@@ -21,6 +21,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
 
@@ -153,7 +156,9 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
 
     @Override
     public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+        clientLogger.entering(this.getClass().getName(), "act", button);
         actionableLogicList.forEach(warDuty -> warDuty.act(button, plainData, stringData, integerData));
+        clientLogger.exiting(this.getClass().getName(), "act", button);
     }
 
     @Override
@@ -274,20 +279,26 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         frame.setContentPane(purposePane.getPane());
         frame.setJMenuBar(produceMenuBar(this));
         repaint();
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onConnected",
+                "Change entrance pane to purposePane, and set menuBar");
     }
 
     private void onDisconnect() {
         frame.setContentPane(entrancePane.getPane());
         frame.setJMenuBar(null);
         repaint();
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onDisconnect",
+                "Change a shown pane to entrance pane, and set menuBar to null");
     }
 
     private void onOutCall(BaseUser who) {
         callDialog.showOutcoming(who, frame.getRootPane());
+
     }
 
     private void onIncomingCall(BaseUser who, String dudes) {
         callDialog.showIncoming(who, dudes, frame.getRootPane());
+
     }
 
     private void repaint() {

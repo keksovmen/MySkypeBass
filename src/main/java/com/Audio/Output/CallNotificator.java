@@ -7,6 +7,9 @@ import com.Util.Interfaces.Starting;
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 /**
  * Need for playing sound while calling or get called
@@ -23,12 +26,16 @@ public class CallNotificator implements Starting, ChangeOutput {
     public boolean start(String name) {
         if (work)
             return false;
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "start",
+                "Started playing call sound");
         work = true;
 
         new Thread(() -> {
             while (work) {
                 playOneFile("/sound/callNotification/Call.WAV");
             }
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "start",
+                    "Stopped playing call sound");
         }, name).start();
 
         return true;

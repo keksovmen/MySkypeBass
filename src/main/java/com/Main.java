@@ -10,16 +10,22 @@ import com.Networking.Protocol.DataPackagePool;
 import com.Networking.Utility.WHO;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.logging.LogManager;
 
 public class Main {
 
 
     public static void main(String[] args) {
+        try {
+            LogManager.getLogManager().readConfiguration(Main.class.getResourceAsStream("/properties/logging.properties"));
+        } catch (IOException e) {
+            System.err.println("Cant read logging properties, so they won't work");
+        }
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         AbstractDataPackagePool.init(new DataPackagePool());
-//        String callSongName = Resources.callSongName;
         try {
             SwingUtilities.invokeAndWait(() -> {
                 ClientModelBase model = new ClientModelBase();

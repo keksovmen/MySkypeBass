@@ -14,9 +14,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 /**
  * Handles messaging, call pane
@@ -111,9 +113,12 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     @Override
     public void update(BaseUnEditableModel model) {
+        clientLogger.entering(this.getClass().getName(), "update");
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+                "Removed all users from local map and added new ones - " + Arrays.toString(model.getUserMap().values().toArray()));
         //Go through tabs and set online or offline icons, except CONFERENCE
         changeIconsOfTabs();
 
@@ -121,7 +126,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
         mainPane.revalidate();
         mainPane.repaint();
-
+        clientLogger.exiting(this.getClass().getName(), "update");
     }
 
     @Override
@@ -186,6 +191,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     }
 
     private void onDisconnect() {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onDisconnect",
+                "Removed all tabs and their cache");
         removeAllTabs();
         tabs.clear();
     }
@@ -195,6 +202,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     private void call(ActionableLogic actionableLogic) {
         if (!selected())
             return;
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "call",
+                "Pressed call button with - " + getSelected());
         actionableLogic.act(
                 BUTTONS.CALL,
                 getSelected(),
@@ -204,6 +213,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     }
 
     private void disconnect(ActionableLogic actionableLogic) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "disconnect",
+                "Pressed disconnect");
         actionableLogic.act(
                 BUTTONS.DISCONNECT,
                 null,
@@ -330,12 +341,21 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      */
 
     private void showMessage(final BaseUser from, final String message, boolean toConv) {
-        if (from == null) // do nothing when dude is not present in model
+        clientLogger.entering(this.getClass().getName(), "showMessage", from);
+        if (from == null) { // do nothing when dude is not present in model
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+                    "Dude who sent message is not present in model");
+            clientLogger.exiting(this.getClass().getName(), "showMessage", from);
             return;
+        }
         String tabName;
         if (toConv) {
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+                    "Message for conversation");
             tabName = CONVERSATION_TAB_NAME;
         } else {
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+                    "Message for you");
             if (isShownAlready(from)) {
                 tabs.get(from).showMessage(message, false);
             } else {
@@ -352,6 +372,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
             tabName = from.toString();
         }
         colorForMessage(callTable.indexOfTab(tabName));
+        clientLogger.exiting(this.getClass().getName(), "showMessage", from);
     }
 
 

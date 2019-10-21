@@ -12,10 +12,14 @@ import com.Util.History.HistoryFactory;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 /**
  * Handle adding new users or removing
@@ -109,10 +113,15 @@ class ConferencePane implements UpdaterAndHandler {
 
     @Override
     public void update(BaseUnEditableModel model) {
+        clientLogger.entering(this.getClass().getName(), "update");
         Set<BaseUser> conversation = model.getConversation();
 
         Map<BaseUser, UserSettings> tmp = new HashMap<>();
-
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+                "Changing amount of users in conversation from - " +
+                        Arrays.toString(conferenceMembers.keySet().toArray())
+                + ", to - " + Arrays.toString(conversation.toArray())
+        );
         conferenceMembers.forEach((user, userSettings) -> {
             if (!conversation.contains(user))
                 tmp.put(user, userSettings);
@@ -126,6 +135,8 @@ class ConferencePane implements UpdaterAndHandler {
                 addUser(user);
         });
 
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+                "Changed dudes result is - " + Arrays.toString(conferenceMembers.keySet().toArray()));
         repaint();
     }
 
@@ -134,6 +145,8 @@ class ConferencePane implements UpdaterAndHandler {
     }
 
     private void onMessage(BaseUser from, String message) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onMessage",
+                "Incoming message in to conversation, from - " + from);
         showMessage(from, message);
     }
 
@@ -150,6 +163,8 @@ class ConferencePane implements UpdaterAndHandler {
     }
 
     private void disconnectAction(ActionableLogic whereToReportActions, GUIDuty guiDuty) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "disconnectAction",
+                "Pressed disconnect from conversation button");
         whereToReportActions.act(
                 BUTTONS.EXIT_CONFERENCE,
                 null,
@@ -263,6 +278,8 @@ class ConferencePane implements UpdaterAndHandler {
      */
 
     private void clear() {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "clear",
+                "Cleared all settings panes, set fields to default");
         settingsPane.removeAll();
         conferenceMembers.clear();
         muteButton.setText("Mute");

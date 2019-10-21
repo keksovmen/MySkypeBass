@@ -23,7 +23,7 @@ public class Test {
 ////                if (dataPackage.getHeader().getCode().equals(CODE.SEND_CALL)){
 ////                    try {
 ////                        countDownLatch.await();
-////                        clientController.getWriter().writeAccept(clientController.getMe().getId(), dataPackage.getHeader().getFrom());
+////                        clientController.getWriter().writeAcceptCall(clientController.getMe().getId(), dataPackage.getHeader().getFrom());
 ////                    } catch (InterruptedException e) {
 ////                        e.printStackTrace();
 ////                    } catch (IOException e) {

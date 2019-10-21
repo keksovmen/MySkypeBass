@@ -8,6 +8,10 @@ import com.Pipeline.BUTTONS;
 
 import javax.swing.*;
 
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
+
 /**
  * Handle calls
  * Gives you an opportunity to cancel, deny and approve calls
@@ -77,6 +81,8 @@ public class CallDialog extends JDialog implements ActionsHandler {
     }
 
     private void onOk(ActionableLogic whereToReportActions) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onOk",
+                "Pressed accept call button with - " + user + ", dudes - " + dudes);
         whereToReportActions.act(
                 BUTTONS.CALL_ACCEPTED,
                 user,
@@ -87,6 +93,8 @@ public class CallDialog extends JDialog implements ActionsHandler {
     }
 
     private void onDeny(ActionableLogic whereToReportActions) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onDeny",
+                "Pressed deny call button with - " + user + ", dudes - " + dudes);
         whereToReportActions.act(
                 BUTTONS.CALL_DENIED,
                 user,
@@ -97,6 +105,8 @@ public class CallDialog extends JDialog implements ActionsHandler {
     }
 
     private void onCancel(ActionableLogic whereToReportActions) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onCancel",
+                "Pressed cancel call button with - " + user + ", dudes - " + dudes);
         whereToReportActions.act(
                 BUTTONS.CALL_CANCELLED,
                 user,
@@ -115,6 +125,8 @@ public class CallDialog extends JDialog implements ActionsHandler {
      */
 
     public void showOutcoming(BaseUser who, JComponent relativeTo) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onOutCall",
+                "Show call dialog box for out call to - " + who);
         user = who;
         dudes = "";
 
@@ -144,6 +156,9 @@ public class CallDialog extends JDialog implements ActionsHandler {
      */
 
     public void showIncoming(BaseUser fromWho, String conversationInfo, JComponent relativeTo) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "onOutCall",
+                "Show call dialog box for input call акщь - " + fromWho +
+                ", conversation - " + conversationInfo);
         user = fromWho;
         dudes = conversationInfo;
 

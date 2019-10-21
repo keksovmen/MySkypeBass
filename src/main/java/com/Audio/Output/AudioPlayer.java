@@ -10,11 +10,11 @@ import com.Util.Resources;
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playable {
 
@@ -130,6 +130,12 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
 
         Map<Integer, SourceDataLine> tmp = new HashMap<>();
 
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+                "Changing amount outputs in conversation from - " +
+                        Arrays.toString(outputs.keySet().toArray())
+                        + ", to - " + Arrays.toString(conversation.toArray())
+        );
+
         outputs.forEach((integer, sourceDataLine) -> {
             if (conversation.contains(userMap.get(integer)))
                 tmp.put(integer, sourceDataLine);
@@ -143,6 +149,9 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
             if (!outputs.containsKey(user.getId()))
                 addOutput(user.getId());
         });
+
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+                "Changed outputs result is - " + Arrays.toString(outputs.keySet().toArray()));
     }
 
     /**

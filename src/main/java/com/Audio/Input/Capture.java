@@ -8,10 +8,14 @@ import com.Util.Resources;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.TargetDataLine;
+import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 /**
  * Represents a microphone
@@ -85,6 +89,8 @@ public class Capture implements DefaultMic, ChangeableInput {
         } catch (LineUnavailableException e) {
             return false;
         }
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "start",
+                "Mic thread start capturing");
 
         new Thread(() -> {
             while (work) {
@@ -105,6 +111,8 @@ public class Capture implements DefaultMic, ChangeableInput {
                         executorService.execute(() -> sendData.accept(bytes));
                 }
             }
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "start",
+                    "Mic thread finished");
         }, name).start();
 
         return true;

@@ -28,6 +28,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.clientLogger;
 
 /**
  * Uses only as holder of network stuff
@@ -47,6 +50,7 @@ public class ClientController extends BaseController implements Registration<Act
     private ClientUser me;
 
 
+
     public ClientController(ChangeableModel model) {
         this.model = model;
         processor = new ClientProcessor();
@@ -63,6 +67,7 @@ public class ClientController extends BaseController implements Registration<Act
      */
 
     public boolean connect(String myName, final String hostName, final int port) {
+        clientLogger.entering(this.getClass().getName(), "connect");
         if (socket != null &&
                 !socket.isClosed()) {
             throw new IllegalStateException("ClientResponder's socket is already opened. " +
@@ -85,10 +90,12 @@ public class ClientController extends BaseController implements Registration<Act
                 socket.close();
             } catch (IOException ignored) {
             }
+            clientLogger.logp(Level.FINER, this.getClass().getName(), "connect",
+                    "Failed to connect due to network exception");
             return false;
         }
         me = new ClientUser(myName, WHO.NO_NAME.getCode());
-
+        clientLogger.exiting(this.getClass().getName(), "connect");
         return true;
     }
 
@@ -145,6 +152,7 @@ public class ClientController extends BaseController implements Registration<Act
     @Override
     boolean authenticate() {
         try {
+            clientLogger.entering(this.getClass().getName(), "authenticate");
             writer.writeName(me.getName());
 
             AbstractDataPackage read = reader.read();
@@ -154,7 +162,11 @@ public class ClientController extends BaseController implements Registration<Act
 
             //sets audio format and tell the server can speaker play format or not
             if (!AudioSupplier.setAudioFormat(audioFormat, micCaptureSize)) {
-                writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
+                writer.writeDenyCall(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
+                clientLogger.logp(Level.FINER, this.getClass().getName(), "authenticate",
+                        "can't handle given audio format - " + audioFormat + ", mic capture size - " +
+                        micCaptureSize);
+                clientLogger.exiting(this.getClass().getName(), "authenticate");
                 return false;
             }
             writer.writeApproveAudioFormat(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
@@ -166,9 +178,9 @@ public class ClientController extends BaseController implements Registration<Act
             );
             AbstractDataPackagePool.returnPackage(read);
         } catch (IOException e) {
-            e.printStackTrace();
             return false;
         }
+        clientLogger.exiting(this.getClass().getName(), "authenticate");
         return true;
     }
 
@@ -220,21 +232,30 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onUsers(AbstractDataPackage dataPackage) {
         String users = dataPackage.getDataAsString();
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onUsers", "Users income from the server - " + users);
         model.addToModel(BaseUser.parseUsers(users));
     }
 
     void onAddUserToList(AbstractDataPackage dataPackage) {
         String user = dataPackage.getDataAsString();
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onAddUserToList", "Incoming user from the server - " + user);
         model.addToModel(BaseUser.parse(user));
     }
 
     void onRemoveUserFromList(AbstractDataPackage dataPackage) {
         int user = dataPackage.getDataAsInt();
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onRemoveUserFromList", "User to be removed, from the server - " + user);
         model.removeFromModel(user);
     }
 
     void onIncomingMessage(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onIncomingMessage", "Message income from - " +
+                        dataPackage.getHeader().getFrom());
         handle(
                 ACTIONS.INCOMING_MESSAGE,
                 sender,
@@ -246,12 +267,18 @@ public class ClientController extends BaseController implements Registration<Act
 
     void onIncomingCall(AbstractDataPackage dataPackage) {
         BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onIncomingCall", "Incoming call from - " + dataPackage.getHeader().getFrom(), sender);
         synchronized (me) {
+            clientLogger.logp(Level.FINER, this.getClass().getName(),
+                    "onIncomingCall", "Sync on user" , me);
             if (me.isCalling() != ClientUser.NO_ONE) {
                 //Auto deny because you already calling and send some shit
                 //that will tell that you wre called
+                clientLogger.logp(Level.FINER, this.getClass().getName(),
+                        "onIncomingCall", "I am already calling some one - " + me.isCalling());
                 try {
-                    writer.writeDeny(getId(), sender.getId());
+                    writer.writeDenyCall(getId(), sender.getId());
                     dudeRespond(ACTIONS.CALLED_BUT_BUSY, sender);
                 } catch (IOException ignored) {
                 }
@@ -260,30 +287,41 @@ public class ClientController extends BaseController implements Registration<Act
             me.call(sender.getId());
         }
         String dudesInConv = dataPackage.getDataAsString();
-        //Use BaseUser.parse(dudesInConv)
         handle(ACTIONS.INCOMING_CALL, sender, dudesInConv, null, -1);
     }
 
     void onCallCanceled(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onCallCanceled", "Who was calling me cancelled the call - " +
+                        dataPackage.getHeader().getFrom());
         me.drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         dudeRespond(ACTIONS.CALL_CANCELLED, baseUser);
     }
 
     void onCallDenied(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onCallDenied", "Who I was calling denied the call - " +
+                        dataPackage.getHeader().getFrom());
         me.drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         dudeRespond(ACTIONS.CALL_DENIED, baseUser);
     }
 
     void onCallAccepted(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onCallAccepted", "Who I was calling accepted the call - " +
+                        dataPackage.getHeader().getFrom());
         me.drop();
         BaseUser dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
-
         callAcceptRoutine(dude, dataPackage.getDataAsString());
     }
 
     void onBothInConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onBothInConversation",
+                "When dude or me called each other, server said we in different conversations - " +
+                dataPackage.getHeader().getFrom());
         if (me.isCalling() == dataPackage.getHeader().getFrom())
             me.drop();
         dudeRespond(ACTIONS.BOTH_IN_CONVERSATION,
@@ -291,17 +329,25 @@ public class ClientController extends BaseController implements Registration<Act
     }
 
     void onExitConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onExitConversation", "Server told I was the only one in conversation");
         plainRespond(ACTIONS.EXITED_CONVERSATION);
         model.clearConversation();
         AbstractDataPackagePool.clearStorage();
     }
 
     void onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onRemoveDudeFromConversation",
+                "Server said remove from conversation - " + dataPackage.getHeader().getFrom());
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         model.removeFromConversation(baseUser);
     }
 
     void onAddDudeToConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(),
+                "onAddDudeToConversation",
+                "Server said add to conversation - " + dataPackage.getHeader().getFrom());
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         model.addToConversation(baseUser);
     }
@@ -321,23 +367,34 @@ public class ClientController extends BaseController implements Registration<Act
     }
 
     private void plainRespond(ACTIONS action) {
+        clientLogger.entering(this.getClass().getName(), "plainRespond", action);
         handle(action, null, null, null, -1);
+        clientLogger.exiting(this.getClass().getName(), "plainRespond", action);
     }
 
     private void stringRespond(ACTIONS action, String data) {
+        clientLogger.entering(this.getClass().getName(), "stringRespond", action);
         handle(action, null, data, null, -1);
+        clientLogger.exiting(this.getClass().getName(), "stringRespond", action);
+
     }
 
     private void dudeRespond(ACTIONS action, BaseUser dude) {
+        clientLogger.entering(this.getClass().getName(), "dudeRespond", action);
         handle(action, dude, null, null, dude.getId());
+        clientLogger.exiting(this.getClass().getName(), "dudeRespond", action);
     }
 
     private void callAcceptRoutine(BaseUser dude, String others) {
+        clientLogger.entering(this.getClass().getName(), "callAcceptRoutine");
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "callAcceptRoutine",
+                "Accepting call with - " + dude + ", others - " + others);
         plainRespond(ACTIONS.CALL_ACCEPTED);
         model.addToConversation(dude);
         for (BaseUser baseUser : BaseUser.parseUsers(others)) {
             model.addToConversation(baseUser);
         }
+        clientLogger.exiting(this.getClass().getName(), "callAcceptRoutine");
     }
 
     /**
@@ -354,6 +411,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         @Override
         public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+            clientLogger.entering(this.getClass().getName(), "act", button);
             switch (button) { //there probably will be swing thread
                 case CONNECT: {
                     processor.execute(() -> onConnect(plainData));
@@ -397,6 +455,7 @@ public class ClientController extends BaseController implements Registration<Act
                 }
 
             }
+            clientLogger.exiting(this.getClass().getName(), "act", button);
         }
 
         /* Action for UI here */
@@ -495,6 +554,8 @@ public class ClientController extends BaseController implements Registration<Act
             }
             int portAsInt = Integer.parseInt(port);
             if (!FormatWorker.portInRange(portAsInt)) {
+                clientLogger.logp(Level.FINER, this.getClass().getName(),
+                        "checkPort", "Port out of range - " + port);
                 handle(
                         ACTIONS.PORT_OUT_OF_RANGE,
                         null,
@@ -535,6 +596,8 @@ public class ClientController extends BaseController implements Registration<Act
 
         private void onCallSomeOne(BaseUser baseUser) {
             synchronized (me) {
+                clientLogger.logp(Level.FINER, this.getClass().getName(), "onCallSomeOne",
+                        "Sync on me - " + me);
                 if (me.isCalling() != ClientUser.NO_ONE) {
                     plainRespond(ACTIONS.ALREADY_CALLING_SOMEONE);
                     return;
@@ -554,7 +617,7 @@ public class ClientController extends BaseController implements Registration<Act
         private void onDenyCall(BaseUser user) {
             me.drop();
             try {
-                writer.writeDeny(getId(), user.getId());
+                writer.writeDenyCall(getId(), user.getId());
             } catch (IOException e) {
                 //reader will fix all problems
             }
@@ -563,7 +626,7 @@ public class ClientController extends BaseController implements Registration<Act
         private void onCancelCall(BaseUser user) {
             me.drop();
             try {
-                writer.writeCancel(getId(), user.getId());
+                writer.writeCancelCall(getId(), user.getId());
             } catch (IOException e) {
                 //reader will fix all problems
             }
@@ -572,7 +635,7 @@ public class ClientController extends BaseController implements Registration<Act
         private void onCallAccepted(BaseUser dude, String others) {
             me.drop();
             try {
-                writer.writeAccept(getId(), dude.getId());
+                writer.writeAcceptCall(getId(), dude.getId());
             } catch (IOException e) {
                 //reader will fix all problems
                 return;
@@ -583,7 +646,7 @@ public class ClientController extends BaseController implements Registration<Act
 
         private void onExitConference() {
             try {
-                writer.writeDisconnectFromConv(getId());
+                writer.writeDisconnectFromConversation(getId());
                 model.clearConversation();
                 plainRespond(ACTIONS.EXITED_CONVERSATION);
             } catch (IOException e) {
