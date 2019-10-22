@@ -14,6 +14,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.serverLogger;
 
 /**
  * Implementation of server with my protocol
@@ -218,6 +221,8 @@ public class Server implements Starting {
      */
 
     public void registerController(ServerController serverController) {
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "registerController",
+                "Controller is registered - " + serverController.getMe());
         users.put(serverController.getId(), serverController);
         if (work)
             sendAddDude(serverController);
@@ -287,6 +292,8 @@ public class Server implements Starting {
      */
 
     public void sendAddDude(ServerController dudesController) {
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "sendAddDude",
+                "All others dudes are notified about this user - " + dudesController.getMe());
         users.forEach((integer, controller) ->
                 {
                     if (integer == dudesController.getId())

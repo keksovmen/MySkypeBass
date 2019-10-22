@@ -124,8 +124,8 @@ public class CallDialog extends JDialog implements ActionsHandler {
      * @param who you are calling
      */
 
-    public void showOutcoming(BaseUser who, JComponent relativeTo) {
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "onOutCall",
+    public void showOutgoingCall(BaseUser who, JComponent relativeTo) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "showOutgoingCall",
                 "Show call dialog box for out call to - " + who);
         user = who;
         dudes = "";
@@ -149,15 +149,15 @@ public class CallDialog extends JDialog implements ActionsHandler {
 
     /**
      * Call when some one called you
-     * Same purpose as showOutcoming()
+     * Same purpose as showOutgoingCall()
      *
      * @param fromWho          who calls you
      * @param conversationInfo and conversation with him
      */
 
-    public void showIncoming(BaseUser fromWho, String conversationInfo, JComponent relativeTo) {
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "onOutCall",
-                "Show call dialog box for input call акщь - " + fromWho +
+    public void showIncomingCall(BaseUser fromWho, String conversationInfo, JComponent relativeTo) {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "showIncomingCall",
+                "Show call dialog box for input call from - " + fromWho +
                 ", conversation - " + conversationInfo);
         user = fromWho;
         dudes = conversationInfo;

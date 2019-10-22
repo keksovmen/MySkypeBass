@@ -271,7 +271,7 @@ public class ClientController extends BaseController implements Registration<Act
                 "onIncomingCall", "Incoming call from - " + dataPackage.getHeader().getFrom(), sender);
         synchronized (me) {
             clientLogger.logp(Level.FINER, this.getClass().getName(),
-                    "onIncomingCall", "Sync on user" , me);
+                    "onIncomingCall", "Sync on user - " + me);
             if (me.isCalling() != ClientUser.NO_ONE) {
                 //Auto deny because you already calling and send some shit
                 //that will tell that you wre called

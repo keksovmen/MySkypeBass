@@ -1,6 +1,9 @@
 package com.Networking.Utility;
 
 import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.serverLogger;
 
 /**
  * Server version of a user
@@ -56,6 +59,8 @@ public class ServerUser extends BaseUser {
     }
 
     public void setConversation(Conversation conversation) {
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "setConversation",
+                "Set conversation for - " + this + ", from - " + this.conversation + ", to - " + conversation);
         this.conversation = conversation;
     }
 

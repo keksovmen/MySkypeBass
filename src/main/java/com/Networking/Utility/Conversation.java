@@ -5,8 +5,12 @@ import com.Networking.Protocol.AbstractDataPackage;
 import com.Networking.ServerController;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.serverLogger;
 
 /**
  * Handles all conversation actions
@@ -90,6 +94,9 @@ public class Conversation {
             }
         });
         users.add(dude);
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "addDude",
+                "Added this dude to conversation - " + dude);
+
         dude.getMe().setConversation(this);
     }
 
@@ -103,6 +110,8 @@ public class Conversation {
 
     public synchronized void removeDude(ServerController user) {
         users.remove(user);
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "removeDude",
+                "Removed this dude from conversation - " + user.getMe());
         user.getMe().setConversation(null);
         users.forEach(serverController -> {
             try {
@@ -113,6 +122,8 @@ public class Conversation {
         });
         if (users.size() == 1){
             ServerController last = users.get(0);
+            serverLogger.logp(Level.FINER, this.getClass().getName(), "removeDude",
+                    "Last dude in conversation, trying to notify him about it - " + last);
             try {
                 last.getWriter().writeStopConv(last.getId());
                 last.getMe().setConversation(null);
@@ -138,5 +149,12 @@ public class Conversation {
             result.append(serverController.getMe().toString()).append("\n");
         });
         return result.toString();
+    }
+
+    @Override
+    public String toString() {
+        return "Conversation{" +
+                "users=" + users +
+                '}';
     }
 }

@@ -292,12 +292,12 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
     }
 
     private void onOutCall(BaseUser who) {
-        callDialog.showOutcoming(who, frame.getRootPane());
+        callDialog.showOutgoingCall(who, frame.getRootPane());
 
     }
 
     private void onIncomingCall(BaseUser who, String dudes) {
-        callDialog.showIncoming(who, dudes, frame.getRootPane());
+        callDialog.showIncomingCall(who, dudes, frame.getRootPane());
 
     }
 

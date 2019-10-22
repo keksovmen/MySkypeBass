@@ -14,6 +14,9 @@ import com.Networking.Writers.ServerWriter;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import static com.Util.Logging.LoggerUtils.serverLogger;
 
 /**
  * Handles all server actions for the connected user
@@ -41,6 +44,8 @@ public class ServerController extends BaseController {
         if (me.inConv()) {
             me.getConversation().removeDude(this);
         }
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "cleanUp",
+                "Thread is almost finished - " + me);
     }
 
     /**
@@ -78,7 +83,8 @@ public class ServerController extends BaseController {
 
             me = new ServerUser(name, id);
             Thread.currentThread().setName(Thread.currentThread().getName() + id);
-
+            serverLogger.logp(Level.FINER, this.getClass().getName(), "authenticate",
+                    "New thread is running for - " + me);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -103,7 +109,13 @@ public class ServerController extends BaseController {
         processor.getOnExitConference().setListener(Handlers.onExitConversation(this));
         processor.getOnSendSound().setListener(Handlers.onSendSound(this));
 
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "dataInitialisation",
+                "Authenticate finished good, so now adding you to server model - " + me);
+
         server.registerController(this);
+
+        serverLogger.logp(Level.FINER, this.getClass().getName(), "dataInitialisation",
+                "Sending all users for you for first time - " + me);
         sendUsers();
     }
 
@@ -141,6 +153,13 @@ public class ServerController extends BaseController {
         return me;
     }
 
+    @Override
+    public String toString() {
+        return "ServerController{" +
+                "me=" + me +
+                '}';
+    }
+
     private static class Handlers {
 
         /**
@@ -151,12 +170,20 @@ public class ServerController extends BaseController {
          */
 
         private static Consumer<AbstractDataPackage> onUsersRequest(ServerController current) {
-            return dataPackage -> current.sendUsers();
+            return dataPackage -> {
+                serverLogger.exiting(current.getClass().getName(), "onUserRequest",
+                        "Dude Ask for users - " + current.getMe() );
+                current.sendUsers();
+            };
         }
 
         private static Consumer<AbstractDataPackage> onTransfer(ServerController current) {
             return dataPackage -> {
                 int to = dataPackage.getHeader().getTo();
+                serverLogger.logp(Level.FINER, current.getClass().getName(), "onTransfer",
+                        "Transferring code/message to - " + to + ", from - " +
+                                dataPackage.getHeader().getFrom() + ", CODE is - " +
+                                dataPackage.getHeader().getCode());
                 if (to == WHO.CONFERENCE.getCode()) {
                     Conversation conversation = current.getMe().getConversation();
                     if (conversation != null) {
@@ -186,10 +213,13 @@ public class ServerController extends BaseController {
 
         private static Consumer<AbstractDataPackage> onCall(ServerController current) {
             return dataPackage -> {
+                serverLogger.entering(current.getClass().getName(), "onCall", "Call initiator is - " + current.me);
                 int to = dataPackage.getHeader().getTo();
                 ServerController receiver = checkedGet(current, to);
-                if (receiver == null)
+                if (receiver == null) {
+                    serverLogger.exiting(current.getClass().getName(), "onCall", "Receiver is not on server");
                     return;
+                }
 
                 //check if we both in conversations
                 ServerUser me = current.me;
@@ -197,6 +227,8 @@ public class ServerController extends BaseController {
                 Runnable release = doubleLock(me, dude);
                 try {
                     if (me.inConv() && dude.inConv()) {
+                        serverLogger.logp(Level.FINER, current.getClass().getName(), "onCall",
+                                "Me and dude in conversation");
                         try {
                             current.writer.writeBothInConversations(current.getId(), receiver.getId());
                         } catch (IOException e) {
@@ -211,7 +243,10 @@ public class ServerController extends BaseController {
                     }
                     try {
                         if (me.inConv()) {
-                            dataPackage.setData(me.getConversation().getAllToString(current));
+                            String allToString = me.getConversation().getAllToString(current);
+                            serverLogger.logp(Level.FINER, current.getClass().getName(), "onCall",
+                                    "Me in conversation adding dudes in conversation as data - " + allToString);
+                            dataPackage.setData(allToString);
                         }
                         receiver.writer.transferPacket(dataPackage);
                     } catch (IOException e) {
@@ -220,6 +255,7 @@ public class ServerController extends BaseController {
                     }
                 } finally {
                     release.run();
+                    serverLogger.exiting(current.getClass().getName(), "onCall");
                 }
             };
         }
@@ -230,10 +266,16 @@ public class ServerController extends BaseController {
 
         private static Consumer<AbstractDataPackage> onCallAccept(ServerController current) {
             return dataPackage -> {
+                serverLogger.entering(current.getClass().getName(), "onCallAccepted",
+                        "Dude who accepted is - " + current.getMe());
+
                 int to = dataPackage.getHeader().getTo();
                 ServerController receiver = checkedGet(current, to);
-                if (receiver == null)
+                if (receiver == null) {
+                    serverLogger.exiting(current.getClass().getName(), "onCallAccepted",
+                            "Dude who's call you trying to accept is disconnected - " + to);
                     return;
+                }
 
                 ServerUser me = current.me;
                 ServerUser dude = receiver.me;
@@ -241,12 +283,17 @@ public class ServerController extends BaseController {
                 //here goes atomic code
                 Conversation conversation;
                 if (me.inConv()) {
+                    serverLogger.logp(Level.FINER, current.getClass().getName(), "onCallAccepted",
+                            "Me in conversation so trying to add dude in it and add others as data - " + dude);
+
                     //add dude to conv and put all dudes from conf to notify him
                     conversation = me.getConversation();
                     dataPackage.setData(conversation.getAllToString(current));
                     conversation.addDude(receiver, current);
                 } else if (dude.inConv()) {
                     //add me to dude's conv I already know about dudes in conf
+                    serverLogger.logp(Level.FINER, current.getClass().getName(), "onCallAccepted",
+                            "Dude in conversation so trying to add me in it - " + me);
                     conversation = dude.getConversation();
                     conversation.addDude(current, receiver);
 //                }else if (me.inConv() && dude.inConv()){
@@ -267,6 +314,8 @@ public class ServerController extends BaseController {
 
                 } else {
                     //create conv for us
+                    serverLogger.logp(Level.FINER, current.getClass().getName(), "onCallAccepted",
+                            "Me and dude isn't in any conversation so trying to create new one - " + dude);
                     conversation = new Conversation(current, receiver);
                     me.setConversation(conversation);
                     dude.setConversation(conversation);
@@ -277,6 +326,8 @@ public class ServerController extends BaseController {
                     receiver.getWriter().transferPacket(dataPackage);
                 } catch (IOException ignored) {
                     //Dude disconnected before so it's thread will handle
+                }finally {
+                    serverLogger.exiting(current.getClass().getName(), "onCallAccepted");
                 }
 
             };
@@ -284,6 +335,8 @@ public class ServerController extends BaseController {
 
         private static Consumer<AbstractDataPackage> onExitConversation(ServerController current) {
             return dataPackage -> {
+                serverLogger.logp(Level.FINER, current.getClass().getName(), "onExitConversation",
+                        "I send remove me from conversation - " + current.getMe());
                 Conversation conversation = current.getMe().getConversation();
                 //check if it is null because some other thread could make you leave
                 if (conversation == null)
@@ -302,10 +355,14 @@ public class ServerController extends BaseController {
         }
 
         private static ServerController checkedGet(ServerController current, int who) {
+            serverLogger.entering(current.getClass().getName(), "checkedGet", "Trying to get this dude from storage - " + who);
             ServerController receiver = current.server.getController(who);
             if (receiver == null) {
+                serverLogger.exiting(current.getClass().getName(), "checkedGet", "There is no such dude with such id - " + who);
                 current.onDudeIsMissing();
+                return null;
             }
+            serverLogger.exiting(current.getClass().getName(), "checkedGet", "Find dude with such id - " + receiver.me);
             return receiver;
         }
 
@@ -317,9 +374,13 @@ public class ServerController extends BaseController {
                 dude.lock();
                 me.lock();
             }
+            serverLogger.logp(Level.FINER, ServerController.class.getName(), "doubleLock",
+                    "Acquired double lock on me - " + me + ", and - " + dude);
             return () -> {
                 me.release();
                 dude.release();
+                serverLogger.logp(Level.FINER, ServerController.class.getName(), "doubleLock",
+                        "Released double lock on me - " + me + ", and - " + dude);
             };
         }
     }

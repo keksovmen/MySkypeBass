@@ -8,10 +8,13 @@ import com.Networking.Protocol.AbstractDataPackagePool;
 import com.Networking.Protocol.CODE;
 import com.Networking.Protocol.DataPackagePool;
 import com.Networking.Utility.WHO;
+import com.Util.Logging.LoggerUtils;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.logging.LogManager;
 
 public class Main {
@@ -19,7 +22,12 @@ public class Main {
 
     public static void main(String[] args) {
         try {
+            Path parent = LoggerUtils.clientFilePath.getParent();
+            if (!Files.isDirectory(parent)) {
+                Files.createDirectory(parent);
+            }
             LogManager.getLogManager().readConfiguration(Main.class.getResourceAsStream("/properties/logging.properties"));
+            LoggerUtils.initLoggers();
         } catch (IOException e) {
             System.err.println("Cant read logging properties, so they won't work");
         }
