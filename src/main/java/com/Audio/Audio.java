@@ -115,6 +115,10 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
                 mic.close();
                 break;
             }
+            case PREVIEW_SOUND:{
+                onIncomingMessage(stringData);
+                break;
+            }
 
         }
 

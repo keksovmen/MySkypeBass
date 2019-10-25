@@ -22,8 +22,8 @@ public class FormatWorker {
 
     /**
      * Parse string like this:
-     *      Sample rate = 01...n
-     *      Sample size = 01...n
+     * Sample rate = 01...n
+     * Sample size = 01...n
      * retrieve from them digits
      * <p>
      *
@@ -42,7 +42,7 @@ public class FormatWorker {
         return new AudioFormat(sampleRate, sampleSize, 1, true, true);
     }
 
-    public static int parseMicCaptureSize(String data){
+    public static int parseMicCaptureSize(String data) {
         Pattern compile = Pattern.compile("Mic capture size = (\\d+)");
         Matcher matcher = compile.matcher(data);
         if (!matcher.find())
@@ -61,11 +61,11 @@ public class FormatWorker {
                 "Sample size = " + audioFormat.getSampleSizeInBits();
     }
 
-    public static String getMicCaptureSizeAsString(int micCaptureSize){
+    public static String getMicCaptureSizeAsString(int micCaptureSize) {
         return "Mic capture size = " + micCaptureSize;
     }
 
-    public static String getFullAudioPackage(AudioFormat format, int micCaptureSize){
+    public static String getFullAudioPackage(AudioFormat format, int micCaptureSize) {
         return getAudioFormatAsString(format) + "\n" + getMicCaptureSizeAsString(micCaptureSize);
     }
 
@@ -153,6 +153,10 @@ public class FormatWorker {
             results.add(Integer.valueOf(rawData));
         }
         return results;
+    }
+
+    public static String asMessageMeta(int id) {
+        return "<$" + id + ">";
     }
 
     public static String getTime() {
