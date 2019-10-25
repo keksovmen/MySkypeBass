@@ -20,5 +20,5 @@ public enum BUTTONS {
     VOLUME_CHANGED, // string data is id, int is volume in % from 0 to 100
     CHANGE_INPUT, // object is mixer
     CHANGE_OUTPUT, // object is mixer
-
+    PREVIEW_SOUND, // string is id formatted as in message, int id of a track
 }

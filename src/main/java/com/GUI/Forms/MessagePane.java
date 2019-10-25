@@ -3,12 +3,15 @@ package com.GUI.Forms;
 import com.GUI.Forms.ActionHolder.GUIActions;
 import com.GUI.Forms.ActionHolder.GUIDuty;
 import com.Networking.Utility.BaseUser;
+import com.Pipeline.ActionableLogic;
+import com.Pipeline.BUTTONS;
 import com.Util.FormatWorker;
 import com.Util.History.History;
 import com.Util.History.HistoryFactory;
 import com.Util.Resources;
 
 import javax.swing.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -40,7 +43,7 @@ class MessagePane {
      * //     * @param actions all your actions
      */
 
-    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, GUIDuty actions) {
+    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, GUIDuty actions, ActionableLogic actionHandler) {
         nameWho.setText(forWho.toString());
 
         sendButton.addActionListener(e -> this.sendMessage(sendMessage, forWho));
@@ -63,8 +66,8 @@ class MessagePane {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
 
-        registerPopUp(messageBoard, messageGetter);
-        registerPopUp(messageGetter, messageGetter);
+        registerPopUp(messageBoard, messageGetter, actionHandler);
+        registerPopUp(messageGetter, messageGetter, actionHandler);
     }
 
     JPanel getMainPane() {
@@ -117,14 +120,20 @@ class MessagePane {
         messageGetter.setText("");
     }
 
-    static void registerPopUp(JComponent component, JTextField textField){
+    static void registerPopUp(JComponent component, JTextField textField, ActionableLogic actionHandler) {
         JPopupMenu popupMenu = new JPopupMenu("Sounds");
         List<String> getDescriptions = Resources.getDescriptions();
 
         for (int i = 0; i < getDescriptions.size(); i++) {
             JMenuItem menuItem = new JMenuItem(getDescriptions.get(i));
             int j = i;
-            menuItem.addActionListener(e -> textField.setText(textField.getText() + "<$" + j + ">"));
+            menuItem.addActionListener(e -> {
+                if (e.getModifiers() == InputEvent.META_MASK) {
+                    actionHandler.act(BUTTONS.PREVIEW_SOUND, null, FormatWorker.asMessageMeta(j), j);
+                } else {
+                    textField.setText(textField.getText() + FormatWorker.asMessageMeta(j));
+                }
+            });
             popupMenu.add(menuItem);
         }
         component.setComponentPopupMenu(popupMenu);

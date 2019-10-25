@@ -60,6 +60,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     private final ConferencePane conferencePane;
 
+    private final ActionableLogic actionHandler;
+
     private final BiConsumer<String, BaseUser> sendAction;
 
     /**
@@ -75,19 +77,27 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         tabs = new HashMap<>();
         conferencePane = new ConferencePane(whereToReportActions, this);
 
-        sendAction = ((s, user) -> whereToReportActions.act(
+        actionHandler = whereToReportActions;
+
+        sendAction = ((s, user) -> actionHandler.act(
                 BUTTONS.SEND_MESSAGE,
                 null,
                 s,
                 user.getId()));
 
+        setListeners();
+
+
+    }
+
+    private void setListeners() {
         callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
 
-        disconnectButton.addActionListener(e -> disconnect(whereToReportActions));
+        disconnectButton.addActionListener(e -> disconnect());
 
-        callButton.addActionListener(e -> call(whereToReportActions));
+        callButton.addActionListener(e -> call());
 //
-        registerPopUp(whereToReportActions);
+        registerPopUp();
 
         usersList.addMouseListener(new MouseAdapter() {
             @Override
@@ -99,14 +109,13 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                         return;
                     }
                     if (e.getClickCount() == 2) {
-                        call(whereToReportActions);
+                        call();
                     }
                 }
                 e.consume();
 
             }
         });
-
     }
 
     @Override
@@ -192,10 +201,10 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     /* Actions */
 
-    private void call(ActionableLogic actionableLogic) {
+    private void call() {
         if (!selected())
             return;
-        actionableLogic.act(
+        actionHandler.act(
                 BUTTONS.CALL,
                 getSelected(),
                 null,
@@ -203,8 +212,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
         );
     }
 
-    private void disconnect(ActionableLogic actionableLogic) {
-        actionableLogic.act(
+    private void disconnect() {
+        actionHandler.act(
                 BUTTONS.DISCONNECT,
                 null,
                 null,
@@ -225,14 +234,14 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      * Refresh - ask for users on the server
      */
 
-    private void registerPopUp(ActionableLogic registration) {
+    private void registerPopUp() {
         JPopupMenu popupMenu = new JPopupMenu("Utility");
         JMenuItem sendMessageMenu = new JMenuItem("Send Message");
         sendMessageMenu.addActionListener(e -> onSendMessage());
 
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e ->
-                registration.act(
+                actionHandler.act(
                         BUTTONS.ASC_FOR_USERS,
                         null,
                         null,
@@ -314,7 +323,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      */
 
     private MessagePane createPane(BaseUser user) {
-        MessagePane messagePane = new MessagePane(user, sendAction, this);
+        MessagePane messagePane = new MessagePane(user, sendAction, this, actionHandler);
         tabs.put(user, messagePane);
         return messagePane;
     }

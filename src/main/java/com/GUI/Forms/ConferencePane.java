@@ -5,7 +5,10 @@ import com.GUI.Forms.ActionHolder.GUIDuty;
 import com.Model.BaseUnEditableModel;
 import com.Networking.Utility.BaseUser;
 import com.Networking.Utility.WHO;
-import com.Pipeline.*;
+import com.Pipeline.ACTIONS;
+import com.Pipeline.ActionableLogic;
+import com.Pipeline.BUTTONS;
+import com.Pipeline.UpdaterAndHandler;
 import com.Util.FormatWorker;
 import com.Util.History.History;
 import com.Util.History.HistoryFactory;
@@ -80,8 +83,8 @@ class ConferencePane implements UpdaterAndHandler {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
 
-        MessagePane.registerPopUp(messagesDisplay, messageGetter);
-        MessagePane.registerPopUp(messageGetter, messageGetter);
+        MessagePane.registerPopUp(messagesDisplay, messageGetter, whereToReportActions);
+        MessagePane.registerPopUp(messageGetter, messageGetter, whereToReportActions);
     }
 
     @Override
@@ -280,7 +283,7 @@ class ConferencePane implements UpdaterAndHandler {
         messageGetter.setText("");
     }
 
-    private void repaint(){
+    private void repaint() {
         mainPane.revalidate();
         mainPane.repaint();
     }
