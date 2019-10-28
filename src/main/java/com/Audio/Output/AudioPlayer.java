@@ -103,6 +103,16 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     }
 
     @Override
+    public void playMessage(int track, int delay) {
+        try {
+            Thread.sleep(delay);
+            playMessage(track);
+        } catch (InterruptedException ignored) {
+            //won't happen
+        }
+    }
+
+    @Override
     public synchronized void playCall() {
         callNotificator.start("Call sound thread");
     }

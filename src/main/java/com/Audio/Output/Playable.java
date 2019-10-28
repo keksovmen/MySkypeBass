@@ -11,6 +11,8 @@ public interface Playable extends Initialising, Updater {
 
     void playMessage(int track);
 
+    void playMessage(int track, int delay);
+
     void playCall();
 
     void stopCall();
