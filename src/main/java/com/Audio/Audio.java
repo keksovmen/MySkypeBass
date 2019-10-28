@@ -11,6 +11,7 @@ import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
 import com.Pipeline.UpdaterAndHandler;
 import com.Util.FormatWorker;
+import com.Util.Pair;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -130,14 +131,14 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
     }
 
     private void onIncomingMessage(String message) {
-        List<Integer> integers = FormatWorker.retrieveMessageMeta(message);
-        if (integers.size() == 0) {
+        List<Pair<Integer, Integer>> pairs = FormatWorker.retrieveMessageMeta(message);
+        if (pairs.size() == 0) {
             executorService.execute(player::playMessage);
             return;
         }
-        integers.forEach(integer ->
+        pairs.forEach(pair ->
                 executorService.execute(() ->
-                        player.playMessage(integer)
+                        player.playMessage(pair.getFirst(), pair.getSecond())
                 ));
     }
 

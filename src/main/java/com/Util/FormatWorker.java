@@ -143,14 +143,20 @@ public class FormatWorker {
      * @return zero or not length list
      */
 
-    public static List<Integer> retrieveMessageMeta(String message) {
-        Pattern pattern = Pattern.compile("<\\$(\\d+)?>");
+    public static List<Pair<Integer, Integer>> retrieveMessageMeta(String message) {
+        Pattern pattern = Pattern.compile("<\\$(\\d+)(-(\\d+))?>");
         Matcher matcher = pattern.matcher(message);
-        List<Integer> results = new ArrayList<>();
+        List<Pair<Integer, Integer>> results = new ArrayList<>();
 
         while (matcher.find()) {
-            String rawData = matcher.group(1);
-            results.add(Integer.valueOf(rawData));
+            String trackIndex = matcher.group(1);
+            String delayString = matcher.group(3);
+            int delay = 0;
+            if (delayString != null &&
+                    delayString.length() > 0) {
+                delay = Integer.valueOf(delayString);
+            }
+            results.add(new Pair<>(Integer.valueOf(trackIndex), delay));
         }
         return results;
     }
