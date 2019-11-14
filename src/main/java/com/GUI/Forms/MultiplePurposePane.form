@@ -22,34 +22,6 @@
           <color color="-11842741"/>
         </border>
         <children>
-          <component id="ea05f" class="javax.swing.JLabel" binding="labelMe">
-            <constraints>
-              <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
-            </constraints>
-            <properties>
-              <text value="Your name and unique id"/>
-            </properties>
-          </component>
-          <component id="fa18" class="javax.swing.JButton" binding="callButton">
-            <constraints>
-              <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
-                <minimum-size width="100" height="-1"/>
-              </grid>
-            </constraints>
-            <properties>
-              <text value="Call"/>
-            </properties>
-          </component>
-          <component id="7906" class="javax.swing.JButton" binding="disconnectButton">
-            <constraints>
-              <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
-                <minimum-size width="100" height="-1"/>
-              </grid>
-            </constraints>
-            <properties>
-              <text value="Disconnect"/>
-            </properties>
-          </component>
           <scrollpane id="2a7f">
             <constraints>
               <grid row="2" column="0" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -74,6 +46,70 @@
               <text value="Online users:"/>
             </properties>
           </component>
+          <scrollpane id="96e1d">
+            <constraints>
+              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <horizontalScrollBarPolicy value="32"/>
+              <opaque value="false"/>
+              <verticalScrollBarPolicy value="20"/>
+              <visible value="true"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <component id="ff736" class="javax.swing.JTextArea" binding="labelMe">
+                <constraints/>
+                <properties>
+                  <editable value="false"/>
+                  <enabled value="true"/>
+                  <lineWrap value="false"/>
+                  <opaque value="false"/>
+                  <text value="Your name and unique id"/>
+                  <wrapStyleWord value="false"/>
+                </properties>
+              </component>
+            </children>
+          </scrollpane>
+          <component id="3ac2a" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="1" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Name - Id:"/>
+              <visible value="true"/>
+            </properties>
+          </component>
+          <grid id="ab6ee" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="fa18" class="javax.swing.JButton" binding="callButton">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                    <minimum-size width="100" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <text value="Call"/>
+                </properties>
+              </component>
+              <component id="7906" class="javax.swing.JButton" binding="disconnectButton">
+                <constraints>
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                    <minimum-size width="100" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <text value="Disconnect"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
         </children>
       </grid>
       <grid id="25af" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
