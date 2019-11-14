@@ -33,7 +33,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     static final String CONVERSATION_TAB_NAME = "Conversation";
 
-    private JLabel labelMe;
+    private JTextArea labelMe;
 
     /**
      * Has pop up menu
