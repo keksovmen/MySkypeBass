@@ -27,7 +27,7 @@ public class BaseUser implements Cloneable {
      * Means any letters or digits then space - space and unique id as digits
      */
 
-    public static final Pattern parser = Pattern.compile("((\\w|[а-яА-Я])+) - (\\d+)");
+    public static final Pattern parser = Pattern.compile("(.*) - (\\d+)");
 
     public BaseUser(String name, int id) {
         this.name = name;
@@ -96,7 +96,7 @@ public class BaseUser implements Cloneable {
         if (!matcher.matches())
             throw new IllegalArgumentException("Base user is in wrong format - " + data);
         String name = matcher.group(1);
-        String id = matcher.group(3);
+        String id = matcher.group(2);
         return new BaseUser(name, Integer.parseInt(id));
     }
 
