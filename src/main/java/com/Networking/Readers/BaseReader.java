@@ -19,7 +19,7 @@ public class BaseReader {
      * DataInputStream because it can readFully()
      */
 
-    final DataInputStream inputStream;
+    final protected DataInputStream inputStream;
 
 
     public BaseReader(InputStream inputStream, int bufferSize) {
@@ -49,13 +49,13 @@ public class BaseReader {
         return aPackage;
     }
 
-    private void readHeader(AbstractDataPackage dataPackage) throws IOException {
+    protected void readHeader(AbstractDataPackage dataPackage) throws IOException {
         byte[] header = new byte[ProtocolBitMap.PACKET_SIZE];
         inputStream.readFully(header);
         dataPackage.getHeader().init(header);
     }
 
-    private void readBody(AbstractDataPackage dataPackage) throws IOException {
+    protected void readBody(AbstractDataPackage dataPackage) throws IOException {
         byte[] body = new byte[dataPackage.getHeader().getLength()];
         inputStream.readFully(body);
         dataPackage.setData(body);

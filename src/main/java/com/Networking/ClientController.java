@@ -48,6 +48,7 @@ public class ClientController extends BaseController implements Registration<Act
 
 
     public ClientController(ChangeableModel model) {
+        super(null);
         this.model = model;
         processor = new ClientProcessor();
         clientResponder = new ClientResponder();
@@ -143,7 +144,7 @@ public class ClientController extends BaseController implements Registration<Act
      */
 
     @Override
-    boolean authenticate() {
+    protected boolean authenticate() {
         try {
             writer.writeName(me.getName());
 
@@ -179,7 +180,7 @@ public class ClientController extends BaseController implements Registration<Act
      */
 
     @Override
-    void mainLoopAction() throws IOException {
+    protected void mainLoopAction() throws IOException {
         try {
             getProcessor().process(reader.read());
         } catch (IOException e) {
@@ -189,7 +190,7 @@ public class ClientController extends BaseController implements Registration<Act
     }
 
     @Override
-    void dataInitialisation() {
+    protected void dataInitialisation() {
         //Add all your possible action handler
         processor.getOnUsers().setListener(this::onUsers);
         processor.getOnAddUserToList().setListener(this::onAddUserToList);
@@ -207,15 +208,20 @@ public class ClientController extends BaseController implements Registration<Act
     }
 
     @Override
-    void cleanUp() {
+    protected void cleanUp() {
         //Need to notify the whole system
         plainRespond(ACTIONS.DISCONNECTED);
         me.drop();
     }
 
     @Override
-    Processable getProcessor() {
+    protected Processable getProcessor() {
         return processor;
+    }
+
+    @Override
+    protected void onAuthenticateError() {
+        close();
     }
 
     void onUsers(AbstractDataPackage dataPackage) {

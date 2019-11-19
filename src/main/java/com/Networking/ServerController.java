@@ -27,15 +27,15 @@ public class ServerController extends BaseController {
     private final Processor processor;
 
     public ServerController(Socket socket, Server server, int bufferSize) throws IOException {
-        reader = new BaseReader(socket.getInputStream(), bufferSize);
-        writer = new ServerWriter(socket.getOutputStream(), bufferSize);
+        super(socket);
+        reader = new BaseReader(this.socket.getInputStream(), bufferSize);
+        writer = new ServerWriter(this.socket.getOutputStream(), bufferSize);
         processor = new Processor();
-        this.socket = socket;
         this.server = server;
     }
 
     @Override
-    void cleanUp() {
+    protected void cleanUp() {
         //Clean up code
         server.removeController(getId());
         if (me.inConv()) {
@@ -56,7 +56,7 @@ public class ServerController extends BaseController {
      */
 
     @Override
-    boolean authenticate() {
+    protected boolean authenticate() {
         try {
             AbstractDataPackage dataPackage = reader.read();
             final String name = dataPackage.getDataAsString();
@@ -91,7 +91,7 @@ public class ServerController extends BaseController {
      */
 
     @Override
-    void dataInitialisation() {
+    protected void dataInitialisation() {
         //Add listeners here
         processor.getOnUsers().setListener(Handlers.onUsersRequest(this));
         processor.getOnMessage().setListener(Handlers.onTransfer(this));
@@ -125,8 +125,13 @@ public class ServerController extends BaseController {
     }
 
     @Override
-    Processable getProcessor() {
+    protected Processable getProcessor() {
         return processor;
+    }
+
+    @Override
+    protected void onAuthenticateError() {
+        close();
     }
 
     public ServerWriter getWriter() {
@@ -157,12 +162,13 @@ public class ServerController extends BaseController {
         private static Consumer<AbstractDataPackage> onTransfer(ServerController current) {
             return dataPackage -> {
                 int to = dataPackage.getHeader().getTo();
+                //To conversation
                 if (to == WHO.CONFERENCE.getCode()) {
                     Conversation conversation = current.getMe().getConversation();
                     if (conversation != null) {
                         conversation.sendMessage(dataPackage, current);
                     }else {
-                        //tell him that hi is not in conversation
+                        //tell him that he is not in a conversation
                         try {
                             current.writer.writeStopConv(current.getId());
                         } catch (IOException e) {
@@ -172,6 +178,7 @@ public class ServerController extends BaseController {
                     return;
                 }
 
+                //To other dude
                 ServerController receiver = checkedGet(current, to);
                 if (receiver == null)
                     return;

@@ -9,29 +9,74 @@ import com.Util.Interfaces.Starting;
 import java.io.IOException;
 import java.net.Socket;
 
+/**
+ * Template method
+ * Start() is main method
+ */
+
 public abstract class BaseController implements Starting {
 
-    Socket socket;
-    BaseReader reader;
-    volatile boolean work;
+    protected Socket socket;
+    protected BaseReader reader;
+    protected volatile boolean work;
 
-    public BaseController() {
-        //All init to null
+    protected BaseController(Socket socket) {
+        this.socket = socket;
+        //All init to null by default
     }
 
-    abstract boolean authenticate();
+    /**
+     * Happens first
+     * Determine is connection accepted or not
+     *
+     * @return true if connection accepted
+     */
 
-    abstract void dataInitialisation();
+    protected abstract boolean authenticate();
 
-    abstract void cleanUp();
+    /**
+     * Lazy initialisation if such exists,
+     * happens after authentication
+     */
 
-    abstract Processable getProcessor();
+    protected abstract void dataInitialisation();
 
-    void mainLoopAction() throws IOException {
+    /**
+     * Called in the last moment of life cycle
+     * Should release resources ext.
+     */
+
+    protected abstract void cleanUp();
+
+    /**
+     * @return object that will handle AbstractDataPackages
+     */
+
+    protected abstract Processable getProcessor();
+
+    /**
+     * If authentication failed
+     */
+
+    protected abstract void onAuthenticateError();
+
+    /**
+     * Action that will happen each time in a loop
+     * until close() or error occurs
+     *
+     * @throws IOException if network fails
+     */
+
+    protected void mainLoopAction() throws IOException {
         AbstractDataPackage read = reader.read();
         getProcessor().process(read);
         DataPackagePool.returnPackage(read);
     }
+
+    /**
+     * Basically produce AbstractDataPackages and give them to
+     * Processable until error or close() occurs
+     */
 
     private void mainLoop() {
         while (work) {
@@ -43,15 +88,22 @@ public abstract class BaseController implements Starting {
         }
     }
 
+    /**
+     * Start new thread that will produce and give away data packages
+     *
+     * @param name name of this thread
+     * @return true if new tread was created false otherwise
+     */
+
     @Override
     public boolean start(String name) {
         if (work)
-            throw new IllegalStateException("Already started");
-//            return false;
+//            throw new IllegalStateException("Already started");
+            return false;
         work = true;
 
         if (!authenticate()) {
-            close();
+            onAuthenticateError();
             return false;
         }
 
@@ -64,6 +116,10 @@ public abstract class BaseController implements Starting {
         return true;
     }
 
+    /**
+     * Release resources and stop this thread
+     */
+
     @Override
     public synchronized void close() {
         work = false;
@@ -71,8 +127,7 @@ public abstract class BaseController implements Starting {
             return;
         try {
             socket.close();
-        } catch (IOException e) {
-//            e.printStackTrace();
+        } catch (IOException ignored) {
         }
     }
 }

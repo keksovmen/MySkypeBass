@@ -19,9 +19,9 @@ public class BaseWriter {
      * Where to write
      */
 
-    final DataOutputStream outputStream;
+    protected final DataOutputStream outputStream;
 
-    BaseWriter(OutputStream outputStream, int bufferSize) {
+    protected BaseWriter(OutputStream outputStream, int bufferSize) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
     }
 
