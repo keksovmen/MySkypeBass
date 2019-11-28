@@ -1,9 +1,7 @@
 package com.GUI.Forms;
 
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
-import com.Networking.Utility.BaseUser;
-import com.Pipeline.ActionableLogic;
+import com.Client.ButtonsHandler;
+import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.BUTTONS;
 import com.Util.FormatWorker;
 import com.Util.History.History;
@@ -15,6 +13,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Handle messaging part with some one
@@ -43,7 +42,7 @@ class MessagePane {
      * //     * @param actions all your actions
      */
 
-    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, GUIDuty actions, ActionableLogic actionHandler) {
+    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, Consumer<String> closeTabAction, ButtonsHandler actionHandler) {
         nameWho.setText(forWho.toString());
 
         sendButton.addActionListener(e -> this.sendMessage(sendMessage, forWho));
@@ -51,7 +50,7 @@ class MessagePane {
         messageGetter.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
         closeButton.addActionListener(e -> {
-            actions.displayChanges(GUIActions.CLOSE_MESSAGE_PANE, forWho.toString());
+            closeTabAction.accept(forWho.toString());
             isShown = false;
         });
 
@@ -120,7 +119,7 @@ class MessagePane {
         messageGetter.setText("");
     }
 
-    static void registerPopUp(JComponent component, JTextField textField, ActionableLogic actionHandler) {
+    static void registerPopUp(JComponent component, JTextField textField, ButtonsHandler actionHandler) {
         JPopupMenu popupMenu = new JPopupMenu("Sounds");
         List<String> getDescriptions = Resources.getDescriptions();
 
@@ -129,7 +128,7 @@ class MessagePane {
             int j = i;
             menuItem.addActionListener(e -> {
                 if (e.getModifiers() == InputEvent.META_MASK) {
-                    actionHandler.act(BUTTONS.PREVIEW_SOUND, null, FormatWorker.asMessageMeta(j), j);
+                    actionHandler.handleRequest(BUTTONS.PREVIEW_SOUND, new Object[]{FormatWorker.asMessageMeta(j), j});
                 } else {
                     textField.setText(textField.getText() + FormatWorker.asMessageMeta(j));
                 }

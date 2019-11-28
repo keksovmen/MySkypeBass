@@ -1,6 +1,6 @@
 package com.GUI.Forms;
 
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 
 import javax.swing.*;
 import java.util.function.BiConsumer;

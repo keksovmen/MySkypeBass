@@ -35,4 +35,8 @@ public class ActionStand implements Processable {
         return action != null;
     }
 
+    @Override
+    public void close() {
+
+    }
 }

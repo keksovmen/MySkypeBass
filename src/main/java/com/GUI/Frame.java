@@ -1,18 +1,17 @@
 package com.GUI;
 
 import com.Audio.AudioSupplier;
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.GUI.Forms.AudioFormatStats;
 import com.GUI.Forms.CallDialog;
 import com.GUI.Forms.EntrancePane;
 import com.GUI.Forms.MultiplePurposePane;
 import com.Model.BaseUnEditableModel;
-import com.Networking.Utility.BaseUser;
+import com.Model.Updater;
+import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
-import com.Pipeline.UpdaterAndHandler;
 import com.Util.Interfaces.Registration;
 import com.Util.Resources;
 
@@ -22,13 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, ActionableLogic, GUIDuty {
+public class Frame implements Updater, LogicObserver, Registration<ButtonsHandler>, ButtonsHandler {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 450;
 
 
-    private final List<ActionableLogic> actionableLogicList;
+    private final List<ButtonsHandler> actionableLogicList;
 
     private final JFrame frame;
     private final EntrancePane entrancePane;
@@ -41,8 +40,8 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
 
         frame = new JFrame("Skype Bass"); // take it from property
 
-        entrancePane = new EntrancePane(this, this);
-        serverCreatePane = new AudioFormatStats(this, this);
+        entrancePane = new EntrancePane(this, this::onServerPaneCreate);
+        serverCreatePane = new AudioFormatStats(this, this::onServerCancel);
         purposePane = new MultiplePurposePane(this);
         callDialog = new CallDialog(this);
 
@@ -59,7 +58,7 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
     }
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         SwingUtilities.invokeLater(() -> { // there will be others thread not swing
             switch (action) {
                 case CONNECT_FAILED: {
@@ -68,16 +67,16 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                 }
                 case AUDIO_FORMAT_NOT_ACCEPTED: {
                     showErrorMessage(
-                            "Not connected, because you audio system can't handle this format {" +
-                                    " " + stringData + " }");
+                            "Not connected, because you audio system can't handleRequest this format {" +
+                                    " " + data[0] + " }");
                     break;
                 }
                 case WRONG_HOST_NAME_FORMAT: {
-                    showInfoMessage("Wrong host name format - " + stringData);
+                    showInfoMessage("Wrong host name format - " + data[0]);
                     break;
                 }
                 case WRONG_PORT_FORMAT: {
-                    showInfoMessage("Wrong port format - " + stringData);
+                    showInfoMessage("Wrong port format - " + data[0]);
                     break;
                 }
                 case CONNECT_SUCCEEDED: {
@@ -85,11 +84,11 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case WRONG_SAMPLE_RATE_FORMAT: {
-                    showInfoMessage("Wrong sample rate format - " + stringData);
+                    showInfoMessage("Wrong sample rate format - " + data[0]);
                     break;
                 }
                 case WRONG_SAMPLE_SIZE_FORMAT: {
-                    showInfoMessage("Wrong sample size format - " + stringData);
+                    showInfoMessage("Wrong sample size format - " + data[0]);
                     break;
                 }
                 case SERVER_CREATED: {
@@ -97,12 +96,12 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case PORT_ALREADY_BUSY: {
-                    showErrorMessage("Port already in use - " + stringData);
+                    showErrorMessage("Port already in use - " + data[0]);
                     break;
                 }
                 case PORT_OUT_OF_RANGE: {
                     showErrorMessage("Port is out of range, must be in "
-                            + stringData + ". But yours is " + intData);
+                            + data[0] + ". But yours is " + data[1]);
                     break;
                 }
                 case DISCONNECTED: {
@@ -110,64 +109,50 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
                     break;
                 }
                 case OUT_CALL: {
-                    onOutCall(from);
+                    onOutCall((BaseUser) data[0]);
                     break;
                 }
                 case INCOMING_CALL: {
-                    onIncomingCall(from, stringData);
+                    onIncomingCall((BaseUser) data[0], (String) data[1]);
                     break;
                 }
                 case CALL_DENIED: {
-                    showMessage("Call was denied by " + from.toString());
+                    showMessage("Call was denied by " + data[0]);
                     break;
                 }
                 case CALL_CANCELLED: {
-                    showMessage("Call was cancelled by " + from.toString());
+                    showMessage("Call was cancelled by " + data[0]);
                     break;
                 }
                 case CONNECTION_TO_SERVER_FAILED: {
                     showInfoMessage("Disconnected from server!");
                     break;
                 }
-                case INVALID_AUDIO_FORMAT:{
-                    showErrorMessage(stringData);
+                case INVALID_AUDIO_FORMAT: {
+                    showErrorMessage((String) data[0]);
                     break;
                 }
             }
 
-            entrancePane.handle(action, from, stringData, bytesData, intData);
-            purposePane.handle(action, from, stringData, bytesData, intData);
-            callDialog.handle(action, from, stringData, bytesData, intData);
+            entrancePane.observe(action, data);
+            purposePane.observe(action, data);
+            callDialog.observe(action, data);
         });
     }
 
     @Override
-    public boolean registerListener(ActionableLogic listener) {
-        return actionableLogicList.add(listener);
+    public void attach(ButtonsHandler listener) {
+        actionableLogicList.add(listener);
     }
 
     @Override
-    public boolean removeListener(ActionableLogic listener) {
-        return actionableLogicList.remove(listener);
+    public void detach(ButtonsHandler listener) {
+        actionableLogicList.remove(listener);
     }
 
     @Override
-    public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
-        actionableLogicList.forEach(warDuty -> warDuty.act(button, plainData, stringData, integerData));
-    }
-
-    @Override
-    public void displayChanges(GUIActions action, Object data) {
-        switch (action) {
-            case CREATE_SERVER_PANE: {
-                onServerPaneCreate();
-                return;
-            }
-            case CANCEL_SERVER_CREATION: {
-                onServerCancel();
-                return;
-            }
-        }
+    public void handleRequest(BUTTONS button, Object[] data) {
+        actionableLogicList.forEach(warDuty -> warDuty.handleRequest(button, data));
     }
 
     private void setSize() {
@@ -184,18 +169,18 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         frame.setIconImage(Resources.getMainIcon().getImage());
     }
 
-    private JMenuBar produceMenuBar(ActionableLogic registration) {
+    private JMenuBar produceMenuBar(ButtonsHandler registration) {
         JMenuBar menuBar = new JMenuBar();
         JMenu speakerMenu = new JMenu("Speaker");
         JMenu micMenu = new JMenu("Microphone");
         fillMenu(
                 speakerMenu,
                 AudioSupplier.getSourceLines(),
-                info -> registration.act(
+                info -> registration.handleRequest(
                         BUTTONS.CHANGE_OUTPUT,
-                        info,
-                        null,
-                        -1
+                        new Object[]{
+                                info
+                        }
                 ),
                 AudioSupplier.getDefaultForOutput()
         );
@@ -203,11 +188,11 @@ public class Frame implements UpdaterAndHandler, Registration<ActionableLogic>, 
         fillMenu(
                 micMenu,
                 AudioSupplier.getTargetLines(),
-                info -> registration.act(
+                info -> registration.handleRequest(
                         BUTTONS.CHANGE_INPUT,
-                        info,
-                        null,
-                        -1
+                        new Object[]{
+                                info
+                        }
                 ),
                 AudioSupplier.getDefaultForInput()
         );

@@ -2,6 +2,8 @@ package com.Audio;
 
 import com.Audio.Input.ChangeableInput;
 import com.Audio.Output.ChangeableOutput;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
 
@@ -10,7 +12,7 @@ import javax.sound.sampled.Mixer;
 /**
  * Change outputs and input
  */
-public class AudioSettings implements ActionableLogic {
+public class AudioSettings implements ButtonsHandler {
 
     private final ChangeableInput input;
     private final ChangeableOutput output;
@@ -21,26 +23,26 @@ public class AudioSettings implements ActionableLogic {
     }
 
     @Override
-    public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+    public void handleRequest(BUTTONS button, Object[] data) {
         switch (button) {
             case MUTE:{
                 input.mute();
                 return;
             }
             case VOLUME_CHANGED:{
-                output.changeVolume(Integer.parseInt(stringData), integerData);
+                output.changeVolume(Integer.parseInt((String) data[0]), (Integer) data[1]);
                 return;
             }
             case INCREASE_BASS:{
-                input.IncreaseBass(integerData);
+                input.IncreaseBass((Integer) data[0]);
                 return;
             }
             case CHANGE_INPUT:{
-                input.changeInput((Mixer.Info) plainData);
+                input.changeInput((Mixer.Info) data[0]);
                 return;
             }
             case CHANGE_OUTPUT:{
-                output.changeOutput((Mixer.Info) plainData);
+                output.changeOutput((Mixer.Info) data[0]);
                 return;
             }
         }

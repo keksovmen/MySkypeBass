@@ -31,7 +31,7 @@ public class Player {
         int j;
         int frameSize = sourceDataLine.getFormat().getFrameSize();
         while ((amount = inputStream.read(data)) != -1) {
-            //handle odd number in case of sample size = 2 bytes
+            //handleRequest odd number in case of sample size = 2 bytes
             j = amount % frameSize;
             if (j != 0) {
                 amount -= j;
@@ -58,7 +58,7 @@ public class Player {
         if (amount == -1) {
             return amount;
         }
-        //handle odd number in case of sample size = 2 bytes
+        //handleRequest odd number in case of sample size = 2 bytes
         int j = amount % frameSize;
         if (j != 0) {
             amount -= j;

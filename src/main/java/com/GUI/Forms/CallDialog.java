@@ -1,6 +1,8 @@
 package com.GUI.Forms;
 
-import com.Networking.Utility.BaseUser;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
+import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
 import com.Pipeline.ActionableLogic;
 import com.Pipeline.ActionsHandler;
@@ -13,7 +15,7 @@ import javax.swing.*;
  * Gives you an opportunity to cancel, deny and approve calls
  */
 
-public class CallDialog extends JDialog implements ActionsHandler {
+public class CallDialog extends JDialog implements LogicObserver {
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -32,7 +34,7 @@ public class CallDialog extends JDialog implements ActionsHandler {
      * And don't show the dialog for this purpose here is a method
      */
 
-    public CallDialog(ActionableLogic whereToReportActions) {
+    public CallDialog(ButtonsHandler whereToReportActions) {
 
         buttonOK.addActionListener(e -> onOk(whereToReportActions));
 
@@ -50,7 +52,7 @@ public class CallDialog extends JDialog implements ActionsHandler {
     }
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         switch (action) {
             case CALL_DENIED: {
                 dispose();
@@ -69,39 +71,42 @@ public class CallDialog extends JDialog implements ActionsHandler {
                 return;
             }
             case BOTH_IN_CONVERSATION: {
-                if (from.equals(user))
+                if (data[0].equals(user))
                     dispose();
                 return;
             }
         }
     }
 
-    private void onOk(ActionableLogic whereToReportActions) {
-        whereToReportActions.act(
+    private void onOk(ButtonsHandler whereToReportActions) {
+        whereToReportActions.handleRequest(
                 BUTTONS.CALL_ACCEPTED,
-                user,
-                dudes,
-                -1
+                new Object[]{
+                        user,
+                        dudes
+                }
         );
         dispose();
     }
 
-    private void onDeny(ActionableLogic whereToReportActions) {
-        whereToReportActions.act(
+    private void onDeny(ButtonsHandler whereToReportActions) {
+        whereToReportActions.handleRequest(
                 BUTTONS.CALL_DENIED,
-                user,
-                dudes,
-                -1
+                new Object[]{
+                        user,
+                        dudes
+                }
         );
         dispose();
     }
 
-    private void onCancel(ActionableLogic whereToReportActions) {
-        whereToReportActions.act(
+    private void onCancel(ButtonsHandler whereToReportActions) {
+        whereToReportActions.handleRequest(
                 BUTTONS.CALL_CANCELLED,
-                user,
-                dudes,
-                -1
+                new Object[]{
+                        user,
+                        dudes
+                }
         );
         dispose();
     }

@@ -1,11 +1,8 @@
 package com.GUI.Forms;
 
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
-import com.Networking.Utility.BaseUser;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
-import com.Pipeline.ActionsHandler;
 import com.Pipeline.BUTTONS;
 import com.Util.FormatWorker;
 import com.Util.Resources;
@@ -20,7 +17,7 @@ import java.awt.*;
  * Have some parameters in properties
  */
 
-public class EntrancePane implements ActionsHandler {
+public class EntrancePane implements LogicObserver {
     private JTextField nameField;
     private JTextField ipField;
     private JFormattedTextField portField;
@@ -29,23 +26,17 @@ public class EntrancePane implements ActionsHandler {
     private JPanel mainPane;
 
 
-    public EntrancePane(ActionableLogic actionsForLogic, GUIDuty actionForGui) {
+    public EntrancePane(ButtonsHandler actionsForLogic, Runnable showServerPane) {
         connectButton.addActionListener(e -> {
-            actionsForLogic.act(
+            actionsForLogic.handleRequest(
                     BUTTONS.CONNECT,
-                    new String[]{getMyName(), getIp(), getPort()},
-                    null,
-                    -1
+                    new Object[]{getMyName(), getIp(), getPort()}
             );
             blockConnectButton();
             mainPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
         });
 
-        createButton.addActionListener(e ->
-                actionForGui.displayChanges(
-                        GUIActions.CREATE_SERVER_PANE,
-                        null
-                ));
+        createButton.addActionListener(e -> showServerPane.run());
 
         nameField.setText(Resources.getDefaultName());
         ipField.setText(Resources.getDefaultIP());
@@ -53,7 +44,7 @@ public class EntrancePane implements ActionsHandler {
     }
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         if (action.equals(ACTIONS.CONNECT_FAILED) ||
                 action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
                 action.equals(ACTIONS.WRONG_PORT_FORMAT)

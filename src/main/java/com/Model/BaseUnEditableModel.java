@@ -1,6 +1,6 @@
 package com.Model;
 
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 
 import java.util.HashSet;
 import java.util.Map;

@@ -4,8 +4,11 @@ import com.Audio.Input.Capture;
 import com.Audio.Input.DefaultMic;
 import com.Audio.Output.AudioPlayer;
 import com.Audio.Output.Playable;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.Model.BaseUnEditableModel;
-import com.Networking.Utility.BaseUser;
+import com.Model.Updater;
+import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
 import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
@@ -18,11 +21,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-public class Audio implements UpdaterAndHandler, ActionableLogic {
+public class Audio implements Updater, LogicObserver, ButtonsHandler {
 
     private final Playable player;
     private final DefaultMic mic;
-    private final ActionableLogic audioLogic;
+    private final ButtonsHandler audioLogic;
 
     private final ExecutorService executorService;
 
@@ -43,10 +46,10 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
 
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         switch (action) {
             case INCOMING_MESSAGE: {
-                onIncomingMessage(stringData);
+                onIncomingMessage((String) data[1]);
                 return;
             }
             case INCOMING_CALL: {
@@ -75,7 +78,7 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
                 return;
             }
             case INCOMING_SOUND: {
-                player.playSound(intData, bytesData);
+                player.playSound((int) data[2], (byte[]) data[1]);
                 return;
             }
             case EXITED_CONVERSATION: {
@@ -100,7 +103,7 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
     }
 
     @Override
-    public void act(BUTTONS button, Object plainData, String stringData, int integerData) {
+    public void handleRequest(BUTTONS button, Object[] data) {
         switch (button) {
             case CALL_CANCELLED: {
                 dropCallAction();
@@ -119,13 +122,13 @@ public class Audio implements UpdaterAndHandler, ActionableLogic {
                 break;
             }
             case PREVIEW_SOUND:{
-                onIncomingMessage(stringData);
+                onIncomingMessage((String) data[0]);
                 break;
             }
 
         }
 
-        audioLogic.act(button, plainData, stringData, integerData);
+        audioLogic.handleRequest(button, data);
     }
 
     private void dropCallAction() {

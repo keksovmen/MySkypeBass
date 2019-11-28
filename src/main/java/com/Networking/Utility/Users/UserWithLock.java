@@ -1,0 +1,26 @@
+package com.Networking.Utility.Users;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class UserWithLock extends BaseUser {
+
+    /**
+     * Work as long term lock
+     */
+
+    private final Lock lock;
+
+    public UserWithLock(String name, int id) {
+        super(name, id);
+        lock = new ReentrantLock();
+    }
+
+    public void lock() {
+        lock.lock();
+    }
+
+    public void unlock() {
+        lock.unlock();
+    }
+}

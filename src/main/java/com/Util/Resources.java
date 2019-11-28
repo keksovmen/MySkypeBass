@@ -110,7 +110,7 @@ public class Resources {
     }
 
     public static int getBufferSize() {
-        return Integer.parseInt(instance.properties.getProperty("ReaderWriterBuffer"));
+        return Integer.parseInt(instance.properties.getProperty("ReaderWriterBuffer")) * 1024;
     }
 
     public static int getLockTime() {

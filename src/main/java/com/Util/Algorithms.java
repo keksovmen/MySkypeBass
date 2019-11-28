@@ -1,5 +1,10 @@
 package com.Util;
 
+import com.Client.Logic;
+import com.Model.ChangeableModel;
+import com.Networking.Utility.Users.BaseUser;
+import com.Pipeline.ACTIONS;
+
 import java.util.Comparator;
 import java.util.function.BiFunction;
 
@@ -119,5 +124,22 @@ public class Algorithms {
         float percent = difference / 100f;
         float value = percent * percentage;
         return (int) (min + value);
+    }
+
+    /**
+     * For client side
+     *
+     * @param dude   who to add in a conversation
+     * @param others who may present in the conversation
+     * @param logic  what to notify about progress
+     * @param model  to update about progress
+     */
+
+    public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {
+        logic.notify(ACTIONS.CALL_ACCEPTED, null);
+        model.addToConversation(dude);
+        for (BaseUser baseUser : BaseUser.parseUsers(others)) {
+            model.addToConversation(baseUser);
+        }
     }
 }

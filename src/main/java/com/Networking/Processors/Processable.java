@@ -9,4 +9,6 @@ import com.Networking.Protocol.AbstractDataPackage;
 public interface Processable {
 
     boolean process(AbstractDataPackage dataPackage);
+
+    void close();
 }

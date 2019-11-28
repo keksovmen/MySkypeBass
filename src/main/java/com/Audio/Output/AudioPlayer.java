@@ -2,7 +2,7 @@ package com.Audio.Output;
 
 import com.Audio.AudioSupplier;
 import com.Model.BaseUnEditableModel;
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 import com.Util.Algorithms;
 import com.Util.Checker;
 import com.Util.Resources;

@@ -1,6 +1,6 @@
 package com.Model;
 
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 
 /**
  * Interface for model that can change its values
@@ -12,7 +12,7 @@ public interface ChangeableModel extends UnEditableModel {
 
     void addToModel(BaseUser[] users);
 
-    void removeFromModel(BaseUser user);
+    default void removeFromModel(BaseUser user){removeFromModel(user.getId());}
 
     void removeFromModel(int user);
 

@@ -9,7 +9,7 @@ package com.Util.Interfaces;
 
 public interface Registration<T> {
 
-    boolean registerListener(T listener);
+    void attach(T listener);
 
-    boolean removeListener(T listener);
+    void detach(T listener);
 }

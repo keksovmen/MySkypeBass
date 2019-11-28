@@ -2,7 +2,7 @@ package com.Networking.Utility;
 
 
 import com.Networking.Protocol.AbstractDataPackage;
-import com.Networking.ServerController;
+import com.Networking.Utility.Users.ServerUser;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +20,7 @@ public class Conversation {
      * CopyOnWriteArrayList works well
      */
 
-    private final List<ServerController> users;
+    private final List<ServerUser> users;
 
     /**
      * Creates conversation for two dudes that know about each other
@@ -29,7 +29,7 @@ public class Conversation {
      * @param second dude
      */
 
-    public Conversation(ServerController first, ServerController second) {
+    public Conversation(ServerUser first, ServerUser second) {
         users = new CopyOnWriteArrayList<>();
         users.add(first);
         users.add(second);
@@ -43,7 +43,7 @@ public class Conversation {
      */
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
-        for (ServerController user : users) {
+        for (ServerUser user : users) {
             if (user.getId() == from)
                 continue;
             try {
@@ -60,8 +60,8 @@ public class Conversation {
      * @param dataPackage contains message data
      */
 
-    public void sendMessage(AbstractDataPackage dataPackage, ServerController me) {
-        for (ServerController user : users) {
+    public void sendMessage(AbstractDataPackage dataPackage, ServerUser me) {
+        for (ServerUser user : users) {
             if (user.equals(me))
                 continue;
             try {
@@ -79,18 +79,18 @@ public class Conversation {
      * @param except who must not receive message about adding dude
      */
 
-    public synchronized void addDude(ServerController dude, ServerController except) {
+    public synchronized void addDude(ServerUser dude, ServerUser except) {
         users.forEach(serverController -> {
             if (serverController.getId() == except.getId())
                 return;
             try {
                 serverController.getWriter().writeAddToConv(dude.getId(), serverController.getId());
             } catch (IOException ignored) {
-                //who you send message is offline ignore it. His thread will handle shit
+                //who you send message is offline ignore it. His thread will handleRequest shit
             }
         });
         users.add(dude);
-        dude.getMe().setConversation(this);
+        dude.setConversation(this);
     }
 
     /**
@@ -101,23 +101,23 @@ public class Conversation {
      * @param user to be removed
      */
 
-    public synchronized void removeDude(ServerController user) {
+    public synchronized void removeDude(ServerUser user) {
         users.remove(user);
-        user.getMe().setConversation(null);
+        user.setConversation(null);
         users.forEach(serverController -> {
             try {
                 serverController.getWriter().writeRemoveFromConv(user.getId(), serverController.getId());
             } catch (IOException ignored) {
-                //Ignore this dude's thread will handle the mess
+                //Ignore this dude's thread will handleRequest the mess
             }
         });
         if (users.size() == 1){
-            ServerController last = users.get(0);
+            ServerUser last = users.get(0);
             try {
                 last.getWriter().writeStopConv(last.getId());
-                last.getMe().setConversation(null);
+                last.setConversation(null);
             } catch (IOException ignored) {
-                //Ignore this dude's thread will handle the mess
+                //Ignore this dude's thread will handleRequest the mess
             }
         }
     }
@@ -130,12 +130,12 @@ public class Conversation {
      * @return all except you
      */
 
-    public synchronized String getAllToString(ServerController exclusive) {
+    public synchronized String getAllToString(ServerUser exclusive) {
         StringBuilder result = new StringBuilder();
-        users.forEach(serverController -> {
-            if (serverController.getId() == exclusive.getId())
+        users.forEach(user -> {
+            if (user.getId() == exclusive.getId())
                 return;
-            result.append(serverController.getMe().toString()).append("\n");
+            result.append(user.toString()).append("\n");
         });
         return result.toString();
     }

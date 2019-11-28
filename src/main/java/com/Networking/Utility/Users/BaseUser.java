@@ -1,4 +1,4 @@
-package com.Networking.Utility;
+package com.Networking.Utility.Users;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -32,6 +32,35 @@ public class BaseUser implements Cloneable {
     public BaseUser(String name, int id) {
         this.name = name;
         this.id = id;
+    }
+
+    /**
+     * Static factory from string
+     *
+     * @param data in format baseUser.toString()
+     * @return new user
+     */
+
+    public static BaseUser parse(String data) {
+        Matcher matcher = parser.matcher(data);
+        if (!matcher.matches())
+            throw new IllegalArgumentException("Base user is in wrong format - " + data);
+        String name = matcher.group(1);
+        String id = matcher.group(2);
+        return new BaseUser(name, Integer.parseInt(id));
+    }
+
+    /**
+     * Static factory but for more users
+     *
+     * @param data same format but with \n after each toString()
+     * @return array of new users
+     */
+
+    public static BaseUser[] parseUsers(String data) {
+        String[] split = data.split("\n");
+        return Arrays.stream(split).map(String::trim).filter(s ->
+                BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }
 
     public String getName() {
@@ -72,44 +101,6 @@ public class BaseUser implements Cloneable {
     @Override
     public int hashCode() {
         return Objects.hash(name, id);
-    }
-
-    @Override
-    public BaseUser clone() {
-        try {
-            return (BaseUser) super.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Static factory from string
-     *
-     * @param data in format baseUser.toString()
-     * @return new user
-     */
-
-    public static BaseUser parse(String data) {
-        Matcher matcher = parser.matcher(data);
-        if (!matcher.matches())
-            throw new IllegalArgumentException("Base user is in wrong format - " + data);
-        String name = matcher.group(1);
-        String id = matcher.group(2);
-        return new BaseUser(name, Integer.parseInt(id));
-    }
-
-    /**
-     * Static factory but for more users
-     *
-     * @param data same format but with \n after each toString()
-     * @return array of new users
-     */
-
-    public static BaseUser[] parseUsers(String data) {
-        String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s -> BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }
 
 }

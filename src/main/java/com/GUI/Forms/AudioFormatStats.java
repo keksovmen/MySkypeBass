@@ -1,8 +1,6 @@
 package com.GUI.Forms;
 
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
-import com.Pipeline.ActionableLogic;
+import com.Client.ButtonsHandler;
 import com.Pipeline.BUTTONS;
 import com.Util.FormatWorker;
 import com.Util.Resources;
@@ -34,7 +32,7 @@ public class AudioFormatStats {
      * register listeners for buttons
      */
 
-    public AudioFormatStats(ActionableLogic whereToReportActions, GUIDuty actionForGui) {
+    public AudioFormatStats(ButtonsHandler whereToReportActions, Runnable cancelServerCreation) {
         ActionListener actionListener = e -> {
             JRadioButton radioButton = (JRadioButton) e.getSource();
             customRate.setText(radioButton.getText());
@@ -46,7 +44,7 @@ public class AudioFormatStats {
 
         buttonOK.addActionListener(e -> onOK(whereToReportActions));
 
-        buttonCancel.addActionListener(e -> onCancel(actionForGui));
+        buttonCancel.addActionListener(e -> onCancel(cancelServerCreation));
 
         a44100RadioButton.setSelected(true);
 
@@ -59,20 +57,15 @@ public class AudioFormatStats {
         return mainPane;
     }
 
-    private void onOK(ActionableLogic whereToReportActions) {
-        whereToReportActions.act(
+    private void onOK(ButtonsHandler whereToReportActions) {
+        whereToReportActions.handleRequest(
                 BUTTONS.CREATE_SERVER,
-                new String[]{getPort(), getSampleRate(), getSampleSize()},
-                null,
-                -1
+                new Object[]{getPort(), getSampleRate(), getSampleSize()}
         );
     }
 
-    private void onCancel(GUIDuty actionForGui) {
-        actionForGui.displayChanges(
-                GUIActions.CANCEL_SERVER_CREATION,
-                null
-        );
+    private void onCancel(Runnable cancelServerCreation) {
+        cancelServerCreation.run();
     }
 
     private String getPort() {

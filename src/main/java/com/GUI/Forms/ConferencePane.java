@@ -1,14 +1,13 @@
 package com.GUI.Forms;
 
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.Model.BaseUnEditableModel;
-import com.Networking.Utility.BaseUser;
+import com.Model.Updater;
+import com.Networking.Utility.Users.BaseUser;
 import com.Networking.Utility.WHO;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
-import com.Pipeline.UpdaterAndHandler;
 import com.Util.FormatWorker;
 import com.Util.History.History;
 import com.Util.History.HistoryFactory;
@@ -19,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Handle adding new users or removing
@@ -26,7 +26,7 @@ import java.util.function.BiConsumer;
  * or mute yourself
  */
 
-class ConferencePane implements UpdaterAndHandler {
+class ConferencePane implements Updater, LogicObserver {
     private JSpinner bassChanger;
     private JButton muteButton;
     private JPanel settingsPane;
@@ -59,7 +59,7 @@ class ConferencePane implements UpdaterAndHandler {
      * //     * @param actions all possible actions
      */
 
-    ConferencePane(ActionableLogic whereToReportActions, GUIDuty closeAction) {
+    ConferencePane(ButtonsHandler whereToReportActions, Consumer<String> closeTabAction) {
         conferenceMembers = new HashMap<>();
 
         history = HistoryFactory.getStringHistory();
@@ -68,7 +68,7 @@ class ConferencePane implements UpdaterAndHandler {
 
         changeVolume = createVolumeChanger(whereToReportActions);
 
-        endCallButton.addActionListener(e -> disconnectAction(whereToReportActions, closeAction));
+        endCallButton.addActionListener(e -> disconnectAction(whereToReportActions, closeTabAction));
 
         muteButton.addActionListener(e -> mute(whereToReportActions));
 
@@ -88,11 +88,11 @@ class ConferencePane implements UpdaterAndHandler {
     }
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         switch (action) {
             case INCOMING_MESSAGE: {
-                if (intData == 1) // check if it suppose to go in conversation chat
-                    onMessage(from, stringData);
+                if ((int) data[2] == 1) // check if it suppose to go in conversation chat
+                    onMessage((BaseUser) data[0], (String) data[1]);
                 return;
             }
             case EXITED_CONVERSATION: {
@@ -140,39 +140,36 @@ class ConferencePane implements UpdaterAndHandler {
         showMessage(from, message);
     }
 
-    private void sendMessageAction(ActionableLogic whereToReportActions) {
+    private void sendMessageAction(ButtonsHandler whereToReportActions) {
         String message = getMessage();
         if (!sendMessage(message))
             return;
-        whereToReportActions.act(
+        whereToReportActions.handleRequest(
                 BUTTONS.SEND_MESSAGE,
-                null,
-                message,
-                WHO.CONFERENCE.getCode()
+                new Object[]{
+                        message,
+                        WHO.CONFERENCE.getCode()
+                }
         );
     }
 
-    private void disconnectAction(ActionableLogic whereToReportActions, GUIDuty guiDuty) {
-        whereToReportActions.act(
+    private void disconnectAction(ButtonsHandler whereToReportActions, Consumer<String> closeTabAction) {
+        whereToReportActions.handleRequest(
                 BUTTONS.EXIT_CONFERENCE,
-                null,
-                null,
-                -1
+                null
         );
-        guiDuty.displayChanges(
-                GUIActions.CLOSE_MESSAGE_PANE,
-                MultiplePurposePane.CONVERSATION_TAB_NAME
-        );
+        closeTabAction.accept(MultiplePurposePane.CONVERSATION_TAB_NAME);
         //Do some clearing here
         clear();
     }
 
-    private BiConsumer<Integer, Integer> createVolumeChanger(ActionableLogic whereToReportActions) {
-        return (id, value) -> whereToReportActions.act(
+    private BiConsumer<Integer, Integer> createVolumeChanger(ButtonsHandler whereToReportActions) {
+        return (id, value) -> whereToReportActions.handleRequest(
                 BUTTONS.VOLUME_CHANGED,
-                null,
-                String.valueOf(id),
-                value
+                new Object[]{
+                        String.valueOf(id),
+                        value
+                }
         );
     }
 
@@ -214,12 +211,10 @@ class ConferencePane implements UpdaterAndHandler {
      * Define what text will be on mute button
      */
 
-    private void mute(ActionableLogic whereToRegisterActions) {
-        whereToRegisterActions.act(
+    private void mute(ButtonsHandler whereToRegisterActions) {
+        whereToRegisterActions.handleRequest(
                 BUTTONS.MUTE,
-                null,
-                null,
-                -1
+                null
         );
         if (muteButton.getText().equals("Mute")) {
             muteButton.setText("Un Mute");
@@ -228,12 +223,12 @@ class ConferencePane implements UpdaterAndHandler {
         }
     }
 
-    private void changeBussBoost(ActionableLogic whereToRegisterActions) {
-        whereToRegisterActions.act(
+    private void changeBussBoost(ButtonsHandler whereToRegisterActions) {
+        whereToRegisterActions.handleRequest(
                 BUTTONS.INCREASE_BASS,
-                null,
-                null,
-                (Integer) bassChanger.getValue()
+                new Object[]{
+                        bassChanger.getValue()
+                }
         );
     }
 

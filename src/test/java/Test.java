@@ -10,8 +10,8 @@ public class Test {
 //
 //        AbstractDataPackagePool.init(new DataPackagePool());
 //
-//        Server server = Server.getFromIntegers(8188, 40_000, 16, 8);
-//        server.start("Server");
+//        SimpleServer server = SimpleServer.getFromIntegers(8188, 40_000, 16, 8);
+//        server.start("SimpleServer");
 //        final int size = 10;
 //        List<ClientController> controllers = new ArrayList<>(size);
 //        CountDownLatch countDownLatch = new CountDownLatch(1);

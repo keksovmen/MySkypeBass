@@ -1,13 +1,12 @@
 package com.GUI.Forms;
 
-import com.GUI.Forms.ActionHolder.GUIActions;
-import com.GUI.Forms.ActionHolder.GUIDuty;
+import com.Client.ButtonsHandler;
+import com.Client.LogicObserver;
 import com.Model.BaseUnEditableModel;
-import com.Networking.Utility.BaseUser;
+import com.Model.Updater;
+import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
-import com.Pipeline.UpdaterAndHandler;
 import com.Util.Resources;
 
 import javax.swing.*;
@@ -24,7 +23,7 @@ import java.util.function.BiConsumer;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
+public class MultiplePurposePane implements Updater, LogicObserver {
 
     /**
      * Name for conversation tab uses in search cases
@@ -60,7 +59,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
     private final ConferencePane conferencePane;
 
-    private final ActionableLogic actionHandler;
+    private final ButtonsHandler actionHandler;
 
     private final BiConsumer<String, BaseUser> sendAction;
 
@@ -73,17 +72,18 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      * 4 - create pop up menu for userList
      */
 
-    public MultiplePurposePane(ActionableLogic whereToReportActions) {
+    public MultiplePurposePane(ButtonsHandler whereToReportActions) {
         tabs = new HashMap<>();
-        conferencePane = new ConferencePane(whereToReportActions, this);
+        conferencePane = new ConferencePane(whereToReportActions, this::closeTab);
 
         actionHandler = whereToReportActions;
 
-        sendAction = ((s, user) -> actionHandler.act(
+        sendAction = ((s, user) -> actionHandler.handleRequest(
                 BUTTONS.SEND_MESSAGE,
-                null,
-                s,
-                user.getId()));
+                new Object[]{
+                        s,
+                        user.getId()
+                }));
 
         setListeners();
 
@@ -134,14 +134,14 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     }
 
     @Override
-    public void handle(ACTIONS action, BaseUser from, String stringData, byte[] bytesData, int intData) {
+    public void observe(ACTIONS action, Object[] data) {
         switch (action) {
             case CONNECT_SUCCEEDED: {
-                labelMe.setText(stringData);
+                labelMe.setText((String) data[0]);
                 break;
             }
             case INCOMING_MESSAGE: {
-                showMessage(from, stringData, intData == 1);
+                showMessage((BaseUser) data[0], (String) data[1], (int) data[2] == 1);
                 break;
             }
             case DISCONNECTED: {
@@ -149,7 +149,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 break;
             }
             case CALLED_BUT_BUSY: {
-                onCalledButBusy(from);
+                onCalledButBusy((BaseUser) data[0]);
                 break;
             }
             case CALL_ACCEPTED: {
@@ -157,7 +157,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 break;
             }
             case BOTH_IN_CONVERSATION: {
-                onBothInConv(from);
+                onBothInConv((BaseUser) data[0]);
                 break;
             }
             case EXITED_CONVERSATION: {
@@ -165,16 +165,9 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
                 break;
             }
         }
-        conferencePane.handle(action, from, stringData, bytesData, intData);
+        conferencePane.observe(action, data);
     }
 
-    @Override
-    public void displayChanges(GUIActions action, Object data) {
-        if (action.equals(GUIActions.CLOSE_MESSAGE_PANE)) {
-            String tabName = (String) data;
-            closeTab(tabName);
-        }
-    }
 
     /* Actions handlers */
 
@@ -204,20 +197,16 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
     private void call() {
         if (!selected())
             return;
-        actionHandler.act(
+        actionHandler.handleRequest(
                 BUTTONS.CALL,
-                getSelected(),
-                null,
-                -1
+                new Object[]{getSelected()}
         );
     }
 
     private void disconnect() {
-        actionHandler.act(
+        actionHandler.handleRequest(
                 BUTTONS.DISCONNECT,
-                null,
-                null,
-                -1
+                null
         );
     }
 
@@ -241,11 +230,8 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
 
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e ->
-                actionHandler.act(
-                        BUTTONS.ASC_FOR_USERS,
-                        null,
-                        null,
-                        -1
+                actionHandler.handleRequest(
+                        BUTTONS.ASC_FOR_USERS, null
                 ));
         popupMenu.add(sendMessageMenu);
         popupMenu.add(refresh);
@@ -323,7 +309,7 @@ public class MultiplePurposePane implements UpdaterAndHandler, GUIDuty {
      */
 
     private MessagePane createPane(BaseUser user) {
-        MessagePane messagePane = new MessagePane(user, sendAction, this, actionHandler);
+        MessagePane messagePane = new MessagePane(user, sendAction, this::closeTab, actionHandler);
         tabs.put(user, messagePane);
         return messagePane;
     }

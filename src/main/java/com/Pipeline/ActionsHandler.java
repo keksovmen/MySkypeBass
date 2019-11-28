@@ -1,6 +1,6 @@
 package com.Pipeline;
 
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 
 public interface ActionsHandler {
 

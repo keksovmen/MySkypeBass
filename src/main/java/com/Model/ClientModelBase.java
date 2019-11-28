@@ -1,6 +1,6 @@
 package com.Model;
 
-import com.Networking.Utility.BaseUser;
+import com.Networking.Utility.Users.BaseUser;
 import com.Util.Interfaces.Registration;
 
 import java.util.LinkedHashSet;
@@ -24,13 +24,13 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public boolean registerListener(Updater listener) {
-        return listeners.add(listener);
+    public void attach(Updater listener) {
+        listeners.add(listener);
     }
 
     @Override
-    public boolean removeListener(Updater listener) {
-        return listeners.remove(listener);
+    public void detach(Updater listener) {
+        listeners.remove(listener);
     }
 
     /**
@@ -61,18 +61,6 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     public synchronized void addToModel(BaseUser user) {
         userMap.put(user.getId(), user);
         notifyListeners();
-    }
-
-    /**
-     * For removing one dude
-     * Notifies listeners
-     *
-     * @param user the dude
-     */
-
-    @Override
-    public synchronized void removeFromModel(BaseUser user) {
-        removeFromModel(user.getId());
     }
 
     /**
