@@ -4,8 +4,6 @@ import com.Client.ButtonsHandler;
 import com.Client.LogicObserver;
 import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
-import com.Pipeline.ActionsHandler;
 import com.Pipeline.BUTTONS;
 
 import javax.swing.*;
@@ -15,7 +13,9 @@ import javax.swing.*;
  * Gives you an opportunity to cancel, deny and approve calls
  */
 
-public class CallDialog extends JDialog implements LogicObserver {
+public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler {
+
+
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -27,6 +27,9 @@ public class CallDialog extends JDialog implements LogicObserver {
     private BaseUser user;
     private String dudes;
 
+    private final ButtonsHandler helpHandlerPredecessor;
+    private final JComponent relativeTo;
+
     /**
      * Single constructor
      * Init and update actions
@@ -34,13 +37,15 @@ public class CallDialog extends JDialog implements LogicObserver {
      * And don't show the dialog for this purpose here is a method
      */
 
-    public CallDialog(ButtonsHandler whereToReportActions) {
+    public CallDialog(ButtonsHandler helpHandlerPredecessor, JComponent relativeTo) {
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
+        this.relativeTo = relativeTo;
 
-        buttonOK.addActionListener(e -> onOk(whereToReportActions));
+        buttonOK.addActionListener(e -> onOk());
 
-        denyButton.addActionListener(e -> onDeny(whereToReportActions));
+        denyButton.addActionListener(e -> onDeny());
 
-        buttonCancel.addActionListener(e -> onCancel(whereToReportActions));
+        buttonCancel.addActionListener(e -> onCancel());
 
         setContentPane(contentPane);
         setModal(true);
@@ -75,11 +80,25 @@ public class CallDialog extends JDialog implements LogicObserver {
                     dispose();
                 return;
             }
+            case INCOMING_CALL: {
+                showIncoming((BaseUser) data[0], (String) data[1]);
+                return;
+            }
+            case OUT_CALL: {
+                showOutcoming((BaseUser) data[0]);
+                return;
+            }
         }
     }
 
-    private void onOk(ButtonsHandler whereToReportActions) {
-        whereToReportActions.handleRequest(
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
+    }
+
+    private void onOk() {
+        handleRequest(
                 BUTTONS.CALL_ACCEPTED,
                 new Object[]{
                         user,
@@ -89,8 +108,8 @@ public class CallDialog extends JDialog implements LogicObserver {
         dispose();
     }
 
-    private void onDeny(ButtonsHandler whereToReportActions) {
-        whereToReportActions.handleRequest(
+    private void onDeny() {
+        handleRequest(
                 BUTTONS.CALL_DENIED,
                 new Object[]{
                         user,
@@ -100,8 +119,8 @@ public class CallDialog extends JDialog implements LogicObserver {
         dispose();
     }
 
-    private void onCancel(ButtonsHandler whereToReportActions) {
-        whereToReportActions.handleRequest(
+    private void onCancel() {
+        handleRequest(
                 BUTTONS.CALL_CANCELLED,
                 new Object[]{
                         user,
@@ -119,7 +138,7 @@ public class CallDialog extends JDialog implements LogicObserver {
      * @param who you are calling
      */
 
-    public void showOutcoming(BaseUser who, JComponent relativeTo) {
+    private void showOutcoming(BaseUser who) {
         user = who;
         dudes = "";
 
@@ -148,7 +167,7 @@ public class CallDialog extends JDialog implements LogicObserver {
      * @param conversationInfo and conversation with him
      */
 
-    public void showIncoming(BaseUser fromWho, String conversationInfo, JComponent relativeTo) {
+    private void showIncoming(BaseUser fromWho, String conversationInfo) {
         user = fromWho;
         dudes = conversationInfo;
 

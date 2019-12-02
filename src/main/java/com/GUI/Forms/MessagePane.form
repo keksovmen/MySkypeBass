@@ -46,7 +46,7 @@
         </properties>
         <border type="none"/>
         <children>
-          <component id="ba1ce" class="javax.swing.JTextArea" binding="messageBoard">
+          <component id="ba1ce" class="javax.swing.JTextArea" binding="messageDisplay">
             <constraints/>
             <properties>
               <disabledTextColor color="-4473925"/>

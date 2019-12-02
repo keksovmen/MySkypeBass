@@ -1,11 +1,16 @@
 package com.Util;
 
+import com.Client.ButtonsHandler;
 import com.Client.Logic;
 import com.Model.ChangeableModel;
 import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
+import com.Pipeline.BUTTONS;
 
+import javax.swing.*;
+import java.awt.event.InputEvent;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiFunction;
 
 public class Algorithms {
@@ -131,15 +136,43 @@ public class Algorithms {
      *
      * @param dude   who to add in a conversation
      * @param others who may present in the conversation
-     * @param logic  what to notify about progress
+     * @param logic  what to notifyObservers about progress
      * @param model  to update about progress
      */
 
     public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {
-        logic.notify(ACTIONS.CALL_ACCEPTED, null);
+        logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
         model.addToConversation(dude);
         for (BaseUser baseUser : BaseUser.parseUsers(others)) {
             model.addToConversation(baseUser);
         }
+    }
+
+    /**
+     * Put pop up menu on a given component
+     * That will give you view on all possible sounds and preview them
+     *
+     * @param component     where to register
+     * @param textField     where put meta symbols to send
+     * @param buttonsHandler helpHandler to preview sound
+     */
+
+    public static void registerPopUp(JComponent component, JTextField textField, ButtonsHandler buttonsHandler) {
+        JPopupMenu popupMenu = new JPopupMenu("Sounds");
+        List<String> getDescriptions = Resources.getDescriptions();
+
+        for (int i = 0; i < getDescriptions.size(); i++) {
+            JMenuItem menuItem = new JMenuItem(getDescriptions.get(i));
+            int j = i;
+            menuItem.addActionListener(e -> {
+                if (e.getModifiers() == InputEvent.META_MASK) {
+                    buttonsHandler.handleRequest(BUTTONS.PREVIEW_SOUND, new Object[]{FormatWorker.asMessageMeta(j), j});
+                } else {
+                    textField.setText(textField.getText() + FormatWorker.asMessageMeta(j));
+                }
+            });
+            popupMenu.add(menuItem);
+        }
+        component.setComponentPopupMenu(popupMenu);
     }
 }

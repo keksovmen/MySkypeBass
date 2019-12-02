@@ -5,21 +5,21 @@ package com.Pipeline;
  */
 
 public enum BUTTONS {
-    CONNECT, // Plain data is String[3] first name ,then ip, then port
+    CONNECT, //data[0] is my name as String, data[1] is host name as String, data[2] is port as String
     DISCONNECT, // no data
-    CREATE_SERVER, // Plain data is String[3] port, sample rate, sample size
-    SEND_MESSAGE, // string is message int is id of receiver
-    CALL, // Object is BaseUser who you try to call
+    CREATE_SERVER, //data[0] is port, data[1] is sample rate, data[2] is sample size everything as String
+    SEND_MESSAGE, //data[0] is message as String, data[1] is id of receiver as Integer
+    CALL, // data[0] is BaseUser who you trying to call
     EXIT_CONFERENCE, // no data
-    MUTE,
-    INCREASE_BASS, // int lvl in % from 1 = base level to 100 findPercentage max
+    MUTE, //no data
+    INCREASE_BASS, // data[0] is lvl in % from 1 = base level to 100 findPercentage max as Integer
     ASC_FOR_USERS, // no data
-    CALL_ACCEPTED, //object is dude who called, string all dudes who is in conversation
-    CALL_DENIED, //object is dude who called
-    CALL_CANCELLED, // object is user who you tried to call
-    VOLUME_CHANGED, // string data is id, int is volume in % from 0 to 100
-    CHANGE_INPUT, // object is mixer
-    CHANGE_OUTPUT, // object is mixer
-    PREVIEW_SOUND, // string is id formatted as in message, int id of a track
-    SEND_SOUND,
+    CALL_ACCEPTED, //data[0] is BaseUser who called, data[1] is String with dudes in conversation
+    CALL_DENIED, //data[0] is BaseUser who called, data[1] is String with dudes in conversation
+    CALL_CANCELLED, // data[0] is BaseUser who called, data[1] is String with dudes in conversation
+    VOLUME_CHANGED, // data[0] is id as Integer, data[1] is volume in % from 0 to 100 as Integer
+    CHANGE_INPUT, // data[0] is Mixer.Info
+    CHANGE_OUTPUT, // data[0] is Mixer.Info
+    PREVIEW_SOUND, // data[0] is id formatted as in message as String, data[1] id of a track as Integer
+    SEND_SOUND, // data[0] is sound to send as byte[]
 }

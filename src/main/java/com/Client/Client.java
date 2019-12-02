@@ -24,9 +24,18 @@ import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Client extends AbstractClient {
 
+    /**
+     * Not ExecutorService because this object suppose to live
+     * from beginning till the end of program, so no need to
+     * shutdown etc.
+     */
+
+    private final Executor executor;
 
     private ClientUser user;
     private ClientHandler handler;
@@ -35,47 +44,50 @@ public class Client extends AbstractClient {
 
     public Client(ChangeableModel model) {
         super(model);
+        executor = Executors.newSingleThreadExecutor();
     }
 
 
     @Override
     public void handleRequest(BUTTONS button, Object[] data) {
         //remember which thread will call it through chain of responsibility
-        switch (button) {
-            case CONNECT:
-                onConnect(data);
-                break;
-            case DISCONNECT:
-                onDisconnect();
-                break;
-            case CREATE_SERVER:
-                onServerCreate(data);
-                break;
-            case SEND_MESSAGE:
-                onMessageSend(data);
-                break;
-            case CALL:
-                onCall(data);
-                break;
-            case EXIT_CONFERENCE:
-                onExitConference();
-                break;
-            case ASC_FOR_USERS:
-                onUserRequest();
-                break;
-            case CALL_ACCEPTED:
-                onCallAccepted(data);
-                break;
-            case CALL_DENIED:
-                onCallDenied(data);
-                break;
-            case CALL_CANCELLED:
-                onCallCanceled(data);
-                break;
-            case SEND_SOUND:
-                onSendSound(data);
-                break;
-        }
+        executor.execute(() -> {
+            switch (button) {
+                case CONNECT:
+                    onConnect(data);
+                    break;
+                case DISCONNECT:
+                    onDisconnect();
+                    break;
+                case CREATE_SERVER:
+                    onServerCreate(data);
+                    break;
+                case SEND_MESSAGE:
+                    onMessageSend(data);
+                    break;
+                case CALL:
+                    onCall(data);
+                    break;
+                case EXIT_CONFERENCE:
+                    onExitConference();
+                    break;
+                case ASC_FOR_USERS:
+                    onUserRequest();
+                    break;
+                case CALL_ACCEPTED:
+                    onCallAccepted(data);
+                    break;
+                case CALL_DENIED:
+                    onCallDenied(data);
+                    break;
+                case CALL_CANCELLED:
+                    onCallCanceled(data);
+                    break;
+                case SEND_SOUND:
+                    onSendSound(data);
+                    break;
+            }
+        });
     }
 
 
@@ -85,18 +97,17 @@ public class Client extends AbstractClient {
             writer.writeName(myName);
 
             AbstractDataPackage read = reader.read();
-            AudioFormat audioFormat = FormatWorker.parseAudioFormat(read.getDataAsString());
-            int micCaptureSize = FormatWorker.parseMicCaptureSize(read.getDataAsString());
+            String formatAndCaptureSizeAsString = read.getDataAsString();
             DataPackagePool.returnPackage(read);
 
             //sets audio format and tell the server can speaker play format or not
-            if (!AudioSupplier.setAudioFormat(audioFormat, micCaptureSize)) {
+            if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
                 writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
-                stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, audioFormat.toString());
+                stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
                 return null;
             }
             writer.writeApproveAudioFormat(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
-            stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, audioFormat.toString());
+            stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
 
             read = reader.read();
             user = new ClientUser(myName, read.getHeader().getTo(), writer);
@@ -138,7 +149,7 @@ public class Client extends AbstractClient {
         } catch (IOException ignored) {
         }
         handler.close();
-        plainNotify(ACTIONS.DISCONNECTED);
+//        plainNotify(ACTIONS.DISCONNECTED);
     }
 
     protected void onServerCreate(Object[] data) {
@@ -165,7 +176,7 @@ public class Client extends AbstractClient {
 
     protected void onMessageSend(Object[] data) {
         String message = (String) data[0];
-        int to = (int) data[1];
+        int to = ((BaseUser) data[1]).getId();
         try {
             user.getWriter().writeMessage(user.getId(), to, message);
         } catch (IOException ignored) {
@@ -187,7 +198,7 @@ public class Client extends AbstractClient {
 
         try {
             user.getWriter().writeCall(user.getId(), dude.getId());
-            notify(ACTIONS.OUT_CALL, new Object[]{dude});
+            notifyObservers(ACTIONS.OUT_CALL, new Object[]{dude});
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -313,7 +324,7 @@ public class Client extends AbstractClient {
         }
         int portAsInt = Integer.parseInt(port);
         if (!FormatWorker.portInRange(portAsInt)) {
-            notify(ACTIONS.PORT_OUT_OF_RANGE, new Object[]{
+            notifyObservers(ACTIONS.PORT_OUT_OF_RANGE, new Object[]{
                             "0 < port < " + 0xFFFF,
                             portAsInt
                     }
@@ -324,11 +335,11 @@ public class Client extends AbstractClient {
     }
 
     private void plainNotify(ACTIONS actions) {
-        notify(actions, null);
+        notifyObservers(actions, null);
     }
 
     private void stringNotify(ACTIONS actions, String data) {
-        notify(actions, new Object[]{data});
+        notifyObservers(actions, new Object[]{data});
     }
 
 }

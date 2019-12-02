@@ -30,7 +30,7 @@ public class AudioSettings implements ButtonsHandler {
                 return;
             }
             case VOLUME_CHANGED:{
-                output.changeVolume(Integer.parseInt((String) data[0]), (Integer) data[1]);
+                output.changeVolume((Integer) data[0], (Integer) data[1]);
                 return;
             }
             case INCREASE_BASS:{

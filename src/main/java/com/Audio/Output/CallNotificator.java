@@ -54,7 +54,7 @@ public class CallNotificator implements Starting, ChangeOutput {
     private void playOneFile(String name) {
         try (BufferedInputStream inputStream = new BufferedInputStream(
                 Checker.getCheckedInput(name));
-             SourceDataLine outputForFile = AudioSupplier.getOutputForFile(mixer, inputStream);
+             SourceDataLine outputForFile = AudioSupplier.getInstance().getOutputForFile(mixer, inputStream);
              AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream)
         ) {
             while (work) {

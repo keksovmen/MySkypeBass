@@ -129,7 +129,7 @@ public class ServerProcessor implements Processable {
     }
 
     /**
-     * Short cut to notify dude that last message he sent
+     * Short cut to notifyObservers dude that last message he sent
      * didn't get to the receiver
      *
      * @param dudeId who he wanted to send a message
@@ -210,7 +210,7 @@ public class ServerProcessor implements Processable {
         //here goes atomic code
         Conversation conversation;
         if (correspondUser.inConversation()) {
-            //add dude to conv and put all dudes from conf to notify him
+            //add dude to conv and put all dudes from conf to notifyObservers him
             conversation = correspondUser.getConversation();
             dataPackage.setData(conversation.getAllToString(correspondUser));
             conversation.addDude(receiver, correspondUser);

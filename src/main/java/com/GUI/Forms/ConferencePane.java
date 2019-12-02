@@ -2,12 +2,13 @@ package com.GUI.Forms;
 
 import com.Client.ButtonsHandler;
 import com.Client.LogicObserver;
-import com.Model.BaseUnEditableModel;
+import com.Model.UnEditableModel;
 import com.Model.Updater;
 import com.Networking.Utility.Users.BaseUser;
 import com.Networking.Utility.WHO;
 import com.Pipeline.ACTIONS;
 import com.Pipeline.BUTTONS;
+import com.Util.Algorithms;
 import com.Util.FormatWorker;
 import com.Util.History.History;
 import com.Util.History.HistoryFactory;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
  * or mute yourself
  */
 
-class ConferencePane implements Updater, LogicObserver {
+class ConferencePane implements Updater, LogicObserver, ButtonsHandler {
     private JSpinner bassChanger;
     private JButton muteButton;
     private JPanel settingsPane;
@@ -50,6 +51,8 @@ class ConferencePane implements Updater, LogicObserver {
 
     private final History<String> history;
 
+    private final ButtonsHandler helpHandlerPredecessor;
+
     /**
      * Default constructor init
      * 1 - actions
@@ -59,22 +62,24 @@ class ConferencePane implements Updater, LogicObserver {
      * //     * @param actions all possible actions
      */
 
-    ConferencePane(ButtonsHandler whereToReportActions, Consumer<String> closeTabAction) {
+    ConferencePane(ButtonsHandler helpHandlerPredecessor, Consumer<String> closeTabAction) {
         conferenceMembers = new HashMap<>();
 
         history = HistoryFactory.getStringHistory();
 
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
+
         bassChanger.setModel(new SpinnerNumberModel(1, 1, 100, 1));
 
-        changeVolume = createVolumeChanger(whereToReportActions);
+        changeVolume = createVolumeChanger();
 
-        endCallButton.addActionListener(e -> disconnectAction(whereToReportActions, closeTabAction));
+        endCallButton.addActionListener(e -> disconnectAction(closeTabAction));
 
-        muteButton.addActionListener(e -> mute(whereToReportActions));
+        muteButton.addActionListener(e -> mute());
 
-        bassChanger.addChangeListener(e -> changeBussBoost(whereToReportActions));
+        bassChanger.addChangeListener(e -> changeBussBoost());
 
-        messageGetter.addActionListener(e -> sendMessageAction(whereToReportActions));
+        messageGetter.addActionListener(e -> sendMessageAction());
 
         messageGetter.registerKeyboardAction(e -> onUp(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
@@ -83,8 +88,8 @@ class ConferencePane implements Updater, LogicObserver {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
 
-        MessagePane.registerPopUp(messagesDisplay, messageGetter, whereToReportActions);
-        MessagePane.registerPopUp(messageGetter, messageGetter, whereToReportActions);
+        Algorithms.registerPopUp(messagesDisplay, messageGetter, this);
+        Algorithms.registerPopUp(messageGetter, messageGetter, this);
     }
 
     @Override
@@ -111,7 +116,7 @@ class ConferencePane implements Updater, LogicObserver {
     }
 
     @Override
-    public void update(BaseUnEditableModel model) {
+    public void update(UnEditableModel model) {
         Set<BaseUser> conversation = model.getConversation();
 
         Map<BaseUser, UserSettings> tmp = new HashMap<>();
@@ -132,6 +137,12 @@ class ConferencePane implements Updater, LogicObserver {
         repaint();
     }
 
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
+    }
+
     JPanel getMainPane() {
         return mainPane;
     }
@@ -140,11 +151,11 @@ class ConferencePane implements Updater, LogicObserver {
         showMessage(from, message);
     }
 
-    private void sendMessageAction(ButtonsHandler whereToReportActions) {
+    private void sendMessageAction() {
         String message = getMessage();
         if (!sendMessage(message))
             return;
-        whereToReportActions.handleRequest(
+        handleRequest(
                 BUTTONS.SEND_MESSAGE,
                 new Object[]{
                         message,
@@ -153,8 +164,8 @@ class ConferencePane implements Updater, LogicObserver {
         );
     }
 
-    private void disconnectAction(ButtonsHandler whereToReportActions, Consumer<String> closeTabAction) {
-        whereToReportActions.handleRequest(
+    private void disconnectAction(Consumer<String> closeTabAction) {
+        handleRequest(
                 BUTTONS.EXIT_CONFERENCE,
                 null
         );
@@ -163,11 +174,11 @@ class ConferencePane implements Updater, LogicObserver {
         clear();
     }
 
-    private BiConsumer<Integer, Integer> createVolumeChanger(ButtonsHandler whereToReportActions) {
-        return (id, value) -> whereToReportActions.handleRequest(
+    private BiConsumer<Integer, Integer> createVolumeChanger() {
+        return (id, value) -> handleRequest(
                 BUTTONS.VOLUME_CHANGED,
                 new Object[]{
-                        String.valueOf(id),
+                        id,
                         value
                 }
         );
@@ -211,8 +222,8 @@ class ConferencePane implements Updater, LogicObserver {
      * Define what text will be on mute button
      */
 
-    private void mute(ButtonsHandler whereToRegisterActions) {
-        whereToRegisterActions.handleRequest(
+    private void mute() {
+        handleRequest(
                 BUTTONS.MUTE,
                 null
         );
@@ -223,8 +234,8 @@ class ConferencePane implements Updater, LogicObserver {
         }
     }
 
-    private void changeBussBoost(ButtonsHandler whereToRegisterActions) {
-        whereToRegisterActions.handleRequest(
+    private void changeBussBoost() {
+        handleRequest(
                 BUTTONS.INCREASE_BASS,
                 new Object[]{
                         bassChanger.getValue()

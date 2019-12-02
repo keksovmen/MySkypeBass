@@ -2,7 +2,7 @@ package com.GUI.Forms;
 
 import com.Client.ButtonsHandler;
 import com.Client.LogicObserver;
-import com.Model.BaseUnEditableModel;
+import com.Model.UnEditableModel;
 import com.Model.Updater;
 import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.ACTIONS;
@@ -15,7 +15,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 
 /**
  * Handles messaging, call pane
@@ -23,14 +22,14 @@ import java.util.function.BiConsumer;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements Updater, LogicObserver {
+public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandler {
 
     /**
      * Name for conversation tab uses in search cases
      * so decided to make it as a variable
      */
 
-    static final String CONVERSATION_TAB_NAME = "Conversation";
+    protected static final String CONVERSATION_TAB_NAME = "Conversation";
 
     private JTextArea labelMe;
 
@@ -59,9 +58,8 @@ public class MultiplePurposePane implements Updater, LogicObserver {
 
     private final ConferencePane conferencePane;
 
-    private final ButtonsHandler actionHandler;
+    private final ButtonsHandler helpHandlerPredecessor;
 
-    private final BiConsumer<String, BaseUser> sendAction;
 
     /**
      * Default constructor
@@ -72,54 +70,19 @@ public class MultiplePurposePane implements Updater, LogicObserver {
      * 4 - create pop up menu for userList
      */
 
-    public MultiplePurposePane(ButtonsHandler whereToReportActions) {
+    public MultiplePurposePane(ButtonsHandler helpHandlerPredecessor) {
         tabs = new HashMap<>();
-        conferencePane = new ConferencePane(whereToReportActions, this::closeTab);
+        conferencePane = new ConferencePane(this, this::closeTab);
 
-        actionHandler = whereToReportActions;
-
-        sendAction = ((s, user) -> actionHandler.handleRequest(
-                BUTTONS.SEND_MESSAGE,
-                new Object[]{
-                        s,
-                        user.getId()
-                }));
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
 
         setListeners();
 
 
     }
 
-    private void setListeners() {
-        callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
-
-        disconnectButton.addActionListener(e -> disconnect());
-
-        callButton.addActionListener(e -> call());
-//
-        registerPopUp();
-
-        usersList.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    if (e.isShiftDown()) {
-                        onSendMessage();
-                        e.consume();
-                        return;
-                    }
-                    if (e.getClickCount() == 2) {
-                        call();
-                    }
-                }
-                e.consume();
-
-            }
-        });
-    }
-
     @Override
-    public void update(BaseUnEditableModel model) {
+    public void update(UnEditableModel model) {
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
@@ -168,6 +131,40 @@ public class MultiplePurposePane implements Updater, LogicObserver {
         conferencePane.observe(action, data);
     }
 
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
+    }
+
+    private void setListeners() {
+        callTable.addChangeListener(e -> deColored(callTable.getSelectedIndex()));
+
+        disconnectButton.addActionListener(e -> disconnect());
+
+        callButton.addActionListener(e -> call());
+//
+        registerPopUp();
+
+        usersList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    if (e.isShiftDown()) {
+                        onSendMessage();
+                        e.consume();
+                        return;
+                    }
+                    if (e.getClickCount() == 2) {
+                        call();
+                    }
+                }
+                e.consume();
+
+            }
+        });
+    }
+
 
     /* Actions handlers */
 
@@ -197,14 +194,14 @@ public class MultiplePurposePane implements Updater, LogicObserver {
     private void call() {
         if (!selected())
             return;
-        actionHandler.handleRequest(
+        handleRequest(
                 BUTTONS.CALL,
                 new Object[]{getSelected()}
         );
     }
 
     private void disconnect() {
-        actionHandler.handleRequest(
+        handleRequest(
                 BUTTONS.DISCONNECT,
                 null
         );
@@ -230,7 +227,7 @@ public class MultiplePurposePane implements Updater, LogicObserver {
 
         JMenuItem refresh = new JMenuItem("Refresh");
         refresh.addActionListener(e ->
-                actionHandler.handleRequest(
+                handleRequest(
                         BUTTONS.ASC_FOR_USERS, null
                 ));
         popupMenu.add(sendMessageMenu);
@@ -309,7 +306,7 @@ public class MultiplePurposePane implements Updater, LogicObserver {
      */
 
     private MessagePane createPane(BaseUser user) {
-        MessagePane messagePane = new MessagePane(user, sendAction, this::closeTab, actionHandler);
+        MessagePane messagePane = new MessagePane(user, () -> closeTab(user.toString()), this);
         tabs.put(user, messagePane);
         return messagePane;
     }

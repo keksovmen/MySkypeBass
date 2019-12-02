@@ -2,17 +2,14 @@ package com.GUI;
 
 import com.Audio.AudioSupplier;
 import com.Client.ButtonsHandler;
-import com.Client.LogicObserver;
 import com.GUI.Forms.AudioFormatStats;
 import com.GUI.Forms.CallDialog;
 import com.GUI.Forms.EntrancePane;
 import com.GUI.Forms.MultiplePurposePane;
-import com.Model.BaseUnEditableModel;
-import com.Model.Updater;
-import com.Networking.Utility.Users.BaseUser;
+import com.Model.UnEditableModel;
 import com.Pipeline.ACTIONS;
 import com.Pipeline.BUTTONS;
-import com.Util.Interfaces.Registration;
+import com.Pipeline.CompositeComponent;
 import com.Util.Resources;
 
 import javax.swing.*;
@@ -21,13 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class Frame implements Updater, LogicObserver, Registration<ButtonsHandler>, ButtonsHandler {
+public class Frame implements CompositeComponent {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 450;
 
 
-    private final List<ButtonsHandler> actionableLogicList;
+    private final List<ButtonsHandler> buttonsHandlers;
 
     private final JFrame frame;
     private final EntrancePane entrancePane;
@@ -36,14 +33,14 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
     private final CallDialog callDialog;
 
     public Frame() {
-        actionableLogicList = new ArrayList<>();
+        buttonsHandlers = new ArrayList<>();
 
         frame = new JFrame("Skype Bass"); // take it from property
 
         entrancePane = new EntrancePane(this, this::onServerPaneCreate);
         serverCreatePane = new AudioFormatStats(this, this::onServerCancel);
         purposePane = new MultiplePurposePane(this);
-        callDialog = new CallDialog(this);
+        callDialog = new CallDialog(this, frame.getRootPane());
 
         setSize();
         setIcon();
@@ -53,7 +50,7 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
     }
 
     @Override
-    public void update(BaseUnEditableModel model) {
+    public void update(UnEditableModel model) {
         SwingUtilities.invokeLater(() -> purposePane.update(model));
     }
 
@@ -108,14 +105,6 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
                     onDisconnect();
                     break;
                 }
-                case OUT_CALL: {
-                    onOutCall((BaseUser) data[0]);
-                    break;
-                }
-                case INCOMING_CALL: {
-                    onIncomingCall((BaseUser) data[0], (String) data[1]);
-                    break;
-                }
                 case CALL_DENIED: {
                     showMessage("Call was denied by " + data[0]);
                     break;
@@ -132,6 +121,10 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
                     showErrorMessage((String) data[0]);
                     break;
                 }
+                case SERVER_CREATED_ALREADY:{
+                    showInfoMessage("Server already created!");
+                    break;
+                }
             }
 
             entrancePane.observe(action, data);
@@ -142,17 +135,17 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
 
     @Override
     public void attach(ButtonsHandler listener) {
-        actionableLogicList.add(listener);
+        buttonsHandlers.add(listener);
     }
 
     @Override
     public void detach(ButtonsHandler listener) {
-        actionableLogicList.remove(listener);
+        buttonsHandlers.remove(listener);
     }
 
     @Override
     public void handleRequest(BUTTONS button, Object[] data) {
-        actionableLogicList.forEach(warDuty -> warDuty.handleRequest(button, data));
+        buttonsHandlers.forEach(buttonsHandler -> buttonsHandler.handleRequest(button, data));
     }
 
     private void setSize() {
@@ -175,26 +168,22 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
         JMenu micMenu = new JMenu("Microphone");
         fillMenu(
                 speakerMenu,
-                AudioSupplier.getSourceLines(),
+                AudioSupplier.getInstance().getSourceLines(),
                 info -> registration.handleRequest(
                         BUTTONS.CHANGE_OUTPUT,
-                        new Object[]{
-                                info
-                        }
+                        new Object[]{info}
                 ),
-                AudioSupplier.getDefaultForOutput()
+                AudioSupplier.getInstance().getDefaultForOutput()
         );
 
         fillMenu(
                 micMenu,
-                AudioSupplier.getTargetLines(),
+                AudioSupplier.getInstance().getTargetLines(),
                 info -> registration.handleRequest(
                         BUTTONS.CHANGE_INPUT,
-                        new Object[]{
-                                info
-                        }
+                        new Object[]{info}
                 ),
-                AudioSupplier.getDefaultForInput()
+                AudioSupplier.getInstance().getDefaultForInput()
         );
 
         menuBar.add(speakerMenu);
@@ -267,13 +256,13 @@ public class Frame implements Updater, LogicObserver, Registration<ButtonsHandle
         repaint();
     }
 
-    private void onOutCall(BaseUser who) {
-        callDialog.showOutcoming(who, frame.getRootPane());
-    }
-
-    private void onIncomingCall(BaseUser who, String dudes) {
-        callDialog.showIncoming(who, dudes, frame.getRootPane());
-    }
+//    private void onOutCall(BaseUser who) {
+//        callDialog.showOutcoming(who, frame.getRootPane());
+//    }
+//
+//    private void onIncomingCall(BaseUser who, String dudes) {
+//        callDialog.showIncoming(who, dudes, frame.getRootPane());
+//    }
 
     private void repaint() {
         frame.revalidate();

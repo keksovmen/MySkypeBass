@@ -3,16 +3,13 @@ package com.GUI.Forms;
 import com.Client.ButtonsHandler;
 import com.Networking.Utility.Users.BaseUser;
 import com.Pipeline.BUTTONS;
+import com.Util.Algorithms;
 import com.Util.FormatWorker;
 import com.Util.History.History;
 import com.Util.History.HistoryFactory;
-import com.Util.Resources;
 
 import javax.swing.*;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -20,10 +17,12 @@ import java.util.function.Consumer;
  * can sendSound message and close self tab
  */
 
-class MessagePane {
+class MessagePane implements ButtonsHandler {
+
+
     private JPanel mainPane;
     private JLabel nameWho;
-    private JTextArea messageBoard;
+    private JTextArea messageDisplay;
     private JButton sendButton;
     private JButton closeButton;
     private JTextField messageGetter;
@@ -31,6 +30,8 @@ class MessagePane {
     private boolean isShown;
 
     private final History<String> history;
+
+    private final ButtonsHandler helpHandlerPredecessor;
 
     /**
      * Default constructor init
@@ -42,21 +43,23 @@ class MessagePane {
      * //     * @param actions all your actions
      */
 
-    MessagePane(BaseUser forWho, BiConsumer<String, BaseUser> sendMessage, Consumer<String> closeTabAction, ButtonsHandler actionHandler) {
+    MessagePane(BaseUser forWho, Runnable closeTabAction, ButtonsHandler helpHandlerPredecessor) {
         nameWho.setText(forWho.toString());
 
-        sendButton.addActionListener(e -> this.sendMessage(sendMessage, forWho));
-
-        messageGetter.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
+        sendButton.addActionListener(e -> sendMessage(forWho));
 
         closeButton.addActionListener(e -> {
-            closeTabAction.accept(forWho.toString());
+            closeTabAction.run();
             isShown = false;
         });
+
+        messageGetter.registerKeyboardAction(e -> sendButton.doClick(), KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), JComponent.WHEN_FOCUSED);
 
         isShown = true;
 
         history = HistoryFactory.getStringHistory();
+
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
 
         messageGetter.registerKeyboardAction(e -> onUp(),
                 KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0),
@@ -65,13 +68,20 @@ class MessagePane {
                 KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0),
                 JComponent.WHEN_FOCUSED);
 
-        registerPopUp(messageBoard, messageGetter, actionHandler);
-        registerPopUp(messageGetter, messageGetter, actionHandler);
+        Algorithms.registerPopUp(messageDisplay, messageGetter, this);
+        Algorithms.registerPopUp(messageGetter, messageGetter, this);
+    }
+
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
     }
 
     JPanel getMainPane() {
         return mainPane;
     }
+
 
     /**
      * Displays message when you write or receive it
@@ -83,7 +93,7 @@ class MessagePane {
 
     void showMessage(String message, boolean me) {
         if (message.length() != 0)
-            messageBoard.append((me ? "Me" : nameWho.getText()) +
+            messageDisplay.append((me ? "Me" : nameWho.getText()) +
                     " (" + FormatWorker.getTime() + "): " + message + "\n");
         isShown = true;
     }
@@ -92,16 +102,15 @@ class MessagePane {
      * Action for sending message
      * can't sendSound if there is empty string
      * also clear messageGetter where was your message
-     *
-     * @param send function to call when need to sendSound
      */
 
-    private void sendMessage(BiConsumer<String, BaseUser> send, BaseUser user) {
+    private void sendMessage(BaseUser user) {
         String message = messageGetter.getText();
         if (message.length() == 0) {
             return;
         }
-        send.accept(message, user);
+        handleRequest(BUTTONS.SEND_MESSAGE,
+                new Object[]{message, user});
         history.push(message);
         showMessage(message, true);
         messageGetter.setText("");
@@ -119,23 +128,5 @@ class MessagePane {
         messageGetter.setText("");
     }
 
-    static void registerPopUp(JComponent component, JTextField textField, ButtonsHandler actionHandler) {
-        JPopupMenu popupMenu = new JPopupMenu("Sounds");
-        List<String> getDescriptions = Resources.getDescriptions();
-
-        for (int i = 0; i < getDescriptions.size(); i++) {
-            JMenuItem menuItem = new JMenuItem(getDescriptions.get(i));
-            int j = i;
-            menuItem.addActionListener(e -> {
-                if (e.getModifiers() == InputEvent.META_MASK) {
-                    actionHandler.handleRequest(BUTTONS.PREVIEW_SOUND, new Object[]{FormatWorker.asMessageMeta(j), j});
-                } else {
-                    textField.setText(textField.getText() + FormatWorker.asMessageMeta(j));
-                }
-            });
-            popupMenu.add(menuItem);
-        }
-        component.setComponentPopupMenu(popupMenu);
-    }
 
 }

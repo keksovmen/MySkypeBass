@@ -5,23 +5,19 @@ import com.Audio.Input.DefaultMic;
 import com.Audio.Output.AudioPlayer;
 import com.Audio.Output.Playable;
 import com.Client.ButtonsHandler;
-import com.Client.LogicObserver;
-import com.Model.BaseUnEditableModel;
-import com.Model.Updater;
-import com.Networking.Utility.Users.BaseUser;
+import com.Model.UnEditableModel;
 import com.Pipeline.ACTIONS;
-import com.Pipeline.ActionableLogic;
 import com.Pipeline.BUTTONS;
-import com.Pipeline.UpdaterAndHandler;
+import com.Pipeline.SimpleComponent;
 import com.Util.FormatWorker;
 import com.Util.Pair;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 
-public class Audio implements Updater, LogicObserver, ButtonsHandler {
+public class Audio implements SimpleComponent {
+
 
     private final Playable player;
     private final DefaultMic mic;
@@ -29,12 +25,15 @@ public class Audio implements Updater, LogicObserver, ButtonsHandler {
 
     private final ExecutorService executorService;
 
-    public Audio(Consumer<byte[]> sendData) {
+
+    public Audio(ButtonsHandler helpHandlerPredecessor) {
+
         AudioPlayer audioPlayer = new AudioPlayer();
-        Capture capture = new Capture(sendData);
+        Capture capture = new Capture(helpHandlerPredecessor);
         AudioSettings settings = new AudioSettings(capture, audioPlayer);
 
         executorService = Executors.newCachedThreadPool();
+
 
         player = audioPlayer;
         mic = capture;
@@ -98,7 +97,7 @@ public class Audio implements Updater, LogicObserver, ButtonsHandler {
     }
 
     @Override
-    public void update(BaseUnEditableModel model) {
+    public void update(UnEditableModel model) {
         player.update(model);
     }
 
@@ -114,11 +113,11 @@ public class Audio implements Updater, LogicObserver, ButtonsHandler {
                 break;
             }
             case EXIT_CONFERENCE: {
-                mic.close();
+                onExitConversation();
                 break;
             }
             case DISCONNECT: {
-                mic.close();
+                onExitConversation();
                 break;
             }
             case PREVIEW_SOUND:{
@@ -147,7 +146,7 @@ public class Audio implements Updater, LogicObserver, ButtonsHandler {
                 ));
     }
 
-    private void onCallAccepted(/*BaseUser dude, String others*/) {
+    private void onCallAccepted() {
         dropCallAction();
         mic.start("Microphone capture");
     }

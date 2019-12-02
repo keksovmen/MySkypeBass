@@ -23,7 +23,7 @@ public abstract class AbstractClient implements Logic {
     public abstract ClientUser authenticate(BaseReader reader, ClientWriter writer, String myName);
 
     @Override
-    public void notify(ACTIONS action, Object[] data) {
+    public void notifyObservers(ACTIONS action, Object[] data) {
         observerList.forEach(logicObserver -> logicObserver.observe(action, data));
     }
 

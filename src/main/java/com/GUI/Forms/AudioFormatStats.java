@@ -14,7 +14,9 @@ import java.awt.event.ActionListener;
  * port for the socket
  */
 
-public class AudioFormatStats {
+public class AudioFormatStats implements ButtonsHandler {
+
+
     private JPanel mainPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -27,12 +29,16 @@ public class AudioFormatStats {
     private JFormattedTextField customRate;
     private JFormattedTextField textFieldPort;
 
+    private final ButtonsHandler helpHandlerPredecessor;
+
     /**
      * Firstly load properties set ip sample rate fields
      * register listeners for buttons
      */
 
-    public AudioFormatStats(ButtonsHandler whereToReportActions, Runnable cancelServerCreation) {
+    public AudioFormatStats(ButtonsHandler helpHandlerPredecessor, Runnable cancelServerCreation) {
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
+
         ActionListener actionListener = e -> {
             JRadioButton radioButton = (JRadioButton) e.getSource();
             customRate.setText(radioButton.getText());
@@ -42,7 +48,7 @@ public class AudioFormatStats {
         a44100RadioButton.addActionListener(actionListener);
         a48000RadioButton.addActionListener(actionListener);
 
-        buttonOK.addActionListener(e -> onOK(whereToReportActions));
+        buttonOK.addActionListener(e -> onOK());
 
         buttonCancel.addActionListener(e -> onCancel(cancelServerCreation));
 
@@ -53,12 +59,18 @@ public class AudioFormatStats {
 
     }
 
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
+    }
+
     public JPanel getMainPane() {
         return mainPane;
     }
 
-    private void onOK(ButtonsHandler whereToReportActions) {
-        whereToReportActions.handleRequest(
+    private void onOK() {
+        handleRequest(
                 BUTTONS.CREATE_SERVER,
                 new Object[]{getPort(), getSampleRate(), getSampleSize()}
         );

@@ -2,6 +2,7 @@ package com.Audio.Output;
 
 import com.Audio.AudioSupplier;
 import com.Model.BaseUnEditableModel;
+import com.Model.UnEditableModel;
 import com.Networking.Utility.Users.BaseUser;
 import com.Util.Algorithms;
 import com.Util.Checker;
@@ -30,7 +31,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     @Override
     public synchronized void changeOutput(Mixer.Info mixerInfo) {
         if (mixerInfo == null && outputInfo == null)
-            mixerInfo = AudioSupplier.getDefaultForOutput();
+            mixerInfo = AudioSupplier.getInstance().getDefaultForOutput();
         outputInfo = mixerInfo;
         changeOutputs();
         callNotificator.changeOutput(outputInfo);
@@ -38,7 +39,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
 
     private synchronized void addOutput(int id) {
         try {
-            outputs.put(id, AudioSupplier.getOutput(outputInfo));
+            outputs.put(id, AudioSupplier.getInstance().getOutput(outputInfo));
         } catch (LineUnavailableException e) {
             e.printStackTrace();
             //Will be thrown when audio line is already opened
@@ -134,7 +135,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     }
 
     @Override
-    public synchronized void update(BaseUnEditableModel model) {
+    public synchronized void update(UnEditableModel model) {
         Set<BaseUser> conversation = model.getConversation();
         Map<Integer, BaseUser> userMap = model.getUserMap();
 
@@ -168,7 +169,7 @@ public class AudioPlayer extends Magnitafon implements ChangeableOutput, Playabl
     private void playMessageSound(int track) {
         try (BufferedInputStream inputStream = new BufferedInputStream(
                 Checker.getCheckedInput(Resources.getMessagePaths().get(track)));
-             SourceDataLine sourceDataLine = AudioSupplier.getOutputForFile(outputInfo, inputStream);
+             SourceDataLine sourceDataLine = AudioSupplier.getInstance().getOutputForFile(outputInfo, inputStream);
              AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream)) {
 
             Player.playLoop(audioInputStream, sourceDataLine);

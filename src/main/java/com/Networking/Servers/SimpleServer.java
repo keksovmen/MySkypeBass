@@ -131,7 +131,7 @@ public class SimpleServer extends AbstractServer {
      * third gets true or false on the audio format
      * than add user or disconnect him
      * after write all users on server to him
-     * and notify all other users
+     * and notifyObservers all other users
      *
      * @param reader used to read packages
      * @param writer used to write to the dude
@@ -284,7 +284,7 @@ public class SimpleServer extends AbstractServer {
     /**
      * Update each user with new users
      *
-     * @param userToAdd who to notify about
+     * @param userToAdd who to notifyObservers about
      */
 
     protected void sendAddDude(ServerUser userToAdd) {

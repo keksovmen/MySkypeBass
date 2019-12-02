@@ -7,31 +7,31 @@ package com.Pipeline;
 
 public enum ACTIONS {
     CONNECT_FAILED, // doesn't contain any data
-    CONNECT_SUCCEEDED, //string data is your BaseUser.toString();
-    CONNECTION_TO_SERVER_FAILED, //doesn't contain any data
-    AUDIO_FORMAT_NOT_ACCEPTED, //stringData is audioFormat.toString()
-    AUDIO_FORMAT_ACCEPTED, //stringData is audioFormat.toString()
-    WRONG_HOST_NAME_FORMAT, // string data is host name
-    WRONG_PORT_FORMAT, //string data is port
-    WRONG_SAMPLE_RATE_FORMAT, //string data is rate
-    WRONG_SAMPLE_SIZE_FORMAT, //string data is size
-    PORT_ALREADY_BUSY, //string data is port
+    CONNECT_SUCCEEDED, //data[0] is your BaseUser.toString();
+    CONNECTION_TO_SERVER_FAILED, //doesn't contain any data, for exceptional cases when server died
+    AUDIO_FORMAT_NOT_ACCEPTED, //data[0] is AudioFormat
+    AUDIO_FORMAT_ACCEPTED, //data[0] is AudioFormat
+    WRONG_HOST_NAME_FORMAT, //data[0] is host name as String
+    WRONG_PORT_FORMAT, //data[0] is port as String
+    WRONG_SAMPLE_RATE_FORMAT, //data[0] is rate as String
+    WRONG_SAMPLE_SIZE_FORMAT, //data[0] is size as String
+    PORT_ALREADY_BUSY, //data[0] is port number as String
     SERVER_CREATED, // no data
     SERVER_CREATED_ALREADY, // no data
-    PORT_OUT_OF_RANGE, // string data is port range and intData is port
-    INCOMING_MESSAGE, //User is who or null if some how not present in model sent and string is message, int 1 if message to conversation 0 otherwise
-    DISCONNECTED, // no data
-    OUT_CALL, // BaseUser who you calling to
-    INCOMING_CALL, // BaseUser who called you string data is dudes in conversation with him
-    CALL_ACCEPTED, // no info, all dudes will be send through ADD_TO_CONVERSATION
-    CALL_DENIED, // BaseUser main dude
-    CALL_CANCELLED, // BaseUser main dude
-    CALLED_BUT_BUSY, // BaseUser is the dude who called
+    PORT_OUT_OF_RANGE, //data[0] is port range as String and data[1] is port itself as Integer
+    INCOMING_MESSAGE, //data[0] is BaseUser who send or null if some how not present in model, data[1] is message as String, data[2] is flag as Integer 1 if message to conversation 0 otherwise
+    DISCONNECTED, // no data, 100% will be called after CONNECTION_TO_SERVER_FAILED
+    OUT_CALL, // data[0] is BaseUser who you calling to
+    INCOMING_CALL, //data[0] is BaseUser who called you, data[1] is String contain dudes as BaseUser.toString() in conversation with him
+    CALL_ACCEPTED, // no data, all dudes will be send through ADD_TO_CONVERSATION
+    CALL_DENIED, //data[0] is BaseUser who denied a call
+    CALL_CANCELLED, //data[0] is BaseUser who cancelled a call
+    CALLED_BUT_BUSY, //data[0] BaseUser is the dude who called
     ALREADY_CALLING_SOMEONE, // no data
-    BOTH_IN_CONVERSATION, // user who you called
-    EXITED_CONVERSATION, // to clear sound objects and close them and GUI too
-    INCOMING_SOUND, // byte [] sound, int id of the dude who sent it
-    INVALID_AUDIO_FORMAT, // string is message
+    BOTH_IN_CONVERSATION, //data[0] is BaseUser or null who you called
+    EXITED_CONVERSATION, // no data
+    INCOMING_SOUND, //data[0] is BaseUser who sent or null if not present in model, data[1] is byte[] sound, data[2] is Integer id of the dude who sent it
+    INVALID_AUDIO_FORMAT, //data[0] is message as String
 
 
 }

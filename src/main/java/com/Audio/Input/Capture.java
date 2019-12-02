@@ -1,6 +1,8 @@
 package com.Audio.Input;
 
 import com.Audio.AudioSupplier;
+import com.Client.ButtonsHandler;
+import com.Pipeline.BUTTONS;
 import com.Util.Algorithms;
 import com.Util.Collection.ArrayBlockingQueueWithWait;
 import com.Util.Resources;
@@ -11,7 +13,6 @@ import javax.sound.sampled.TargetDataLine;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Represents a microphone
@@ -24,13 +25,13 @@ public class Capture implements DefaultMic, ChangeableInput {
     private static final float MIN_BASS_LVL = 1f;
     private static final float MAX_BASS_LVL = 20f;
 
-    private final Consumer<byte[]> sendData;
+    private final ButtonsHandler helpHandlerPredecessor;
 
     private volatile TargetDataLine mic = null;
     private volatile Mixer.Info mixer = null;
 
     private volatile boolean muted = false;
-    private volatile boolean work = false;
+    private volatile boolean isWorking = false;
 
     private volatile float bassLvl = 1f;
 
@@ -42,20 +43,20 @@ public class Capture implements DefaultMic, ChangeableInput {
     private volatile ExecutorService executorService;
 
 
-    public Capture(Consumer<byte[]> sendData) {
-        this.sendData = sendData;
+    public Capture(ButtonsHandler helpHandlerPredecessor) {
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
     }
 
     @Override
     public void changeInput(Mixer.Info mixer) {
         if (mixer == null /*&& this.mixer == null*/)
-            mixer = AudioSupplier.getDefaultForInput();
+            mixer = AudioSupplier.getInstance().getDefaultForInput();
         this.mixer = mixer;
         if (mic != null)
             mic.close();
 
         try {
-            mic = AudioSupplier.getInput(this.mixer);
+            mic = AudioSupplier.getInstance().getInput(this.mixer);
         } catch (LineUnavailableException e) {
             e.printStackTrace();
         }
@@ -78,7 +79,7 @@ public class Capture implements DefaultMic, ChangeableInput {
 
     @Override
     public synchronized boolean start(String name) {
-        if (work)
+        if (isWorking)
             return false;
         try {
             onStart();
@@ -87,7 +88,7 @@ public class Capture implements DefaultMic, ChangeableInput {
         }
 
         new Thread(() -> {
-            while (work) {
+            while (isWorking) {
                 if (muted) {
                     synchronized (this) {
                         try {
@@ -96,13 +97,15 @@ public class Capture implements DefaultMic, ChangeableInput {
                         }
                     }
                 }
-                if (!work)
+                if (!isWorking)
                     break;
                 byte[] bytes = bassBoost(readFromMic());
 
                 synchronized (this) {
-                    if (!executorService.isShutdown())
-                        executorService.execute(() -> sendData.accept(bytes));
+                    if (!executorService.isShutdown()) {
+                        executorService.execute(() -> helpHandlerPredecessor.handleRequest(
+                                BUTTONS.SEND_SOUND, new Object[]{bytes}));
+                    }
                 }
             }
         }, name).start();
@@ -111,16 +114,18 @@ public class Capture implements DefaultMic, ChangeableInput {
     }
 
     private void onStart() throws LineUnavailableException {
-        work = true;
+        isWorking = true;
         muted = false;
         if (mic == null || !mic.isOpen())
-            mic = AudioSupplier.getInput(mixer);
+            mic = AudioSupplier.getInstance().getInput(mixer);
         executorService = getDefaultOne();
     }
 
     @Override
     public synchronized void close() {
-        work = false;
+        if (!isWorking)
+            return;
+        isWorking = false;
         if (executorService != null && !executorService.isShutdown())
             executorService.shutdown();
         mic.close();
@@ -134,7 +139,7 @@ public class Capture implements DefaultMic, ChangeableInput {
     }
 
     private byte[] readFromMic() {
-        byte[] bytes = new byte[AudioSupplier.getMicCaptureSize()];
+        byte[] bytes = new byte[AudioSupplier.getInstance().getMicCaptureSize()];
         mic.read(bytes, 0, bytes.length);
         return bytes;
     }

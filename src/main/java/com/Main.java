@@ -1,6 +1,7 @@
 package com;
 
 import com.Audio.Audio;
+import com.Client.AbstractClient;
 import com.Client.Client;
 import com.GUI.Frame;
 import com.Model.ClientModelBase;
@@ -8,7 +9,8 @@ import com.Networking.Protocol.AbstractDataPackagePool;
 import com.Networking.Protocol.CODE;
 import com.Networking.Protocol.DataPackagePool;
 import com.Networking.Utility.WHO;
-import com.Pipeline.BUTTONS;
+import com.Pipeline.CompositeComponent;
+import com.Pipeline.SimpleComponent;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
@@ -24,10 +26,9 @@ public class Main {
         try {
             SwingUtilities.invokeAndWait(() -> {
                 ClientModelBase model = new ClientModelBase();
-                Client client = new Client(model);
-//                ClientController clientController = new ClientController(model);
+                AbstractClient client = new Client(model);
 
-                Frame frame = new Frame();
+                CompositeComponent frame = new Frame();
                 client.attach(frame);
                 //register audio part for package exchange actions
 
@@ -35,7 +36,7 @@ public class Main {
 
                 frame.attach(client);
 
-                Audio audio = new Audio(bytes -> client.handleRequest(BUTTONS.SEND_SOUND, new Object[]{bytes}));
+                SimpleComponent audio = new Audio(client);
 
                 client.attach(audio);
                 frame.attach(audio);

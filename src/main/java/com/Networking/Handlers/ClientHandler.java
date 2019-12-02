@@ -3,11 +3,12 @@ package com.Networking.Handlers;
 import com.Client.AbstractClient;
 import com.Networking.BaseController;
 import com.Networking.Processors.Processable;
-import com.Networking.Processors.TestProcessor;
+import com.Networking.Processors.ClientProcessor;
 import com.Networking.Readers.BaseReader;
-import com.Networking.TestController;
+import com.Networking.ClientController;
 import com.Networking.Utility.Users.ClientUser;
 import com.Networking.Writers.ClientWriter;
+import com.Pipeline.ACTIONS;
 import com.Util.Interfaces.Starting;
 import com.Util.Resources;
 
@@ -29,7 +30,6 @@ public class ClientHandler implements Starting {
     }
 
     /**
-     *
      * @param name your desired name on server <- totally retarded code
      * @return true if new reader thread started
      */
@@ -79,11 +79,11 @@ public class ClientHandler implements Starting {
     }
 
     protected Processable createProcessor(ClientUser clientUser) {
-        return new TestProcessor(client.getModel(), clientUser, client);
+        return new ClientProcessor(client.getModel(), clientUser, client);
     }
 
     protected BaseController createController(BaseReader reader) {
-        return new TestController(reader);
+        return new ClientController(reader);
     }
 
     private void handleLoop() {
@@ -94,6 +94,8 @@ public class ClientHandler implements Starting {
                     close();
                 }
             } catch (IOException e) {
+                if (isWorking)
+                    client.notifyObservers(ACTIONS.CONNECTION_TO_SERVER_FAILED, null);
                 close();
             }
         }

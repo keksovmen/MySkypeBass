@@ -17,5 +17,5 @@ public interface Logic extends Registration<LogicObserver>, ButtonsHandler {
      * @param data   see ACTIONS for description
      */
 
-    void notify(ACTIONS action, Object[] data);
+    void notifyObservers(ACTIONS action, Object[] data);
 }

@@ -14,9 +14,9 @@ import java.util.TreeMap;
 
 public abstract class BaseUnEditableModel implements UnEditableModel{
 
-    final Map<Integer, BaseUser> userMap;
+    protected final Map<Integer, BaseUser> userMap;
 
-    final Set<BaseUser> conversation;
+    protected final Set<BaseUser> conversation;
 
     /**
      * TreeMap just for easy to find on GUI

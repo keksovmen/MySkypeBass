@@ -17,7 +17,9 @@ import java.awt.*;
  * Have some parameters in properties
  */
 
-public class EntrancePane implements LogicObserver {
+public class EntrancePane implements LogicObserver, ButtonsHandler {
+
+
     private JTextField nameField;
     private JTextField ipField;
     private JFormattedTextField portField;
@@ -25,16 +27,13 @@ public class EntrancePane implements LogicObserver {
     private JButton createButton;
     private JPanel mainPane;
 
+    private final ButtonsHandler helpHandlerPredecessor;
 
-    public EntrancePane(ButtonsHandler actionsForLogic, Runnable showServerPane) {
-        connectButton.addActionListener(e -> {
-            actionsForLogic.handleRequest(
-                    BUTTONS.CONNECT,
-                    new Object[]{getMyName(), getIp(), getPort()}
-            );
-            blockConnectButton();
-            mainPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
-        });
+
+    public EntrancePane(ButtonsHandler helpHandlerPredecessor, Runnable showServerPane) {
+        this.helpHandlerPredecessor = helpHandlerPredecessor;
+
+        connectButton.addActionListener(e -> onConnect());
 
         createButton.addActionListener(e -> showServerPane.run());
 
@@ -47,7 +46,8 @@ public class EntrancePane implements LogicObserver {
     public void observe(ACTIONS action, Object[] data) {
         if (action.equals(ACTIONS.CONNECT_FAILED) ||
                 action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
-                action.equals(ACTIONS.WRONG_PORT_FORMAT)
+                action.equals(ACTIONS.WRONG_PORT_FORMAT) ||
+                action.equals(ACTIONS.WRONG_HOST_NAME_FORMAT)
         ) {
             releaseConnectButton();
             mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
@@ -63,6 +63,12 @@ public class EntrancePane implements LogicObserver {
         ) {
             releaseConnectButton();
         }
+    }
+
+    @Override
+    public void handleRequest(BUTTONS button, Object[] data) {
+        //delegate
+        helpHandlerPredecessor.handleRequest(button, data);
     }
 
     /**
@@ -125,6 +131,15 @@ public class EntrancePane implements LogicObserver {
 
     private void releaseCreateServerButton() {
         createButton.setEnabled(true);
+    }
+
+    private void onConnect() {
+        handleRequest(
+                BUTTONS.CONNECT,
+                new Object[]{getMyName(), getIp(), getPort()}
+        );
+        blockConnectButton();
+        mainPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
     }
 
     private void createUIComponents() {
