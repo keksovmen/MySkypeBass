@@ -1,0 +1,2 @@
+Package represents abstraction from a concrete platform Desktop or Android
+You will need to inherit some classes and factories

@@ -114,7 +114,7 @@
 ////                System.out.println("\t" + j + "\t" + mixer.getTargetLineInfo()[j]);
 ////            }
 ////        }
-////        for (Line sourceLine : mixer.getSourceLines()) {
+////        for (Line sourceLine : mixer.getOutputLines()) {
 ////            System.out.println(sourceLine);
 ////        }
 //
