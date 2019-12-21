@@ -27,23 +27,45 @@ public interface AudioOutputLine extends AbstractLine {
     /**
      * Make underlying speaker produce given sound
      *
-     * @param data   to speak
+     * @param buffer   to speak
      * @param offset from 0 to length
      * @param length amount of bytes to read
      * @return amount of bytes actually read
      */
 
-    int write(byte[] data, int offset, int length);
+    int writeNonBlocking(byte[] buffer, int offset, int length);
 
     /**
-     * Short cut for writing data
+     * Short cut for writing buffer
      *
-     * @param data to speak
+     * @param buffer to speak
      * @return amount ob bytes actually read
      */
 
-    default int write(byte[] data) {
-        return write(data, 0, data.length);
+    default int writeNonBlocking(byte[] buffer) {
+        return writeNonBlocking(buffer, 0, buffer.length);
+    }
+
+    /**
+     * Blocking write to output device
+     *
+     * @param buffer   to write
+     * @param offset in given buffer
+     * @param length of buffer to put in
+     * @return actual amount of bytes whiten
+     */
+
+    int writeBlocking(byte[] buffer, int offset, int length);
+
+    /**
+     * Short cut for blocking write
+     *
+     * @param buffer to write
+     * @return actual amount of bytes whiten
+     */
+
+    default int writeBlocking(byte[] buffer) {
+        return writeBlocking(buffer, 0, buffer.length);
     }
 
 }

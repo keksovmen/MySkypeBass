@@ -15,34 +15,16 @@ public class AudioInputDesktop implements AudioInputLine {
         this.format = format;
     }
 
+
     @Override
-    public int read(byte[] buffer, int offset, int length) {
+    public int readNonBlocking(byte[] buffer, int offset, int length) {
+        int available = line.available();
+        return line.read(buffer, offset, available < length ? available : length);
+    }
+
+    @Override
+    public int readBlocking(byte[] buffer, int offset, int length) {
         return line.read(buffer, offset, length);
-    }
-
-    @Override
-    public int available() {
-        return line.available();
-    }
-
-    @Override
-    public void flush() {
-        line.flush();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return line.isOpen();
-    }
-
-    @Override
-    public boolean isRunning() {
-        return line.isRunning();
-    }
-
-    @Override
-    public void drain() {
-        line.drain();
     }
 
     @Override

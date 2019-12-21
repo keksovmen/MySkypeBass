@@ -37,9 +37,9 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
 
         createButton.addActionListener(e -> showServerPane.run());
 
-        nameField.setText(Resources.getDefaultName());
-        ipField.setText(Resources.getDefaultIP());
-        portField.setText(Resources.getDefaultPort());
+        nameField.setText(Resources.getInstance().getDefaultName());
+        ipField.setText(Resources.getInstance().getDefaultIP());
+        portField.setText(Resources.getInstance().getDefaultPort());
     }
 
     @Override
@@ -47,7 +47,8 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
         if (action.equals(ACTIONS.CONNECT_FAILED) ||
                 action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
                 action.equals(ACTIONS.WRONG_PORT_FORMAT) ||
-                action.equals(ACTIONS.WRONG_HOST_NAME_FORMAT)
+                action.equals(ACTIONS.WRONG_HOST_NAME_FORMAT) ||
+                action.equals(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED)
         ) {
             releaseConnectButton();
             mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));

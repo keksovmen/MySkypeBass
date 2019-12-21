@@ -1,7 +1,7 @@
 package com.Abstraction.Audio.Input;
 
-import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Audio.AudioSupplier;
+import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Collection.ArrayBlockingQueueWithWait;
@@ -10,10 +10,25 @@ import com.Abstraction.Util.Resources;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput {
 
     protected final ButtonsHandler helpHandlerPredecessor;
+
+    /**
+     * For not stopping mic to do send action
+     * without it can cause some glitches in mic recording
+     */
+
+    protected final ExecutorService executorService;
+
+    /**
+     * For mute actions
+     */
+
+    protected final Lock muteLock;
 
     protected volatile AudioInputLine inputLine;
     protected volatile int indexOfParticularMixer;
@@ -21,21 +36,15 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
     protected volatile boolean isMuted;
     protected volatile boolean isWorking;
 
-    /**
-     * For not stopping mic to do send action
-     * without it can cause some glitches in mic recording
-     */
-
-    private volatile ExecutorService executorService;
-
 
     public AbstractMicrophone(ButtonsHandler helpHandlerPredecessor) {
         this.helpHandlerPredecessor = helpHandlerPredecessor;
         executorService = createExecutor();
+        muteLock = new ReentrantLock();
     }
 
     @Override
-    public void changeInput(int indexOfParticularInputDevice) {
+    public synchronized void changeInput(int indexOfParticularInputDevice) {
         indexOfParticularMixer = indexOfParticularInputDevice;
         if (inputLine != null)
             inputLine.close();
@@ -44,6 +53,7 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
             inputLine = AudioSupplier.getInstance().getInput(indexOfParticularMixer);
         } catch (AudioLineException e) {
             e.printStackTrace();
+            inputLine = null;
         }
     }
 
@@ -51,8 +61,8 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
     public void mute() {
         isMuted = !isMuted;
         if (!isMuted) {
-            synchronized (this) {
-                notify();
+            synchronized (muteLock) {
+                muteLock.notify();
             }
         }
     }
@@ -78,9 +88,15 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
         if (!isWorking)
             return;
         isWorking = false;
-        if (executorService != null && !executorService.isShutdown())
-            executorService.shutdown();
-        inputLine.close();
+        isMuted = false;
+
+        if (inputLine != null) {
+            inputLine.close();
+            inputLine = null;
+        }
+        synchronized (muteLock) {
+            muteLock.notify();
+        }
         notify();
     }
 
@@ -92,23 +108,35 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
     protected void workingLoop() {
         while (isWorking) {
             if (isMuted) {
-                synchronized (this) {
+                synchronized (muteLock) {
                     try {
-                        wait();
+                        muteLock.wait();
                     } catch (InterruptedException ignored) { //should't happen
+                        ignored.printStackTrace();
                     }
                 }
             }
             if (!isWorking)
                 break;
+            checkExistenceOfMic();
             byte[] bytes = bassBoost(readFromMic());
 
-            synchronized (this) {
-                if (!executorService.isShutdown()) {
-                    executorService.execute(() -> helpHandlerPredecessor.handleRequest(
-                            BUTTONS.SEND_SOUND, new Object[]{bytes}
-                    ));
-                }
+//            synchronized (this) {
+//                if (!executorService.isShutdown()) {
+            executorService.execute(() -> helpHandlerPredecessor.handleRequest(
+                    BUTTONS.SEND_SOUND, new Object[]{bytes}
+            ));
+//                }
+//            }
+        }
+    }
+
+    private synchronized void checkExistenceOfMic(){
+        while (inputLine == null){
+            try {
+                wait();
+            } catch (InterruptedException ignored) {
+                ignored.printStackTrace();
             }
         }
     }
@@ -121,7 +149,7 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
 
     protected byte[] readFromMic() {
         byte[] bytes = new byte[AudioSupplier.getInstance().getMicCaptureSize()];
-        inputLine.read(bytes);
+        inputLine.readBlocking(bytes);
         return bytes;
     }
 
@@ -144,18 +172,18 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
 
     protected ExecutorService createExecutor() {
         return new ThreadPoolExecutor(
-                1,
+                0,
                 1,
                 30,
                 TimeUnit.SECONDS,
-                new ArrayBlockingQueueWithWait<>(Resources.getMicQueueSize())
+                new ArrayBlockingQueueWithWait<>(Resources.getInstance().getMicQueueSize())
         );
     }
 
     private boolean onStart() {
         isWorking = true;
         isMuted = false;
-        if (inputLine == null || !inputLine.isOpen()) {
+        if (inputLine == null) {
             try {
                 inputLine = AudioSupplier.getInstance().getInput(indexOfParticularMixer);
             } catch (AudioLineException e) {
@@ -163,8 +191,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
                 return false;
             }
         }
-        if (executorService.isShutdown())
-            executorService = createExecutor();
         return true;
     }
 }

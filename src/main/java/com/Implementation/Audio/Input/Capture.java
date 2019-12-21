@@ -26,6 +26,7 @@ public class Capture extends AbstractMicrophone {
     @Override
     public void IncreaseBass(int percentage) {
         bassLvl = Algorithms.findPercentage((int) MIN_BASS_LVL, (int) MAX_BASS_LVL, percentage);
+        System.out.println(bassLvl);
     }
 
 

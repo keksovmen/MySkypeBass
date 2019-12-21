@@ -7,8 +7,10 @@ import com.Abstraction.Model.Updater;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
+import com.Abstraction.Util.Collection.Track;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources;
+import com.Implementation.Util.DesktopResources;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +18,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -248,13 +249,13 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
         if (isCashed(selected)) {
             callTable.addTab(
                     selected.toString(),
-                    new ImageIcon(Resources.getOnlineIcon()),
+                    new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()),
                     tabs.get(selected).getMainPane()
             );
         } else {
             callTable.addTab(
                     selected.toString(),
-                    new ImageIcon(Resources.getOnlineIcon()),
+                    new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()),
                     createPane(selected).getMainPane());
         }
     }
@@ -265,7 +266,7 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
                 if (!model.contains(user)) {
                     callTable.setIconAt(
                             callTable.indexOfTab(user.toString()),
-                            new ImageIcon(Resources.getOfflineIcon())
+                            new ImageIcon(((DesktopResources) Resources.getInstance()).getOfflineIcon())
                     );
                 }
             }
@@ -296,7 +297,7 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
     private void showConversationPane() {
         callTable.addTab(
                 CONVERSATION_TAB_NAME,
-                new ImageIcon(Resources.getConversationIcon()),
+                new ImageIcon(((DesktopResources) Resources.getInstance()).getConversationIcon()),
                 conferencePane.getMainPane());
         callTable.revalidate();
         callTable.repaint();
@@ -336,11 +337,11 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
             } else {
                 if (isCashed(from)) {
                     MessagePane messagePane = tabs.get(from);
-                    callTable.addTab(from.toString(), new ImageIcon(Resources.getOnlineIcon()), messagePane.getMainPane());
+                    callTable.addTab(from.toString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), messagePane.getMainPane());
                     messagePane.showMessage(message, false);
                 } else {
                     MessagePane pane = createPane(from);
-                    callTable.addTab(from.toString(), new ImageIcon(Resources.getOnlineIcon()), pane.getMainPane());
+                    callTable.addTab(from.toString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), pane.getMainPane());
                     pane.showMessage(message, false);
                 }
             }
@@ -405,17 +406,17 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
      * Put pop up menu on a given component
      * That will give you view on all possible sounds and preview them
      *
-     * @param component     where to register
-     * @param textField     where put meta symbols to send
+     * @param component      where to register
+     * @param textField      where put meta symbols to send
      * @param buttonsHandler helpHandler to preview sound
      */
 
     public static void registerPopUp(JComponent component, JTextField textField, ButtonsHandler buttonsHandler) {
         JPopupMenu popupMenu = new JPopupMenu("Sounds");
-        List<String> getDescriptions = Resources.getDescriptions();
+        Map<Integer, Track> tracks = Resources.getInstance().getNotificationTracks();
 
-        for (int i = 0; i < getDescriptions.size(); i++) {
-            JMenuItem menuItem = new JMenuItem(getDescriptions.get(i));
+        for (int i = 0; i < tracks.size(); i++) {
+            JMenuItem menuItem = new JMenuItem(tracks.get(i).description);
             int j = i;
             menuItem.addActionListener(e -> {
                 if (e.getModifiers() == InputEvent.META_MASK) {

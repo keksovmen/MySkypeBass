@@ -54,8 +54,8 @@ public class AudioFormatStats implements ButtonsHandler {
 
         a44100RadioButton.setSelected(true);
 
-        customRate.setText(Resources.getDefaultRate());
-        textFieldPort.setText(Resources.getDefaultPort());
+        customRate.setText(Resources.getInstance().getDefaultRate());
+        textFieldPort.setText(Resources.getInstance().getDefaultPort());
 
     }
 

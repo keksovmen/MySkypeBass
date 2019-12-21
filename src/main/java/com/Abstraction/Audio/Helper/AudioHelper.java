@@ -1,12 +1,10 @@
 package com.Abstraction.Audio.Helper;
 
+import com.Abstraction.Audio.Input.AudioInputLine;
 import com.Abstraction.Audio.Misc.AbstractAudioFormat;
 import com.Abstraction.Audio.Misc.AudioLineException;
-import com.Abstraction.Audio.Input.AudioInputLine;
 import com.Abstraction.Audio.Output.AudioOutputLine;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.util.Map;
 
 public abstract class AudioHelper {
@@ -15,7 +13,7 @@ public abstract class AudioHelper {
 
     public abstract AudioOutputLine getOutput(int idOfParticularMixer) throws AudioLineException;
 
-    public abstract AudioOutputLine getOutputForFile(int idOfParticularMixer, BufferedInputStream file) throws IOException, AudioLineException;
+    public abstract void playResourceFile(int idOfParticularMixer, int trackId);
 
     public abstract int getDefaultForOutput();
 

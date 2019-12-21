@@ -17,7 +17,7 @@ public abstract class AbstractCallNotificator implements Starting, ChangeOutput 
     }
 
     @Override
-    public final boolean start(String name) {
+    public boolean start(String name) {
         if (isWorking)
             return false;
         isWorking = true;
@@ -31,7 +31,7 @@ public abstract class AbstractCallNotificator implements Starting, ChangeOutput 
     }
 
     @Override
-    public final void close() {
+    public void close() {
         isWorking = false;
     }
 

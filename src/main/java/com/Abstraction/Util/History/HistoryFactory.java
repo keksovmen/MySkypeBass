@@ -12,6 +12,6 @@ public class HistoryFactory {
     }
 
     public static History<String> getStringHistory() {
-        return new StringHistory(Resources.getHistorySize());
+        return new StringHistory(Resources.getInstance().getHistorySize());
     }
 }

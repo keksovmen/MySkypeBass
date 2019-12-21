@@ -2,8 +2,10 @@ package com.Implementation.Audio.Output;
 
 import com.Abstraction.Audio.Output.AudioOutputLine;
 import com.Abstraction.Util.Resources;
+import com.Implementation.Util.DesktopResources;
 
 import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.SourceDataLine;
 import java.io.IOException;
 
 /**
@@ -25,14 +27,13 @@ public class Player {
      * @throws IOException if can't read from input stream
      */
 
-    public static void playLoop(AudioInputStream inputStream, AudioOutputLine outputLine) throws IOException {
-        byte[] data = new byte[Resources.getAudioFragmentSize()];
+    public static void playWholeFile(AudioInputStream inputStream, SourceDataLine outputLine) throws IOException {
+        byte[] data = new byte[((DesktopResources) Resources.getInstance()).getAudioFragmentSize()];
         int amount;
-        int j;
         int frameSize = outputLine.getFormat().getFrameSize();
         while ((amount = inputStream.read(data)) != -1) {
             //handleRequest odd number in case of sample size = 2 bytes
-            j = amount % frameSize;
+            int j = amount % frameSize;
             if (j != 0) {
                 amount -= j;
             }
@@ -52,7 +53,7 @@ public class Player {
      */
 
     public static int playOnce(AudioInputStream inputStream, AudioOutputLine audioOutput) throws IOException {
-        byte[] data = new byte[Resources.getAudioFragmentSize()];
+        byte[] data = new byte[((DesktopResources) Resources.getInstance()).getAudioFragmentSize()];
         int frameSize = audioOutput.getFormat().getFrameSize();
         int amount = inputStream.read(data);
         if (amount == -1) {
@@ -63,7 +64,7 @@ public class Player {
         if (j != 0) {
             amount -= j;
         }
-        audioOutput.write(data, 0, amount);
+        audioOutput.writeBlocking(data, 0, amount);
         return amount;
     }
 }

@@ -5,7 +5,7 @@ package com.Abstraction.Audio.Misc;
  *
  * ENCODING IS PCM 16BIT
  *
- * Little note: Android AudioFormat is SIGNED and BIG_ENDIAN but may be native endian
+ * Little note: Android AudioFormat is SIGNED and LITTLE_ENDIAN for 16BIT frame size for 8 doesn't work any combination
  */
 
 public class AbstractAudioFormat {
@@ -14,7 +14,7 @@ public class AbstractAudioFormat {
 
     public static final int CHANNELS = 1;
     public static final boolean SIGNED = true;
-    public static final boolean BIG_ENDIAN = true;
+    public static final boolean BIG_ENDIAN = false;
 
     private final int sampleRate;
     private final int sampleSizeInBits;

@@ -32,33 +32,16 @@ public class AudioOutputDesktop implements AudioOutputLine {
     }
 
     @Override
-    public int write(byte[] data, int offset, int length) {
-        return line.write(data, offset, length);
+    public int writeNonBlocking(byte[] buffer, int offset, int length) {
+        if (line.available() < buffer.length)
+            line.flush();
+
+        return line.write(buffer, 0, buffer.length);
     }
 
     @Override
-    public int available() {
-        return line.available();
-    }
-
-    @Override
-    public void flush() {
-        line.flush();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return line.isOpen();
-    }
-
-    @Override
-    public boolean isRunning() {
-        return line.isRunning();
-    }
-
-    @Override
-    public void drain() {
-        line.drain();
+    public int writeBlocking(byte[] buffer, int offset, int length) {
+        return line.write(buffer, offset, length);
     }
 
     @Override

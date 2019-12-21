@@ -83,7 +83,7 @@ public class FormatWorker {
      */
 
     public static boolean portInRange(int port) {
-        return 0 < port && port < 0xFFFF;
+        return 0 <= port && port <= 0xFFFF;
     }
 
     public static boolean checkZeroLength(String data) {

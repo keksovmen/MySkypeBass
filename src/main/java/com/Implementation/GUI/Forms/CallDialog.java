@@ -7,6 +7,7 @@ import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * Handle calls
@@ -68,6 +69,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
                 return;
             }
             case CALL_CANCELLED: {
+//                setVisible(false);
                 dispose();
                 return;
             }
@@ -168,6 +170,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      */
 
     private void showIncoming(BaseUser fromWho, String conversationInfo) {
+        if (isShowing())
+            setVisible(false);
         user = fromWho;
         dudes = conversationInfo;
 

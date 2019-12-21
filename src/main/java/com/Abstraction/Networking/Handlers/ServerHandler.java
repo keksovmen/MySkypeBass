@@ -74,11 +74,11 @@ public class ServerHandler implements Starting {
     }
 
     protected BaseReader createReader() throws IOException {
-        return new BaseReader(socket.getInputStream(), Resources.getBufferSize());
+        return new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
     }
 
     protected ServerWriter createWriter() throws IOException {
-        return new ServerWriter(socket.getOutputStream(), Resources.getBufferSize());
+        return new ServerWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize());
     }
 
     protected Processable createProcessor(ServerUser serverUser) {

@@ -70,7 +70,7 @@ public class SimpleServer extends AbstractServer {
     protected SimpleServer(int port, int sampleRate, int sampleSizeInBits)
             throws IOException, ProtocolValueException {
         super(port);
-        BUFFER_SIZE_FOR_IO = Resources.getBufferSize() * 1024;
+        BUFFER_SIZE_FOR_IO = Resources.getInstance().getBufferSize() * 1024;
         try {
             MIC_CAPTURE_SIZE = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
         } catch (ProtocolValueException e) {
@@ -255,7 +255,7 @@ public class SimpleServer extends AbstractServer {
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
-        int i = (sampleRate / Resources.getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
+        int i = (sampleRate / Resources.getInstance().getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
         i = i - i % (sampleSizeInBits / 8);
         if (ProtocolBitMap.MAX_VALUE < i)
             throw new ProtocolValueException("Audio capture size is larger than length of the protocol! " +

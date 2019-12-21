@@ -36,7 +36,7 @@ public class ServerWriter extends BaseWriter {
     public ServerWriter(OutputStream outputStream, int bufferSize) {
         super(outputStream, bufferSize);
         lock = new ReentrantLock();
-        LOCK_TIME = Resources.getLockTime();
+        LOCK_TIME = Resources.getInstance().getLockTime();
     }
 
 

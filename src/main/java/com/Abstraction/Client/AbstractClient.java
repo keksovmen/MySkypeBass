@@ -50,6 +50,7 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor();
+        handler = createHandler();
 
     }
 
@@ -173,10 +174,11 @@ public abstract class AbstractClient implements Logic {
         if (strings == null) {
             return;
         }
+
         Socket socket = new Socket();
 
         try {
-            socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getTimeOut() * 1000);
+            socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
         } catch (IOException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
             try {
@@ -185,10 +187,14 @@ public abstract class AbstractClient implements Logic {
             }
             return;
         }
-        handler = createHandler(socket);
-        if (handler.start(strings[0])) {
-            stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
-        } else {
+        try {
+            if (handler.start(strings[0], socket)) {
+                stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
+            }else {
+                stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, user.toString());
+            }
+        } catch (IOException e) {
+
             handler.close();
         }
     }
@@ -268,7 +274,7 @@ public abstract class AbstractClient implements Logic {
         BaseUser dude = (BaseUser) data[0];
         user.drop();
         try {
-            user.getWriter().writeAccept(user.getId(), dude.getId());
+            user.getWriter().writeDeny(user.getId(), dude.getId());
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -278,7 +284,7 @@ public abstract class AbstractClient implements Logic {
         BaseUser dude = (BaseUser) data[0];
         user.drop();
         try {
-            user.getWriter().writeAccept(user.getId(), dude.getId());
+            user.getWriter().writeCancel(user.getId(), dude.getId());
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -292,8 +298,8 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected ClientHandler createHandler(Socket socket) {
-        return new ClientHandler(this, socket);
+    protected ClientHandler createHandler() {
+        return new ClientHandler(this);
     }
 
     /**

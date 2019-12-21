@@ -1,17 +1,15 @@
 package com.Abstraction.Audio.Output;
 
-import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Audio.AudioSupplier;
+import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public abstract class AbstractAudioPlayer extends Magnitafon implements ChangeableOutput, Playable {
+public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable {
 
     protected final Map<Integer, AudioOutputLine> outputLines;
     protected final AbstractCallNotificator callNotificator;
@@ -20,14 +18,12 @@ public abstract class AbstractAudioPlayer extends Magnitafon implements Changeab
      * For not blocking main thread while playing message notifications
      */
 
-    protected final ExecutorService executorService;
 
     protected volatile int outputMixerId;
 
     public AbstractAudioPlayer() {
         outputLines = createLinesStorage();
         callNotificator = createCallNotificator();
-        executorService = createExecutor();
     }
 
     /**
@@ -47,16 +43,6 @@ public abstract class AbstractAudioPlayer extends Magnitafon implements Changeab
      */
 
     protected abstract AbstractCallNotificator createCallNotificator();
-
-    /**
-     * Factory method
-     *
-     * @return executor for messages
-     */
-
-    protected ExecutorService createExecutor() {
-        return Executors.newCachedThreadPool();
-    }
 
     /**
      * Trying to change volume of particular dude
@@ -91,25 +77,20 @@ public abstract class AbstractAudioPlayer extends Magnitafon implements Changeab
         callNotificator.changeOutput(indexOfParticularMixer);
     }
 
+    /**
+     * Put as much data as possible on this device buffer to play
+     * non blocking thread
+     *
+     * @param who  the dude
+     * @param data audio
+     */
+
     @Override
     public synchronized void playSound(int who, byte[] data) {
         AudioOutputLine outputLine = outputLines.get(who);
         if (outputLine == null)            //Just ignore it until update is occurs
             return;
-        playData(outputLine, data);
-    }
-
-    @Override
-    public void playMessage(int track, int delay) {
-        executorService.execute(() -> {
-            try {
-                Thread.sleep(delay);
-                playMessage(track);
-            } catch (InterruptedException ignored) {
-                //won't happen
-            }
-        });
-
+        outputLine.writeNonBlocking(data);
     }
 
     @Override
@@ -126,6 +107,7 @@ public abstract class AbstractAudioPlayer extends Magnitafon implements Changeab
     public synchronized void close() {
         outputLines.forEach((integer, line) -> line.close());
         outputLines.clear();
+        stopCall();
     }
 
     @Override

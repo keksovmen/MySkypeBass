@@ -17,7 +17,7 @@ public interface AudioInputLine extends AbstractLine {
      * @return actual amount of reade bytes
      */
 
-    int read(byte[] buffer, int offset, int length);
+    int readNonBlocking(byte[] buffer, int offset, int length);
 
     /**
      * Short cut for read
@@ -26,7 +26,29 @@ public interface AudioInputLine extends AbstractLine {
      * @return actual amount of reade bytes
      */
 
-    default int read(byte[] buffer) {
-        return read(buffer, 0, buffer.length);
+    default int readNonBlocking(byte[] buffer) {
+        return readNonBlocking(buffer, 0, buffer.length);
+    }
+
+    /**
+     * Blocking read
+     *
+     * @param buffer to fill
+     * @param offset buffer start position
+     * @param length amount of bytes to read
+     * @return actual number of read bytes from underlying device buffer
+     */
+
+    int readBlocking(byte[] buffer, int offset, int length);
+
+    /**
+     * Blocking read for full buffer
+     *
+     * @param buffer to fill
+     * @return actual number of read bytes from underlying device buffer
+     */
+
+    default int readBlocking(byte[] buffer) {
+        return readBlocking(buffer, 0, buffer.length);
     }
 }

@@ -2,15 +2,16 @@ package com.Implementation.GUI;
 
 import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Client.ButtonsHandler;
-import com.Implementation.GUI.Forms.AudioFormatStats;
-import com.Implementation.GUI.Forms.CallDialog;
-import com.Implementation.GUI.Forms.EntrancePane;
-import com.Implementation.GUI.Forms.MultiplePurposePane;
 import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Util.Resources;
+import com.Implementation.GUI.Forms.AudioFormatStats;
+import com.Implementation.GUI.Forms.CallDialog;
+import com.Implementation.GUI.Forms.EntrancePane;
+import com.Implementation.GUI.Forms.MultiplePurposePane;
+import com.Implementation.Util.DesktopResources;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +33,8 @@ public class Frame implements CompositeComponent {
     private final AudioFormatStats serverCreatePane;
     private final MultiplePurposePane purposePane;
     private final CallDialog callDialog;
+
+//    private JDialog infoDialog;
 
     public Frame() {
         buttonsHandlers = new ArrayList<>();
@@ -58,6 +61,7 @@ public class Frame implements CompositeComponent {
     @Override
     public void observe(ACTIONS action, Object[] data) {
         SwingUtilities.invokeLater(() -> { // there will be others thread not swing
+
             switch (action) {
                 case CONNECT_FAILED: {
                     showErrorMessage("Not connected, check port or host name or internet connection");
@@ -65,7 +69,7 @@ public class Frame implements CompositeComponent {
                 }
                 case AUDIO_FORMAT_NOT_ACCEPTED: {
                     showErrorMessage(
-                            "Not connected, because you audio system can't handleRequest this format {" +
+                            "Not connected, because your audio system can't handleRequest this format {" +
                                     " " + data[0] + " }");
                     break;
                 }
@@ -122,15 +126,21 @@ public class Frame implements CompositeComponent {
                     showErrorMessage((String) data[0]);
                     break;
                 }
-                case SERVER_CREATED_ALREADY:{
+                case SERVER_CREATED_ALREADY: {
                     showInfoMessage("Server already created!");
+                    break;
+                }
+                case INCOMING_CALL: {
+                    //need to remove Joption pane dialog cause blocking call dialog
+
                     break;
                 }
             }
 
+            callDialog.observe(action, data);
             entrancePane.observe(action, data);
             purposePane.observe(action, data);
-            callDialog.observe(action, data);
+//            callDialog.observe(action, data);
         });
     }
 
@@ -160,7 +170,7 @@ public class Frame implements CompositeComponent {
     }
 
     private void setIcon() {
-        frame.setIconImage(new ImageIcon(Resources.getMainIcon()).getImage());
+        frame.setIconImage(new ImageIcon(((DesktopResources) Resources.getInstance()).getMainIcon()).getImage());
     }
 
     private JMenuBar produceMenuBar(ButtonsHandler registration) {
@@ -222,13 +232,30 @@ public class Frame implements CompositeComponent {
         );
     }
 
+    /**
+     * Need this little different because
+     * When you get called and dude cancelled
+     * it will display it, but if ModalityType is one (always focus on me)
+     * you cant press anywhere and then you receive another call but it's buttons dos't work
+     * simply can't be pressed except for one in focus can be handled with keyboard but mouse doesn't work on them
+     * focking jedies!
+     *
+     * @param message to display
+     */
+
     private void showMessage(String message) {
-        JOptionPane.showMessageDialog(
-                frame,
-                message,
-                "Message",
-                JOptionPane.PLAIN_MESSAGE
-        );
+        JOptionPane jOptionPane = new JOptionPane(message, JOptionPane.PLAIN_MESSAGE);
+        JDialog dialog = jOptionPane.createDialog(frame,"Message");
+
+        //Must be this one for less bags
+        dialog.setModalityType(Dialog.ModalityType.MODELESS);
+        dialog.setVisible(true);
+//        JOptionPane.showMessageDialog(
+//                frame,
+//                message,
+//                "Message",
+//                JOptionPane.PLAIN_MESSAGE
+//        );
     }
 
     private void onServerPaneCreate() {

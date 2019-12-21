@@ -68,7 +68,7 @@ class ConferencePane implements Updater, LogicObserver, ButtonsHandler {
 
         this.helpHandlerPredecessor = helpHandlerPredecessor;
 
-        bassChanger.setModel(new SpinnerNumberModel(1, 1, 100, 1));
+        bassChanger.setModel(new SpinnerNumberModel(0, 0, 100, 1));
 
         changeVolume = createVolumeChanger();
 

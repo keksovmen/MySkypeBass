@@ -13,4 +13,8 @@ public class Pair<T,Y> {
     public T getFirst(){return first;}
     public Y getSecond(){return second;}
 
+    @Override
+    public String toString() {
+        return "Pair [{first - " + first.toString() + "} second - " + second.toString() + "}]";
+    }
 }

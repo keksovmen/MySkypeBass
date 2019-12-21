@@ -1,13 +1,17 @@
 package com.Implementation.Audio.Helpers;
 
 import com.Abstraction.Audio.Helper.AudioHelper;
+import com.Abstraction.Audio.Input.AudioInputLine;
 import com.Abstraction.Audio.Misc.AbstractAudioFormat;
 import com.Abstraction.Audio.Misc.AudioLineException;
-import com.Implementation.Audio.Input.AudioInputDesktop;
-import com.Abstraction.Audio.Input.AudioInputLine;
-import com.Implementation.Audio.Output.AudioOutputDesktop;
 import com.Abstraction.Audio.Output.AudioOutputLine;
+import com.Implementation.Util.Checker;
 import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Resources;
+import com.Implementation.Audio.Input.AudioInputDesktop;
+import com.Implementation.Audio.Output.AudioOutputDesktop;
+import com.Implementation.Audio.Output.Player;
+import com.Implementation.Main;
 
 import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
@@ -50,19 +54,16 @@ public class SimpleHelper extends AudioHelper {
     }
 
     @Override
-    public AudioOutputLine getOutputForFile(int idOfParticularMixer, BufferedInputStream file) throws IOException, AudioLineException {
-        try {
-            AudioFormat format = AudioSystem.getAudioFileFormat(file).getFormat();
-            SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(format, sourceLines.get(idOfParticularMixer));
-            sourceDataLine.open(format);
-            sourceDataLine.start();
-            return new AudioOutputDesktop(sourceDataLine, new AbstractAudioFormat(
-                    (int) format.getSampleRate(),
-                    format.getSampleSizeInBits()
+    public void playResourceFile(int idOfParticularMixer, int trackId) {
+        try (BufferedInputStream inputStream = new BufferedInputStream(
+                Checker.getCheckedInput(Main.NOTIFICATION_PATH + Resources.getInstance().getNotificationTracks().get(trackId).name));
+             SourceDataLine sourceDataLine = getOutputForFile(idOfParticularMixer, inputStream);
+             AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(inputStream)) {
 
-            ));
-        } catch (UnsupportedAudioFileException | LineUnavailableException e) {
-            throw new AudioLineException("Can't open output line, because unsupported file extension");
+            Player.playWholeFile(audioInputStream, sourceDataLine);
+
+        } catch (IOException | AudioLineException | UnsupportedAudioFileException e) {
+            e.printStackTrace();
         }
     }
 
@@ -148,14 +149,26 @@ public class SimpleHelper extends AudioHelper {
         return result;
     }
 
+    private SourceDataLine getOutputForFile(int idOfParticularMixer, BufferedInputStream file) throws IOException, AudioLineException {
+        try {
+            AudioFormat format = AudioSystem.getAudioFileFormat(file).getFormat();
+            SourceDataLine sourceDataLine = AudioSystem.getSourceDataLine(format, sourceLines.get(idOfParticularMixer));
+            sourceDataLine.open(format);
+            sourceDataLine.start();
+            return sourceDataLine;
+        } catch (UnsupportedAudioFileException | LineUnavailableException e) {
+            throw new AudioLineException("Can't open output line, because unsupported file extension");
+        }
+    }
+
     private static AudioFormat parseFormat(AbstractAudioFormat audioFormat) {
         return new AudioFormat
                 (
                         audioFormat.getSampleRate(),
                         audioFormat.getSampleSizeInBits(),
-                        AbstractAudioFormat.CHANNELS,
-                        AbstractAudioFormat.SIGNED,
-                        AbstractAudioFormat.BIG_ENDIAN
+                        audioFormat.getChannelsAmount(),
+                        audioFormat.isSigned(),
+                        audioFormat.isBigEndian()
                 );
     }
 

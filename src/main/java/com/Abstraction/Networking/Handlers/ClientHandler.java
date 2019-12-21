@@ -12,43 +12,39 @@ import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Util.Interfaces.Starting;
 import com.Abstraction.Util.Resources;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ClientHandler implements Starting {
+public class ClientHandler implements Closeable {
 
     protected final AbstractClient client;
-    protected final Socket socket;
+    protected Socket socket;
     protected Processable processor;
     protected BaseController controller;
 
     protected volatile boolean isWorking;
 
-    public ClientHandler(AbstractClient client, Socket socket) {
+    public ClientHandler(AbstractClient client) {
         this.client = client;
-        this.socket = socket;
     }
 
     /**
-     * @param name your desired name on server <- totally retarded code
-     * @return true if new reader thread started
+     * @param name your desired name on server
+     * @param socket with connection
+     * @return true if connected to server, false if already connected
+     * @throws IOException if network connection failed
      */
 
-    @Override
-    public boolean start(String name) {
+    public boolean start(String name, Socket socket) throws IOException {
         if (isWorking)
             return false;
-        BaseReader reader = null;
-        ClientWriter writer = null;
-        try {
-            reader = createReader();
-            writer = createWriter();
-        } catch (IOException e) {
-            return false;
-        }
+        this.socket = socket;
+        BaseReader reader = createReader();
+        ClientWriter writer = createWriter();
         ClientUser user = client.authenticate(reader, writer, name);
         if (user == null)
-            return false;
+            throw new IOException();
         controller = createController(reader);
         processor = createProcessor(user);
 
@@ -60,9 +56,11 @@ public class ClientHandler implements Starting {
 
     @Override
     public void close() {
+        if (!isWorking)
+            return;
         isWorking = false;
         processor.close();
-        if (!socket.isClosed()) {
+        if (socket.isConnected()) {
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -70,12 +68,16 @@ public class ClientHandler implements Starting {
         }
     }
 
+    public boolean isWorking() {
+        return isWorking;
+    }
+
     protected BaseReader createReader() throws IOException {
-        return new BaseReader(socket.getInputStream(), Resources.getBufferSize());
+        return new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
     }
 
     protected ClientWriter createWriter() throws IOException {
-        return new ClientWriter(socket.getOutputStream(), Resources.getBufferSize());
+        return new ClientWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize());
     }
 
     protected Processable createProcessor(ClientUser clientUser) {
@@ -94,9 +96,10 @@ public class ClientHandler implements Starting {
                     close();
                 }
             } catch (IOException e) {
-                if (isWorking)
+                if (isWorking) {
                     client.notifyObservers(ACTIONS.CONNECTION_TO_SERVER_FAILED, null);
-                close();
+                    close();
+                }
             }
         }
     }

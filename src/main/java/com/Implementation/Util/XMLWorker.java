@@ -1,4 +1,4 @@
-package com.Abstraction.Util;
+package com.Implementation.Util;
 
 import com.Abstraction.Util.Collection.Pair;
 import org.w3c.dom.Document;
@@ -25,16 +25,16 @@ public class XMLWorker {
     /**
      * Tries to get a document from the given name of resource
      * Also if a document has DTD will check for it
+     * <p>
      *
-     * @param resource name absolute reference
+     * @param stream opened stream with xml file
      * @return loaded document
      * @throws ParserConfigurationException if can't create new document builder
      * @throws IOException                  can't read file
      * @throws SAXException                 format is broken
      */
 
-    private static Document getDocument(String resource) throws ParserConfigurationException, IOException, SAXException {
-        InputStream stream = Checker.getCheckedInput(resource);
+    private static Document getDocument(InputStream stream) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         documentBuilderFactory.setValidating(true);
         documentBuilderFactory.setIgnoringElementContentWhitespace(true);
@@ -47,15 +47,16 @@ public class XMLWorker {
      * Document should look like <root><file><name>here goes file name.format</name></file></root>
      * But you can put it in more deeper state cause
      * method tries to find <name> attribute and gets its text info
+     * <p>
      *
-     * @param resourceName name of recurse to load
+     * @param stream opened stream with xml file
      * @return empty if exception or filled list with names
      */
 
-    public static List<Pair<String, String>> retrieveNames(String resourceName) {
+    public static List<Pair<String, String>> retrieveNames(InputStream stream) {
         Document document;
         try {
-            document = getDocument(resourceName);
+            document = getDocument(stream);
         } catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
             return new ArrayList<>(0);

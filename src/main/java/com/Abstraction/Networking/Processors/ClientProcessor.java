@@ -98,6 +98,9 @@ public class ClientProcessor implements Processable {
                 logic.notifyObservers(ACTIONS.CALLED_BUT_BUSY, new Object[]{sender});
             } catch (IOException ignored) {
             }
+            finally {
+                user.unlock();
+            }
             return true;
         }
         user.call(sender.getId());
