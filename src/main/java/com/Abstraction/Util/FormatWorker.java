@@ -54,6 +54,7 @@ public class FormatWorker {
     /**
      * Format for transferring audio data
      *
+     * @param audioFormat contain audio format data
      * @return data enough to represent audio format for client
      */
 

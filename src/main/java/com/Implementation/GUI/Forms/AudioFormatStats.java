@@ -3,7 +3,7 @@ package com.Implementation.GUI.Forms;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Implementation.GUI.Frame;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;

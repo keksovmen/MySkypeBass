@@ -33,7 +33,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
 
     /**
      * Single constructor
-     * Init and update actions
+     * Init and modelObservation actions
      * register listeners
      * And don't show the dialog for this purpose here is a method
      */

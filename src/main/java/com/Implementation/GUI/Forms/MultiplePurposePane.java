@@ -3,13 +3,13 @@ package com.Implementation.GUI.Forms;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Model.UnEditableModel;
-import com.Abstraction.Model.Updater;
+import com.Abstraction.Model.ModelObserver;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Collection.Track;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Util.DesktopResources;
 
 import javax.swing.*;
@@ -26,7 +26,7 @@ import java.util.Map;
  * Has pop up menu in usersList
  */
 
-public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandler {
+public class MultiplePurposePane implements ModelObserver, LogicObserver, ButtonsHandler {
 
     /**
      * Name for conversation tab uses in search cases
@@ -68,7 +68,7 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
     /**
      * Default constructor
      * Init firstly
-     * 1 - update actions
+     * 1 - modelObservation actions
      * 2 - set my name and id
      * 3 - register buttons action
      * 4 - create pop up menu for userList
@@ -86,14 +86,14 @@ public class MultiplePurposePane implements Updater, LogicObserver, ButtonsHandl
     }
 
     @Override
-    public void update(UnEditableModel model) {
+    public void modelObservation(UnEditableModel model) {
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
         //Go through tabs and set online or offline icons, except CONFERENCE
         changeIconsOfTabs();
 
-        conferencePane.update(model);
+        conferencePane.modelObservation(model);
 
         mainPane.revalidate();
         mainPane.repaint();

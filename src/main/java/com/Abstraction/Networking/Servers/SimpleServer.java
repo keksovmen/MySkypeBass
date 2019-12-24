@@ -12,7 +12,7 @@ import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Implementation of server with my protocol
  * Basic TCP, but best way is made this was use TCP for everything
  * except sound data for that should be better UDP
- * but I too lazy to implement it
+ * but I am too lazy to implement it
  */
 
 public class SimpleServer extends AbstractServer {
@@ -51,7 +51,7 @@ public class SimpleServer extends AbstractServer {
     private final ConcurrentHashMap<Integer, ServerUser> users;
 
     /**
-     * Format for audio data, if client can't handleRequest it on mic or speaker
+     * Format for audio data, if client can't handleDataPackageRouting it on mic or speaker
      * he must be disconnected, but i will rewrite this
      */
 
@@ -124,13 +124,11 @@ public class SimpleServer extends AbstractServer {
      * first read name from the user
      * second writes audio format
      * third gets true or false on the audio format
-     * than add user or disconnect him
-     * after write all users on server to him
-     * and notifyObservers all other users
+     * forth write him his id
      *
      * @param reader used to read packages
      * @param writer used to write to the dude
-     * @return true only if you are able to use this audio format
+     * @return null if not able to use this audio format
      */
 
     @Override
@@ -222,7 +220,7 @@ public class SimpleServer extends AbstractServer {
     }
 
     /**
-     * Get controller for other usages
+     * Get packageRouter for other usages
      *
      * @param who to get id
      * @return null if there is no such dude
@@ -246,7 +244,7 @@ public class SimpleServer extends AbstractServer {
     @Override
     protected void acceptSocket(Socket socket) {
         ServerHandler serverHandler = new ServerHandler(this, socket);
-        if (!serverHandler.start("SimpleServer controller - ")) {
+        if (!serverHandler.start("SimpleServer packageRouter - ")) {
             try {
                 socket.close();
             } catch (IOException ignored) {
@@ -295,7 +293,7 @@ public class SimpleServer extends AbstractServer {
                                     userToAdd.toString()
                             );
                         } catch (IOException ignored) {
-                            //If exception with io, is must be handled by corresponding thread not yours
+                            //If exception with io, it must be handled by corresponding thread not yours
                         }
                     });
                 }
@@ -318,7 +316,7 @@ public class SimpleServer extends AbstractServer {
                                 dudesId
                         );
                     } catch (IOException ignored) {
-                        //If exception with io, is must be handled by corresponding thread not yours
+                        //If exception with io, it must be handled by corresponding thread not yours
                     }
                 })
         );

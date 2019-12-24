@@ -1,5 +1,9 @@
 package com.Abstraction.Util.Collection;
 
+/**
+ * Represent track entry from Notifications.xml
+ */
+
 public class Track {
 
     public final String name;

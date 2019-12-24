@@ -8,7 +8,12 @@ import com.Abstraction.Networking.Utility.WHO;
 
 import java.io.IOException;
 
+/**
+ * Handler for incoming messages from client socket
+ */
+
 public class ServerProcessor implements Processable {
+
 
     private final ServerUser correspondUser;
     private final AbstractServer server;
@@ -21,8 +26,8 @@ public class ServerProcessor implements Processable {
     /**
      * Handle the data package command
      *
-     * @param dataPackage to handleRequest
-     * @return true if handled request without network failures
+     * @param dataPackage to handleDataPackageRouting
+     * @return true if handles request without network failures
      */
 
     @Override
@@ -59,9 +64,14 @@ public class ServerProcessor implements Processable {
             }
             //And so on
         }
-        System.err.println("There is no such handler for given CODE - " + dataPackage.getHeader().getCode());
+        System.err.println("There is no such networkHelper for given CODE - " + dataPackage.getHeader().getCode());
         return false;
     }
+
+    /**
+     * First remove user from server observation
+     * Then kick him from his conversation if such exists
+     */
 
     @Override
     public void close() {
@@ -72,7 +82,7 @@ public class ServerProcessor implements Processable {
     }
 
     /**
-     * Grabs every correspondUser on the server except you and send it to you
+     * Grabs every user on the server except you and send it to you as String
      *
      * @param dataPackage contain info
      * @return true if handled without connection failure
@@ -89,7 +99,7 @@ public class ServerProcessor implements Processable {
     }
 
     /**
-     * Transfer given dataPackage to correspond correspondUser or conversation
+     * Transfer given dataPackage to correspond user or conversation
      * Without creating new ones
      *
      * @param dataPackage contain message and receiver id
@@ -173,7 +183,7 @@ public class ServerProcessor implements Processable {
                 try {
                     receiver.getWriter().writeBothInConversations(receiver.getId(), correspondUser.getId());
                 } catch (IOException ignored) {
-                    //His thread will handleRequest shit
+                    //His thread will handle network failure
                 }
                 return true;
             }
@@ -229,7 +239,7 @@ public class ServerProcessor implements Processable {
         try {
             receiver.getWriter().transferPacket(dataPackage);
         } catch (IOException ignored) {
-            //Dude disconnected before so it's thread will handleRequest
+            //Dude disconnected before so it's thread will handle
         }
         return true;
     }

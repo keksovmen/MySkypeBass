@@ -1,14 +1,15 @@
 package com.Abstraction.Networking.Handlers;
 
-import com.Abstraction.Networking.BaseController;
+import com.Abstraction.Networking.BaseDataPackageRouter;
 import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Processors.ServerProcessor;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Networking.Writers.BaseWriter;
 import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Util.Interfaces.Starting;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -18,7 +19,7 @@ public class ServerHandler implements Starting {
     protected final AbstractServer server;
     protected final Socket socket;
     protected Processable processor;
-    protected BaseController controller;
+    protected BaseDataPackageRouter controller;
 
     protected volatile boolean isWorking;
 
@@ -78,22 +79,22 @@ public class ServerHandler implements Starting {
     }
 
     protected ServerWriter createWriter() throws IOException {
-        return new ServerWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize());
+        return new ServerWriter(new BaseWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize()));
     }
 
     protected Processable createProcessor(ServerUser serverUser) {
         return new ServerProcessor(serverUser, server);
     }
 
-    protected BaseController createController(BaseReader reader) {
-        return new BaseController(reader);
+    protected BaseDataPackageRouter createController(BaseReader reader) {
+        return new BaseDataPackageRouter(reader);
     }
 
     private void handleLoop() {
         while (isWorking) {
             try {
-                if (!controller.handleRequest(processor)) {
-                    //if processor can't handleRequest a request
+                if (!controller.handleDataPackageRouting(processor)) {
+                    //if processor can't handleDataPackageRouting a request
                     close();
                 }
             } catch (IOException e) {

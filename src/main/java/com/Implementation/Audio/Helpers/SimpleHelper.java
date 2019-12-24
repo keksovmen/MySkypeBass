@@ -7,7 +7,7 @@ import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Audio.Output.AudioOutputLine;
 import com.Implementation.Util.Checker;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Audio.Input.AudioInputDesktop;
 import com.Implementation.Audio.Output.AudioOutputDesktop;
 import com.Implementation.Audio.Output.Player;
@@ -24,13 +24,13 @@ public class SimpleHelper extends AudioHelper {
     private final Map<Integer, Mixer.Info> sourceLines;
     private final Map<Integer, Mixer.Info> targetLines;
 
-    private AbstractAudioFormat abstractAudioFormat;
+//    private AbstractAudioFormat abstractAudioFormat;
     private int micCaptureSize;
 
     public SimpleHelper() {
         sourceLines = new HashMap<>();
         targetLines = new HashMap<>();
-        abstractAudioFormat = null;
+//        abstractAudioFormat = null;
         micCaptureSize = -1;
     }
 
@@ -50,7 +50,7 @@ public class SimpleHelper extends AudioHelper {
 
     @Override
     public AudioOutputLine getOutput(int idOfParticularMixer) throws AudioLineException {
-        return getOutput(idOfParticularMixer, abstractAudioFormat);
+        return getOutput(idOfParticularMixer, getDefaultAudioFormat());
     }
 
     @Override
@@ -92,7 +92,7 @@ public class SimpleHelper extends AudioHelper {
 
     @Override
     public AudioInputLine getInput(int idOfParticularMixer) throws AudioLineException {
-        return getInput(idOfParticularMixer, abstractAudioFormat);
+        return getInput(idOfParticularMixer, getDefaultAudioFormat());
     }
 
     @Override
@@ -111,11 +111,6 @@ public class SimpleHelper extends AudioHelper {
     }
 
     @Override
-    public AbstractAudioFormat getAudioFormat() {
-        return abstractAudioFormat;
-    }
-
-    @Override
     public boolean isFormatSupported(String formatAndCaptureSize) {
         AbstractAudioFormat abstractFormat = FormatWorker.parseAudioFormat(formatAndCaptureSize);
         AudioFormat format = parseFormat(abstractFormat);
@@ -125,7 +120,7 @@ public class SimpleHelper extends AudioHelper {
         boolean result = isLineExist(format, SourceDataLine.class) &&
                 isLineExist(format, TargetDataLine.class);
         if (result) {
-            this.abstractAudioFormat = abstractFormat;
+            setDefaultFormat(abstractFormat);
             micCaptureSize = micSize;
         }
         return result;

@@ -1,9 +1,9 @@
 package com.Implementation.Util;
 
-import com.Abstraction.Util.AbstractResources;
+import com.Abstraction.Util.Resources.AbstractResources;
 import com.Abstraction.Util.Collection.Pair;
 import com.Abstraction.Util.Collection.Track;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.net.URL;

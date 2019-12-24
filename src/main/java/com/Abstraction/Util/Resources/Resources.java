@@ -1,4 +1,4 @@
-package com.Abstraction.Util;
+package com.Abstraction.Util.Resources;
 
 /**
  * Contain resources that can be got directly

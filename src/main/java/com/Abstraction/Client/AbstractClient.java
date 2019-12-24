@@ -2,7 +2,7 @@ package com.Abstraction.Client;
 
 import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Model.ChangeableModel;
-import com.Abstraction.Networking.Handlers.ClientHandler;
+import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
@@ -10,13 +10,15 @@ import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Networking.Writers.BaseWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -43,51 +45,68 @@ public abstract class AbstractClient implements Logic {
 
     protected final Executor executor;
 
-    protected ClientUser user;
-    protected ClientHandler handler;
+//    protected ClientUser user;
+
+    /**
+     * Help with server incoming messages
+     * Will be changed each time when you connect to a server
+     * Will be 2 factory methods plain and ciphered version
+     */
+
+    protected ClientNetworkHelper networkHelper;
+
+    /**
+     * Indicates connection type
+     * plain or cipher
+     */
+
+    protected boolean isSecureConnection = false;
+
 
     public AbstractClient(ChangeableModel model) {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor();
-        handler = createHandler();
+//        networkHelper = createNetworkHelper();
 
     }
 
     /**
-     * Authenticate procedure Server has similar
+     * Authenticate procedure {@link com.Abstraction.Networking.Servers.AbstractServer} has similar
+     * In future there will be flag indicating is connection ciphered or not
      * Default implementation
      *
      * @param reader to read data
      * @param writer to send to the server
      * @param myName to send for authenticate
-     * @return me or null if failed
+     * @return my id or {@link WHO#NO_NAME}
      */
 
-    public ClientUser authenticate(BaseReader reader, ClientWriter writer, String myName) {
-        try {
-            writer.writeName(myName);
+    public int authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
+//        try {
+        writer.writeName(myName);
 
-            AbstractDataPackage read = reader.read();
-            String formatAndCaptureSizeAsString = read.getDataAsString();
-            DataPackagePool.returnPackage(read);
+        AbstractDataPackage read = reader.read();
+        String formatAndCaptureSizeAsString = read.getDataAsString();
+        DataPackagePool.returnPackage(read);
 
-            //sets audio format and tell the server can speaker play format or not
-            if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
-                writer.writeDeny(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
-                stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
-                return null;
-            }
-            writer.writeApproveAudioFormat(WHO.NO_NAME.getCode(), WHO.SERVER.getCode());
-            stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
-
-            read = reader.read();
-            user = new ClientUser(myName, read.getHeader().getTo(), writer);
-            AbstractDataPackagePool.returnPackage(read);
-        } catch (IOException e) {
-            return null;
+        //sets audio format and tell the server can speaker play format or not
+        if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
+            writer.writeDeny(WHO.SERVER.getCode());
+            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
+            throw new IOException("Audio format not accepted");
         }
-        return user;
+        writer.writeApproveAudioFormat(WHO.SERVER.getCode());
+        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
+
+        read = reader.read();
+//            user = new ClientUser(myName, read.getHeader().getTo(), writer);
+        int myID = read.getHeader().getTo();
+        AbstractDataPackagePool.returnPackage(read);
+//        } catch (IOException e) {
+//            return myID;
+//        }
+        return myID;
     }
 
     @Override
@@ -151,7 +170,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     /**
-     * Override to put more BUTTON cases to handler
+     * Override to put more BUTTON cases to networkHelper
      *
      * @param buttons to handle
      * @param data    to use
@@ -170,48 +189,77 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onConnect(Object[] data) {
+        if (networkHelper != null && networkHelper.isWorking()) {
+            stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, model.getMyself().toString());
+            return;
+        }
+
         String[] strings = validateConnectData(data);
         if (strings == null) {
             return;
         }
 
         Socket socket = new Socket();
+        String myName = strings[0];
 
         try {
             socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
+            BaseReader reader = new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
+            OutputStream outputStream = socket.getOutputStream();
+
+            int myID = authenticate(
+                    reader,
+                    new ClientWriter(new BaseWriter(outputStream, Resources.getInstance().getBufferSize())),
+                    myName
+            );
+
+            ClientUser me = new ClientUser(myName, myID, new ClientWriter(createWriterForClient(outputStream), myID), reader);
+            model.setMyself(me);
+            networkHelper = createNetworkHelper(socket);
+            networkHelper.start("Client network helper / reader");
+            stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
         } catch (IOException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
             try {
                 socket.close();
             } catch (IOException ignored) {
+                //already closed
             }
             return;
         }
-        try {
-            if (handler.start(strings[0], socket)) {
-                stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
-            }else {
-                stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, user.toString());
-            }
-        } catch (IOException e) {
 
-            handler.close();
-        }
+        /*
+        Check cipher flag
+        Create ClientUser and set it to model
+        Create ClientNetworkHandler which in future can be 2 types cipher and plain, so need some creation patterns
+        */
+
+
+//        try {
+//            if (networkHelper.start(strings[0], socket)) {
+//                stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
+//            }else {
+//                stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, user.toString());
+//            }
+//        } catch (IOException e) {
+//
+//            networkHelper.close();
+//        }
     }
 
     protected void onDisconnect() {
         try {
-            user.getWriter().writeDisconnect(user.getId());
+            getWriter().writeDisconnect();
         } catch (IOException ignored) {
         }
-        handler.close();
+        networkHelper.close();
     }
 
     protected void onMessageSend(Object[] data) {
         String message = (String) data[0];
         int to = (int) data[1];
         try {
-            user.getWriter().writeMessage(user.getId(), to, message);
+            getWriter().writeMessage(to, message);
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -219,18 +267,19 @@ public abstract class AbstractClient implements Logic {
 
     protected void onCall(Object[] data) {
         BaseUser dude = (BaseUser) data[0];
-        user.lock();
-        if (user.isCalling() != ClientUser.NO_ONE) {
+        ClientUser myself = model.getMyself();
+        myself.lock();
+        if (myself.isCalling() != ClientUser.NO_ONE) {
             plainNotify(ACTIONS.ALREADY_CALLING_SOMEONE);
             return;
         }
         if (model.inConversationWith(dude))
             return;
-        user.call(dude.getId());
-        user.unlock();
+        myself.call(dude.getId());
+        myself.unlock();
 
         try {
-            user.getWriter().writeCall(user.getId(), dude.getId());
+            myself.getWriter().writeCall(dude.getId());
             notifyObservers(ACTIONS.OUT_CALL, new Object[]{dude});
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
@@ -239,7 +288,7 @@ public abstract class AbstractClient implements Logic {
 
     protected void onExitConference() {
         try {
-            user.getWriter().writeDisconnectFromConv(user.getId());
+            getWriter().writeDisconnectFromConv();
             model.clearConversation();
             plainNotify(ACTIONS.EXITED_CONVERSATION);
         } catch (IOException ignored) {
@@ -250,7 +299,7 @@ public abstract class AbstractClient implements Logic {
 
     protected void onUserRequest() {
         try {
-            user.getWriter().writeUsersRequest(user.getId());
+            getWriter().writeUsersRequest();
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -260,9 +309,10 @@ public abstract class AbstractClient implements Logic {
         BaseUser dude = (BaseUser) data[0];
         String others = (String) data[1];
 
-        user.drop();
+        ClientUser myself = model.getMyself();
+        myself.drop();
         try {
-            user.getWriter().writeAccept(user.getId(), dude.getId());
+            myself.getWriter().writeAccept(dude.getId());
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
             return;
@@ -272,9 +322,11 @@ public abstract class AbstractClient implements Logic {
 
     protected void onCallDenied(Object[] data) {
         BaseUser dude = (BaseUser) data[0];
-        user.drop();
+        ClientUser myself = model.getMyself();
+
+        myself.drop();
         try {
-            user.getWriter().writeDeny(user.getId(), dude.getId());
+            myself.getWriter().writeDeny(dude.getId());
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -282,9 +334,11 @@ public abstract class AbstractClient implements Logic {
 
     protected void onCallCanceled(Object[] data) {
         BaseUser dude = (BaseUser) data[0];
-        user.drop();
+        ClientUser myself = model.getMyself();
+
+        myself.drop();
         try {
-            user.getWriter().writeCancel(user.getId(), dude.getId());
+            myself.getWriter().writeCancel(dude.getId());
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -292,15 +346,28 @@ public abstract class AbstractClient implements Logic {
 
     protected void onSendSound(Object[] data) {
         try {
-            user.getWriter().writeSound(user.getId(), (byte[]) data[0]);
+            getWriter().writeSound((byte[]) data[0]);
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
     }
 
-    protected ClientHandler createHandler() {
-        return new ClientHandler(this);
+    protected ClientNetworkHelper createNetworkHelper(Socket socket) {
+        if (isSecureConnection) {
+            return null;
+        } else {
+            return new ClientNetworkHelper(this, socket);
+        }
     }
+
+    protected BaseWriter createWriterForClient(OutputStream outputStream) {
+        if (isSecureConnection) {
+            return null;
+        } else {
+            return new BaseWriter(outputStream, Resources.getInstance().getBufferSize());
+        }
+    }
+
 
     /**
      * Check argument and modify them if needed
@@ -347,6 +414,15 @@ public abstract class AbstractClient implements Logic {
         return true;
     }
 
+    /**
+     * Short cut for gaining writer from user
+     * @return my writer
+     */
+
+    protected final ClientWriter getWriter(){
+        return model.getMyself().getWriter();
+    }
+
 
     /**
      * For client side
@@ -354,7 +430,7 @@ public abstract class AbstractClient implements Logic {
      * @param dude   who to add in a conversation
      * @param others who may present in the conversation
      * @param logic  what to notifyObservers about progress
-     * @param model  to update about progress
+     * @param model  to modelObservation about progress
      */
 
     public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {

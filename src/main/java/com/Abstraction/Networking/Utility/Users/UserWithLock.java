@@ -3,6 +3,10 @@ package com.Abstraction.Networking.Utility.Users;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * Add long term lock functionality
+ */
+
 public class UserWithLock extends BaseUser {
 
     /**

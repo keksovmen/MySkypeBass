@@ -1,6 +1,6 @@
 package com.Abstraction.Util.History;
 
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 /**
  * Factory for obtaining History<> objects

@@ -8,13 +8,13 @@ import com.Abstraction.Audio.Output.ChangeableOutput;
 import com.Abstraction.Audio.Settings.BaseAudioSettings;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Implementation.Audio.Input.Capture;
-import com.Implementation.Audio.Output.DesktopAudioPlayer;
+import com.Implementation.Audio.Output.DesktopBasicAudioPlayer;
 
 public class AudioDesktopFactory extends AudioFactory {
 
     @Override
     public AbstractAudioPlayer createPlayer() {
-        return new DesktopAudioPlayer();
+        return new DesktopBasicAudioPlayer();
     }
 
     @Override

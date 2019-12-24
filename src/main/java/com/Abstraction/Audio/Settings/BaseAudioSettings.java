@@ -5,9 +5,22 @@ import com.Abstraction.Audio.Output.ChangeableOutput;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Pipeline.BUTTONS;
 
+/**
+ * Handles {@link BUTTONS}
+ */
+
 public class BaseAudioSettings implements ButtonsHandler {
 
+    /**
+     * Mic
+     */
+
     protected final ChangeableInput input;
+
+    /**
+     * AudioPlayer
+     */
+
     protected final ChangeableOutput output;
 
     public BaseAudioSettings(ChangeableInput input, ChangeableOutput output) {
@@ -27,7 +40,7 @@ public class BaseAudioSettings implements ButtonsHandler {
                 return;
             }
             case INCREASE_BASS:{
-                input.IncreaseBass((Integer) data[0]);
+                input.changeBassLevel((Integer) data[0]);
                 return;
             }
             case CHANGE_INPUT:{
@@ -35,7 +48,7 @@ public class BaseAudioSettings implements ButtonsHandler {
                 return;
             }
             case CHANGE_OUTPUT:{
-                output.changeOutput((int) data[0]);
+                output.changeOutputDevice((int) data[0]);
                 return;
             }
         }

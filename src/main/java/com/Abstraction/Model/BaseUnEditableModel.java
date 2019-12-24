@@ -1,6 +1,7 @@
 package com.Abstraction.Model;
 
 import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.ClientUser;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -36,6 +37,11 @@ public abstract class BaseUnEditableModel implements UnEditableModel{
     public Map<Integer, BaseUser> getUserMap() {
         return new TreeMap<>(userMap);
     }
+
+    /**
+     *
+     * @return Copy of this set, as instant snapshot
+     */
 
     @Override
     public Set<BaseUser> getConversation(){

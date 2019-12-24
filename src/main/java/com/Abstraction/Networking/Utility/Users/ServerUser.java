@@ -7,7 +7,7 @@ import com.Abstraction.Networking.Writers.ServerWriter;
  * SimpleServer version of a user
  *
  * Lock policy:
- * Want to do something with thi dude
+ * Want to do something with this dude
  * first call lock()
  * then do whatever you want
  * last call unlock()

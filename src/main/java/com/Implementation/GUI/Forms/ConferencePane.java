@@ -3,7 +3,7 @@ package com.Implementation.GUI.Forms;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Model.UnEditableModel;
-import com.Abstraction.Model.Updater;
+import com.Abstraction.Model.ModelObserver;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * or mute yourself
  */
 
-class ConferencePane implements Updater, LogicObserver, ButtonsHandler {
+class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
     private JSpinner bassChanger;
     private JButton muteButton;
     private JPanel settingsPane;
@@ -115,7 +115,7 @@ class ConferencePane implements Updater, LogicObserver, ButtonsHandler {
     }
 
     @Override
-    public void update(UnEditableModel model) {
+    public void modelObservation(UnEditableModel model) {
         Set<BaseUser> conversation = model.getConversation();
 
         Map<BaseUser, UserSettings> tmp = new HashMap<>();

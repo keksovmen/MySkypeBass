@@ -1,9 +1,9 @@
 package com.Implementation.Audio.Output;
 
 import com.Abstraction.Audio.Output.AbstractCallNotificator;
-import com.Abstraction.Audio.Output.AudioPlayer;
+import com.Abstraction.Audio.Output.BasicAudioPlayer;
 
-public class DesktopAudioPlayer extends AudioPlayer {
+public class DesktopBasicAudioPlayer extends BasicAudioPlayer {
 
     @Override
     protected AbstractCallNotificator createCallNotificator() {

@@ -12,15 +12,31 @@ public class AbstractAudioFormat {
 
     //May not be used by android
 
+    /**
+     * Default channel amount
+     */
+
     public static final int CHANNELS = 1;
+
+    /**
+     * Default signed state
+     */
+
     public static final boolean SIGNED = true;
+
+    /**
+     * Default endian state
+     */
+
     public static final boolean BIG_ENDIAN = false;
+
 
     private final int sampleRate;
     private final int sampleSizeInBits;
     private final int channelsAmount;
     private final boolean isSigned;
     private final boolean isBigEndian;
+
 
     public AbstractAudioFormat(int sampleRate, int sampleSizeInBits) {
         this.sampleRate = sampleRate;

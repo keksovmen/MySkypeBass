@@ -2,7 +2,11 @@ package com.Abstraction.Pipeline;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
-import com.Abstraction.Model.Updater;
+import com.Abstraction.Model.ModelObserver;
 
-public interface SimpleComponent extends Updater, LogicObserver, ButtonsHandler {
+/**
+ * Observer + Chain of Responsibility patterns
+ */
+
+public interface SimpleComponent extends ModelObserver, LogicObserver, ButtonsHandler {
 }

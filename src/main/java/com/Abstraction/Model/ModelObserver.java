@@ -1,10 +1,10 @@
 package com.Abstraction.Model;
 
 /**
- * Implement if you want to listen for users update
+ * Implement if you want to listen for users modelObservation
  */
 
-public interface Updater {
+public interface ModelObserver {
 
     /**
      * Will be called each time when users on client side get updated
@@ -12,5 +12,5 @@ public interface Updater {
      * @param model where you can get copy of map
      */
 
-    void update(UnEditableModel model);
+    void modelObservation(UnEditableModel model);
 }

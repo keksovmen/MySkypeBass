@@ -8,26 +8,32 @@ import com.Abstraction.Networking.Readers.BaseReader;
 import java.io.IOException;
 
 /**
- * Template method
- * Start() is main method
+ * Reads data packages and route them to given Processor
  */
 
-public class BaseController {
+public class BaseDataPackageRouter {
+
+    /**
+     * From which will fetch Data Packages
+     */
 
     protected final BaseReader reader;
 
-    public BaseController(BaseReader reader) {
+
+    public BaseDataPackageRouter(BaseReader reader) {
         this.reader = reader;
     }
 
     /**
      * Action that will happen each time in a loop
-     * until close() or error or process() return false
+     * until process() return false
      *
+     * @param processor consumes packages
+     * @return false if processor can't handle given package
      * @throws IOException if network fails
      */
 
-    public boolean handleRequest(Processable processor) throws IOException {
+    public boolean handleDataPackageRouting(Processable processor) throws IOException {
         AbstractDataPackage read = reader.read();
         if (!processor.process(read)) {
             DataPackagePool.returnPackage(read);

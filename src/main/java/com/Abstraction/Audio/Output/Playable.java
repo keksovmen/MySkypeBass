@@ -1,9 +1,14 @@
 package com.Abstraction.Audio.Output;
 
-import com.Abstraction.Model.Updater;
+import com.Abstraction.Model.ModelObserver;
 import com.Abstraction.Util.Interfaces.Initialising;
+import com.Abstraction.Util.Resources.AbstractResources;
 
-public interface Playable extends Initialising, Updater {
+/**
+ * High level overlay for accessing audio functions
+ */
+
+public interface Playable extends Initialising, ModelObserver {
 
     /**
      * Play audio for given dude
@@ -23,7 +28,7 @@ public interface Playable extends Initialising, Updater {
     /**
      * Play particular notification
      *
-     * @param track id
+     * @param track id in {@link AbstractResources#getNotificationTracks()}
      */
 
     void playMessage(int track);
@@ -31,7 +36,7 @@ public interface Playable extends Initialising, Updater {
     /**
      * Play particular track with delay in millis
      *
-     * @param track id
+     * @param track id in {@link AbstractResources#getNotificationTracks()}
      * @param delay time in millis
      */
 
