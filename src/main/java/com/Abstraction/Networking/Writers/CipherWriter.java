@@ -122,7 +122,7 @@ public class CipherWriter extends PlainWriter {
             return false;
         }
         try {
-            encoder.init(Cipher.ENCRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameterSpec());
+            encoder.init(Cipher.ENCRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameters());
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
             return false;

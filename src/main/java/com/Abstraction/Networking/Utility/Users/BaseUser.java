@@ -1,7 +1,12 @@
 package com.Abstraction.Networking.Utility.Users;
 
+import com.Abstraction.Util.Algorithms;
+
+import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.security.AlgorithmParameters;
 import java.security.Key;
-import java.security.spec.AlgorithmParameterSpec;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -30,28 +35,28 @@ public class BaseUser implements Cloneable {
 
     private final Key sharedKey;
 
-    private final AlgorithmParameterSpec algorithmParameterSpec;
+    private final AlgorithmParameters algorithmParameters;
 
     /**
      * Represent how it should look like
      * Means any letters or digits then space - space and unique id as digits
      */
 
-    public static final Pattern parser = Pattern.compile("(.*) - (\\d+)");
+    public static final Pattern parser = Pattern.compile("(.*) - (\\d+)( : ((\\d{1,3} ){16})- ((\\d{1,3} )+))?");
 
 
     public BaseUser(String name, int id) {
         this.name = name;
         this.id = id;
         sharedKey = null;
-        algorithmParameterSpec = null;
+        algorithmParameters = null;
     }
 
-    public BaseUser(String name, int id, Key sharedKey, AlgorithmParameterSpec algorithmParameterSpec) {
+    public BaseUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters) {
         this.name = name;
         this.id = id;
         this.sharedKey = sharedKey;
-        this.algorithmParameterSpec = algorithmParameterSpec;
+        this.algorithmParameters = algorithmParameters;
     }
 
     public String getName() {
@@ -63,11 +68,15 @@ public class BaseUser implements Cloneable {
     }
 
     public Key getSharedKey() {
+        if (sharedKey == null)
+            throw new NullPointerException("Was created without cipher parameters");
         return sharedKey;
     }
 
-    public AlgorithmParameterSpec getAlgorithmParameterSpec() {
-        return algorithmParameterSpec;
+    public AlgorithmParameters getAlgorithmParameters() {
+        if (algorithmParameters == null)
+            throw new NullPointerException("Was created without cipher parameters");
+        return algorithmParameters;
     }
 
     /**
@@ -79,7 +88,18 @@ public class BaseUser implements Cloneable {
 
     @Override
     public final String toString() {
-        return name + " - " + id;
+        String base = name + " - " + id;
+        String addition = "";
+        try {
+            addition = sharedKey == null ? "" :
+                    " : " + Algorithms.byteArrayToString(sharedKey.getEncoded()) +
+                            "- " + Algorithms.byteArrayToString(algorithmParameters.getEncoded());
+        } catch (IOException e) {
+            e.printStackTrace();
+            //won't happen i hope so
+        }
+
+        return base + addition;
     }
 
     @Override
@@ -114,7 +134,21 @@ public class BaseUser implements Cloneable {
             throw new IllegalArgumentException("Base user is in wrong format - " + data);
         String name = matcher.group(1);
         String id = matcher.group(2);
-        return new BaseUser(name, Integer.parseInt(id));
+        String keyAndParam = matcher.group(3);
+        if (keyAndParam == null) {
+            return new BaseUser(name, Integer.parseInt(id));
+        } else {
+            Key key = new SecretKeySpec(Algorithms.stringToByteArray(matcher.group(4)), "AES");
+            AlgorithmParameters parameters = null;
+            try {
+                parameters = AlgorithmParameters.getInstance("AES");
+                parameters.init(Algorithms.stringToByteArray(matcher.group(6)));
+            } catch (NoSuchAlgorithmException | IOException e) {
+                e.printStackTrace();
+                return new BaseUser(name, Integer.parseInt(id));
+            }
+            return new BaseUser(name, Integer.parseInt(id), key, parameters);
+        }
     }
 
     /**

@@ -1,4 +1,6 @@
 
+import com.Abstraction.Util.Algorithms;
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
@@ -15,7 +17,8 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-        AlgoritmsTest.testStringToByteAndOtherwise();
+        AlgorithmsTest.testStringToByteAndOtherwise();
+        AlgorithmsTest.usersTest();
 
         int alo = -1;
         assert (byte) alo == -1;
@@ -166,6 +169,8 @@ public class Test {
         assert Arrays.equals(clearText, bobDecryptedAliceString) : "Text isn't the same";
         System.out.printf("%s\t%s\t%s\n", new String(clearText), new String(recovered), new String(bobDecryptedAliceString));
 
+        String asd = Algorithms.byteArrayToString(bobAesKey.getEncoded());
+        String qwe = Algorithms.byteArrayToString(encodedParams);
         /*
          * Alice decrypts, using AES in CBC mode
          */
