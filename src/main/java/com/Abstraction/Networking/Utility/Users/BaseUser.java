@@ -1,5 +1,7 @@
 package com.Abstraction.Networking.Utility.Users;
 
+import java.security.Key;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -23,6 +25,14 @@ public class BaseUser implements Cloneable {
     private final int id;
 
     /**
+     * Shared secret with server and this dude
+     */
+
+    private final Key sharedKey;
+
+    private final AlgorithmParameterSpec algorithmParameterSpec;
+
+    /**
      * Represent how it should look like
      * Means any letters or digits then space - space and unique id as digits
      */
@@ -33,6 +43,15 @@ public class BaseUser implements Cloneable {
     public BaseUser(String name, int id) {
         this.name = name;
         this.id = id;
+        sharedKey = null;
+        algorithmParameterSpec = null;
+    }
+
+    public BaseUser(String name, int id, Key sharedKey, AlgorithmParameterSpec algorithmParameterSpec) {
+        this.name = name;
+        this.id = id;
+        this.sharedKey = sharedKey;
+        this.algorithmParameterSpec = algorithmParameterSpec;
     }
 
     public String getName() {
@@ -43,6 +62,13 @@ public class BaseUser implements Cloneable {
         return id;
     }
 
+    public Key getSharedKey() {
+        return sharedKey;
+    }
+
+    public AlgorithmParameterSpec getAlgorithmParameterSpec() {
+        return algorithmParameterSpec;
+    }
 
     /**
      * DO NOT OVERRIDE

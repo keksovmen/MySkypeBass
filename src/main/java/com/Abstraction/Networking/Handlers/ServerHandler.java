@@ -6,7 +6,7 @@ import com.Abstraction.Networking.Processors.ServerProcessor;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
-import com.Abstraction.Networking.Writers.BaseWriter;
+import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Util.Interfaces.Starting;
 import com.Abstraction.Util.Resources.Resources;
@@ -79,7 +79,7 @@ public class ServerHandler implements Starting {
     }
 
     protected ServerWriter createWriter() throws IOException {
-        return new ServerWriter(new BaseWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize()));
+        return new ServerWriter(new PlainWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize()));
     }
 
     protected Processable createProcessor(ServerUser serverUser) {

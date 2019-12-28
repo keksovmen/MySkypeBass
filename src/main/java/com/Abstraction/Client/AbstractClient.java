@@ -10,7 +10,7 @@ import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.BaseWriter;
+import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
@@ -209,7 +209,7 @@ public abstract class AbstractClient implements Logic {
 
             int myID = authenticate(
                     reader,
-                    new ClientWriter(new BaseWriter(outputStream, Resources.getInstance().getBufferSize())),
+                    new ClientWriter(new PlainWriter(outputStream, Resources.getInstance().getBufferSize())),
                     myName
             );
 
@@ -360,11 +360,11 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected BaseWriter createWriterForClient(OutputStream outputStream) {
+    protected PlainWriter createWriterForClient(OutputStream outputStream) {
         if (isSecureConnection) {
             return null;
         } else {
-            return new BaseWriter(outputStream, Resources.getInstance().getBufferSize());
+            return new PlainWriter(outputStream, Resources.getInstance().getBufferSize());
         }
     }
 

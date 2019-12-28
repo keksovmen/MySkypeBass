@@ -13,7 +13,7 @@ import java.io.OutputStream;
  * Thread safe can call write methods then will be sent sequentially
  */
 
-public class BaseWriter implements Writer {
+public class PlainWriter implements Writer {
 
     /**
      * Where to write
@@ -22,7 +22,7 @@ public class BaseWriter implements Writer {
     protected final DataOutputStream outputStream;
 
 
-    public BaseWriter(OutputStream outputStream, int bufferSize) {
+    public PlainWriter(OutputStream outputStream, int bufferSize) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
     }
 
