@@ -23,7 +23,7 @@ public class ClientProcessor implements Processable {
      * Where made user changes
      */
 
-    private final ChangeableModel model;
+    protected final ChangeableModel model;
 
 //    /**
 //     * When you making call you have to be properly synchronised
