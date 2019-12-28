@@ -15,6 +15,8 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
+        AlgoritmsTest.testStringToByteAndOtherwise();
+
         int alo = -1;
         assert (byte) alo == -1;
         byte darov = -1;

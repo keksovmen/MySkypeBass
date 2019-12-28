@@ -1,7 +1,11 @@
 package com.Abstraction.Util;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiFunction;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Algorithms {
 
@@ -119,5 +123,48 @@ public class Algorithms {
         float percent = difference / 100f;
         float value = percent * percentage;
         return (int) (min + value);
+    }
+
+    /**
+     * Convert each byte into unsigned int -> to string -> append in line with spaces between
+     *
+     * @param data to convert
+     * @return string such as "(\\d )*"
+     */
+
+    public static String byteArrayToString(byte[] data) {
+        StringBuilder stringBuilder = new StringBuilder(data.length * 3);
+        for (byte b : data) {
+            stringBuilder.append(String.valueOf(Byte.toUnsignedInt(b)));
+            stringBuilder.append(" ");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Convert String from {@link #byteArrayToString(byte[])} to original byte array
+     *
+     * @param data to convert
+     * @return original byte array
+     */
+
+    public static byte[] stringToByteArray(String data) {
+        Pattern pattern = Pattern.compile("(\\d{1,3}) ");
+        Matcher matcher = pattern.matcher(data);
+
+        List<Byte> byteList = new ArrayList<>();
+        while (matcher.find()) {
+            byteList.add(Integer.valueOf(matcher.group(1)).byteValue());
+        }
+
+        return listOfBytesToPrimitiveByte(byteList);
+    }
+
+    private static byte[] listOfBytesToPrimitiveByte(List<Byte> list){
+        byte[] result = new byte[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            result[i] = list.get(i);
+        }
+        return result;
     }
 }
