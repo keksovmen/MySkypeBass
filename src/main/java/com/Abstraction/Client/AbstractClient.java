@@ -5,15 +5,17 @@ import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
+import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
+import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
+import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 
@@ -82,8 +84,7 @@ public abstract class AbstractClient implements Logic {
      * @return my id or {@link WHO#NO_NAME}
      */
 
-    public int authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
-//        try {
+    public BaseUser authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
         writer.writeName(myName);
 
         AbstractDataPackage read = reader.read();
@@ -100,13 +101,27 @@ public abstract class AbstractClient implements Logic {
         stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
 
         read = reader.read();
-//            user = new ClientUser(myName, read.getHeader().getTo(), writer);
         int myID = read.getHeader().getTo();
         AbstractDataPackagePool.returnPackage(read);
-//        } catch (IOException e) {
-//            return myID;
-//        }
-        return myID;
+
+        read = reader.read();
+        if (read.getHeader().getCode().equals(CODE.SEND_SERVER_PLAIN_MODE)) {
+            isSecureConnection = false;
+            return new BaseUser(myName, myID);
+        } else if (read.getHeader().getCode().equals(CODE.SEND_SERVER_CIPHER_MODE)) {
+            if (!Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)){
+                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
+                throw new IOException("Your system can't handle given cipher algorithm - " + Crypto.STANDARD_CIPHER_FORMAT);
+            }
+            isSecureConnection = true;
+
+
+            return null;
+        }else {
+            //error
+            return null;
+        }
+
     }
 
     @Override
@@ -207,13 +222,13 @@ public abstract class AbstractClient implements Logic {
             BaseReader reader = new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
             OutputStream outputStream = socket.getOutputStream();
 
-            int myID = authenticate(
+            BaseUser authenticate = authenticate(
                     reader,
                     new ClientWriter(new PlainWriter(outputStream, Resources.getInstance().getBufferSize())),
                     myName
             );
 
-            ClientUser me = new ClientUser(myName, myID, new ClientWriter(createWriterForClient(outputStream), myID), reader);
+            ClientUser me = new ClientUser(authenticate, new ClientWriter(createWriterForClient(outputStream), authenticate.getId()), reader);
             model.setMyself(me);
             networkHelper = createNetworkHelper(socket);
             networkHelper.start("Client network helper / reader");
@@ -416,10 +431,11 @@ public abstract class AbstractClient implements Logic {
 
     /**
      * Short cut for gaining writer from user
+     *
      * @return my writer
      */
 
-    protected final ClientWriter getWriter(){
+    protected final ClientWriter getWriter() {
         return model.getMyself().getWriter();
     }
 

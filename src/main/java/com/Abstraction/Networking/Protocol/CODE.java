@@ -33,7 +33,12 @@ public enum CODE {
     SEND_ACCEPT_CALL(18), // when dude accepts an incoming call
     SEND_DENY_CALL(19), // when dude denies an incoming call
     SEND_CANCEL_CALL(20), // when dude cancel an out coming call
-    SEND_BOTH_IN_CONVERSATIONS(21); // when you trying to call some one but you both in conversations
+    SEND_BOTH_IN_CONVERSATIONS(21), // when you trying to call some one but you both in conversations
+    SEND_SERVER_CIPHER_MODE(22), // when you trying to call some one but you both in conversations
+    SEND_SERVER_PLAIN_MODE(23), // when you trying to call some one but you both in conversations
+    SEND_PUBLIC_ENCODED_KEY(24), // when you trying to call some one but you both in conversations
+    SEND_ALGORITHM_PARAMETERS_ENCODED(25); // when you trying to call some one but you both in conversations
+
 
     private static boolean checked = false;
 

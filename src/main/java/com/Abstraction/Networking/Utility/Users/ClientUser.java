@@ -29,6 +29,12 @@ public class ClientUser extends UserWithLock {
         this.reader = reader;
     }
 
+    public ClientUser(BaseUser user, ClientWriter writer, BaseReader reader) {
+        super(user.getName(), user.getId(), user.getSharedKey(), user.getAlgorithmParameters());
+        this.writer = writer;
+        this.reader = reader;
+    }
+
     /**
      * When you calling some one
      */
