@@ -2,6 +2,7 @@ package com.Abstraction.Client;
 
 import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Model.ChangeableModel;
+import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
@@ -11,6 +12,7 @@ import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Networking.Writers.CipherWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Pipeline.ACTIONS;
@@ -69,7 +71,7 @@ public abstract class AbstractClient implements Logic {
     public AbstractClient(ChangeableModel model) {
         this.model = model;
         observerList = new ArrayList<>();
-        executor = Executors.newSingleThreadExecutor();
+        executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
 //        networkHelper = createNetworkHelper();
 
     }
@@ -219,7 +221,7 @@ public abstract class AbstractClient implements Logic {
 
     protected void onConnect(Object[] data) {
         if (networkHelper != null && networkHelper.isWorking()) {
-            stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, model.getMyself().toString());
+            stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, model.getMyself().prettyString());
             return;
         }
 
@@ -242,11 +244,11 @@ public abstract class AbstractClient implements Logic {
                     myName
             );
 
-            ClientUser me = new ClientUser(authenticate, new ClientWriter(createWriterForClient(outputStream), authenticate.getId()), reader);
+            ClientUser me = new ClientUser(authenticate, new ClientWriter(createWriterForClient(outputStream, authenticate), authenticate.getId()), reader);
             model.setMyself(me);
             networkHelper = createNetworkHelper(socket);
             networkHelper.start("Client network helper / reader");
-            stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
+            stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.prettyString());
         } catch (IOException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
             try {
@@ -300,10 +302,13 @@ public abstract class AbstractClient implements Logic {
         myself.lock();
         if (myself.isCalling() != ClientUser.NO_ONE) {
             plainNotify(ACTIONS.ALREADY_CALLING_SOMEONE);
+            myself.unlock();
             return;
         }
-        if (model.inConversationWith(dude))
+        if (model.inConversationWith(dude)) {
+            myself.unlock();
             return;
+        }
         myself.call(dude.getId());
         myself.unlock();
 
@@ -383,15 +388,15 @@ public abstract class AbstractClient implements Logic {
 
     protected ClientNetworkHelper createNetworkHelper(Socket socket) {
         if (isSecureConnection) {
-            return null;
+            return new ClientCipherNetworkHelper(this, socket);
         } else {
             return new ClientNetworkHelper(this, socket);
         }
     }
 
-    protected PlainWriter createWriterForClient(OutputStream outputStream) {
+    protected PlainWriter createWriterForClient(OutputStream outputStream, BaseUser cipherInfo) {
         if (isSecureConnection) {
-            return null;
+            return new CipherWriter(outputStream, Resources.getInstance().getBufferSize(), cipherInfo.getSharedKey(), cipherInfo.getAlgorithmParameters());
         } else {
             return new PlainWriter(outputStream, Resources.getInstance().getBufferSize());
         }

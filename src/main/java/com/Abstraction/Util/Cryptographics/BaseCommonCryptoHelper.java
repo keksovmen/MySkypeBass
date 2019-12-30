@@ -31,7 +31,7 @@ public class BaseCommonCryptoHelper implements CommonCryptoHelper{
     }
 
     @Override
-    public Key getKey() {
+    public SecretKeySpec getKey() {
         if (keyForAlgorithm == null)
             throw new IllegalStateException("Wrong steps, key is null! " +
                     "Steps must be initialiseKeyGenerator() -> getPublicKeyEncoded() -> " +

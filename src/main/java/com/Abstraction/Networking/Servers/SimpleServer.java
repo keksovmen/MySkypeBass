@@ -11,12 +11,14 @@ import com.Abstraction.Networking.Utility.ProtocolValueException;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Networking.Writers.*;
 import com.Abstraction.Util.Cryptographics.BaseServerCryptoHelper;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -71,7 +73,7 @@ public class SimpleServer extends AbstractServer {
 
     protected SimpleServer(int port, int sampleRate, int sampleSizeInBits)
             throws IOException, ProtocolValueException {
-        super(port, false);
+        super(port, true);
         BUFFER_SIZE_FOR_IO = Resources.getInstance().getBufferSize() * 1024;
         try {
             MIC_CAPTURE_SIZE = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
@@ -153,7 +155,7 @@ public class SimpleServer extends AbstractServer {
             final int id = getIdAndIncrement();
             writer.writeId(id);
 
-            if (isCipherMode){
+            if (isCipherMode) {
                 writer.writeCipherMode(id);
                 dataPackage = reader.read();
 
@@ -165,10 +167,10 @@ public class SimpleServer extends AbstractServer {
                 writer.writeAlgorithmParams(id, cryptoHelper.getAlgorithmParametersEncoded());
 
 
-                return new ServerUser(new BaseUser(name, id, cryptoHelper.getKey(), cryptoHelper.getParameters()), writer);
-            }else {
+                return new ServerUser(new BaseUser(name, id, cryptoHelper.getKey(), cryptoHelper.getParameters()), writer, reader);
+            } else {
                 writer.writePlainMode(id);
-                return new ServerUser(name, id, writer);
+                return new ServerUser(name, id, writer, reader);
             }
 
 
@@ -229,7 +231,7 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     public String getUsersExceptYou(final int exclusiveId) {
-        StringBuilder stringBuilder = new StringBuilder(50);
+        StringBuilder stringBuilder = new StringBuilder(100);
         users.forEach((integer, user) -> {
             if (integer != exclusiveId) {
                 stringBuilder.append(user.toString()).append("\n");
@@ -262,12 +264,69 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected void acceptSocket(Socket socket) {
-        ServerHandler serverHandler = new ServerHandler(this, socket);
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
+        try {
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
+        } catch (IOException e) {
+            e.printStackTrace();
+            //fuck him
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+            } finally {
+                return;
+            }
+        }
+        BaseReader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
+        ServerUser authenticate = authenticate(reader,
+                new ServerWriter(new PlainWriter(outputStream, Resources.getInstance().getBufferSize())));
+        if (authenticate == null) {
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+            } finally {
+                return;
+            }
+        }
+        ServerUser realUser = new ServerUser(authenticate, new ServerWriter(createWriterForUser(outputStream, authenticate)), reader);
+
+        registerUser(realUser);
+        try {
+            realUser.getWriter().writeUsers(realUser.getId(), getUsersExceptYou(realUser.getId()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            removeUser(realUser.getId());
+            try {
+                socket.close();
+            } catch (IOException ignored) {
+            } finally {
+                return;
+            }
+        }
+
+        ServerHandler serverHandler = createServerHandler(socket, realUser);
         if (!serverHandler.start("SimpleServer packageRouter - ")) {
             try {
                 socket.close();
             } catch (IOException ignored) {
             }
+        }
+    }
+
+    @Override
+    protected ServerHandler createServerHandler(Socket socket, ServerUser user) {
+        return new ServerHandler(this, socket, user);
+    }
+
+    @Override
+    protected Writer createWriterForUser(OutputStream outputStream, BaseUser cipherInfo) {
+        final int bufferSize = Resources.getInstance().getBufferSize();
+        if (isCipherMode) {
+            return new ServerCipherWriter(outputStream, bufferSize, cipherInfo.getSharedKey(), cipherInfo.getAlgorithmParameters());
+        } else {
+            return new PlainWriter(outputStream, bufferSize);
         }
     }
 

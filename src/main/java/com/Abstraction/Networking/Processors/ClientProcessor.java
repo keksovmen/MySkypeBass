@@ -212,14 +212,14 @@ public class ClientProcessor implements Processable {
     protected boolean onCallDeny(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{baseUser});
+        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new BaseUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
 
     protected boolean onCallCanceled(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
         BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{baseUser});
+        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new BaseUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
 

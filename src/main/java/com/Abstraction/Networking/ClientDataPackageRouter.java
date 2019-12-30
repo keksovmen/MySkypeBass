@@ -28,7 +28,7 @@ public class ClientDataPackageRouter extends BaseDataPackageRouter {
 
     public ClientDataPackageRouter(BaseReader reader) {
         super(reader);
-        executorService = Executors.newSingleThreadExecutor();
+        executorService = Executors.newSingleThreadExecutor(r -> new Thread(r, "Client processor"));
     }
 
     /**

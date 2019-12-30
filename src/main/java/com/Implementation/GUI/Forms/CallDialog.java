@@ -146,7 +146,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
 
         setTitle("Calling");
 
-        nameTo.setText(who.toString());
+        nameTo.setText(who.prettyString());
 
         nameTo.setVisible(true);
         buttonCancel.setVisible(true);
@@ -177,7 +177,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
 
         setTitle("Incoming");
 
-        nameTo.setText(fromWho.toString());
+        nameTo.setText(fromWho.prettyString());
 
         if (conversationInfo.length() == 0) {
             this.conversationInfo.setVisible(false);

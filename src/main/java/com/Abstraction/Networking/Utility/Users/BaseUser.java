@@ -121,6 +121,10 @@ public class BaseUser implements Cloneable {
         return Objects.hash(name, id);
     }
 
+    public String prettyString(){
+        return name + " - " + id;
+    }
+
     /**
      * Static factory from string
      *
@@ -160,7 +164,7 @@ public class BaseUser implements Cloneable {
 
     public static BaseUser[] parseUsers(String data) {
         String[] split = data.split("\n");
-        return Arrays.stream(split).map(String::trim).filter(s ->
+        return Arrays.stream(split)/*.map(String::trim)*/.filter(s ->
                 BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }
 

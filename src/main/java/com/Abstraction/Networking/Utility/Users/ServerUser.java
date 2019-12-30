@@ -1,5 +1,6 @@
 package com.Abstraction.Networking.Utility.Users;
 
+import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Writers.ServerWriter;
 
@@ -17,6 +18,7 @@ public class ServerUser extends UserWithLock {
 
 
     private final ServerWriter writer;
+    private final BaseReader reader;
 
     /**
      * Shows in conversation you are or not
@@ -25,14 +27,16 @@ public class ServerUser extends UserWithLock {
     private volatile Conversation conversation;
 
 
-    public ServerUser(String name, int id, ServerWriter writer) {
+    public ServerUser(String name, int id, ServerWriter writer, BaseReader reader) {
         super(name, id);
         this.writer = writer;
+        this.reader = reader;
     }
 
-    public ServerUser(BaseUser user, ServerWriter writer){
+    public ServerUser(BaseUser user, ServerWriter writer, BaseReader reader){
         super(user.getName(), user.getId(), user.getSharedKey(), user.getAlgorithmParameters());
         this.writer = writer;
+        this.reader = reader;
     }
 
 
@@ -51,5 +55,9 @@ public class ServerUser extends UserWithLock {
 
     public ServerWriter getWriter() {
         return writer;
+    }
+
+    public BaseReader getReader() {
+        return reader;
     }
 }

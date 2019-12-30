@@ -19,6 +19,7 @@ public class Test {
 
         AlgorithmsTest.testStringToByteAndOtherwise();
         AlgorithmsTest.usersTest();
+        EncryptionDecryptionTest.encryptDecryptTest();
 
         int alo = -1;
         assert (byte) alo == -1;
@@ -134,7 +135,7 @@ public class Test {
         Cipher bobCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         bobCipher.init(Cipher.ENCRYPT_MODE, bobAesKey);
 //        byte[] clearText = "This is just an example".getBytes();
-        byte[] clearText = "This is just an exampleThis is just an exampleThis is just an exampleThis is just an exampleThis is just an exampleThis is just an example".getBytes();
+        byte[] clearText = "1".getBytes();
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(clearText);
         ByteBuffer secret = ByteBuffer.allocate(byteBuffer.capacity() + 16);
@@ -166,8 +167,15 @@ public class Test {
         bobCipher.init(Cipher.DECRYPT_MODE, bobAesKey, bobCipher.getParameters());
         byte[] bobDecryptedAliceString = bobCipher.doFinal(aliceEncryptedString);
 
+        assert Arrays.equals(encodedParams, bobCipher.getParameters().getEncoded()) : "Params are changed";
+
         assert Arrays.equals(clearText, bobDecryptedAliceString) : "Text isn't the same";
         System.out.printf("%s\t%s\t%s\n", new String(clearText), new String(recovered), new String(bobDecryptedAliceString));
+
+
+        //Third dude who received everything before encryption
+        Cipher carlCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        aliceCipher.init(Cipher.DECRYPT_MODE, aliceAesKey, aesParams);
 
         /*
          * Alice decrypts, using AES in CBC mode

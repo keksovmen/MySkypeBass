@@ -2,14 +2,13 @@ package com.Abstraction.Networking.Writers;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Util.Cryptographics.Crypto;
 
 import javax.crypto.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.util.function.Function;
 
 /**
@@ -30,11 +29,6 @@ public class CipherWriter extends PlainWriter {
 
     private final Cipher encoder;
 
-    /**
-     * Command, could return null, Integer is {@link BaseUser#getId()}
-     */
-
-    private final Function<Integer, BaseUser> userFetcher;
 
     /**
      * Dynamically changes its size, through it's allocate static method
@@ -45,12 +39,17 @@ public class CipherWriter extends PlainWriter {
     private ByteBuffer cipherBuffer;
 
 
-    public CipherWriter(OutputStream outputStream, int bufferSize, Function<Integer, BaseUser> userFetcher) throws NoSuchPaddingException, NoSuchAlgorithmException {
+    public CipherWriter(OutputStream outputStream, int bufferSize, Key key, AlgorithmParameters parameters) {
         super(outputStream, bufferSize);
-        this.userFetcher = userFetcher;
 
-        encoder = Cipher.getInstance("AES/CBC/PKCS5Padding");
-//        encoder.init(Cipher.ENCRYPT_MODE, sharedKey, parameterSpec);
+        encoder = Crypto.getCipherWithoutExceptions(Crypto.STANDARD_CIPHER_FORMAT);
+        try {
+            encoder.init(Cipher.ENCRYPT_MODE, key, parameters);
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (InvalidAlgorithmParameterException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -60,18 +59,10 @@ public class CipherWriter extends PlainWriter {
     }
 
     protected AbstractDataPackage encryptGivenPackage(AbstractDataPackage dataPackage) {
-        if (dataPackage.getData().length == 0)
+        if (!checkPackageForEncoding(dataPackage))
             return dataPackage;
 
         ByteBuffer plaintData = ByteBuffer.wrap(dataPackage.getData());
-        if (!initCipher(dataPackage.getHeader().getTo())){
-            /*
-            Handle missing dude in underlying model
-            Maybe just ignore message sending
-            Or send it anyway, dude probably disconnected from server, won't do much harm
-            */
-            return dataPackage;
-        }
         int size = encode(plaintData);
         byte[] data = new byte[size];
         cipherBuffer.flip();
@@ -79,6 +70,10 @@ public class CipherWriter extends PlainWriter {
         dataPackage.setData(data);
 
         return dataPackage;
+    }
+
+    protected boolean checkPackageForEncoding(AbstractDataPackage dataPackage){
+        return dataPackage.getHeader().getLength() != 0;
     }
 
     private int encode(ByteBuffer input) {
@@ -115,18 +110,18 @@ public class CipherWriter extends PlainWriter {
         return input.capacity() + encoder.getBlockSize();
     }
 
-    private boolean initCipher(int id){
-        BaseUser user = userFetcher.apply(id);
-        if (user == null){
-            //handle not existence of user in underlying model
-            return false;
-        }
-        try {
-            encoder.init(Cipher.ENCRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameters());
-        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
+//    private boolean initCipher(int id){
+//        BaseUser user = userFetcher.apply(id);
+//        if (user == null){
+//            //handle not existence of user in underlying model
+//            return false;
+//        }
+//        try {
+//            encoder.init(Cipher.ENCRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameters());
+//        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
+//            e.printStackTrace();
+//            return false;
+//        }
+//        return true;
+//    }
 }

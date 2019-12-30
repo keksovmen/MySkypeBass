@@ -1,11 +1,15 @@
 package com.Abstraction.Networking.Servers;
 
+import com.Abstraction.Networking.Handlers.ServerHandler;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -148,6 +152,10 @@ public abstract class AbstractServer implements Starting {
      */
 
     protected abstract void acceptSocket(Socket socket);
+
+    protected abstract ServerHandler createServerHandler(Socket socket, ServerUser user);
+
+    protected abstract Writer createWriterForUser(OutputStream outputStream, BaseUser cipherInfo);
 
     /**
      * Server loop for it's main thread
