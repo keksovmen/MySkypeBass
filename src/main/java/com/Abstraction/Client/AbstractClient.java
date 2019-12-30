@@ -15,6 +15,7 @@ import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
+import com.Abstraction.Util.Cryptographics.BaseClientCryptoHelper;
 import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
@@ -115,8 +116,21 @@ public abstract class AbstractClient implements Logic {
             }
             isSecureConnection = true;
 
+            BaseClientCryptoHelper clientCryptoHelper = new BaseClientCryptoHelper();
+            clientCryptoHelper.initialiseKeyGenerator();
+            writer.writePublicKeyEncoded(clientCryptoHelper.getPublicKeyEncoded());
+            AbstractDataPackagePool.returnPackage(read);
 
-            return null;
+            read = reader.read();
+            clientCryptoHelper.finishExchange(read.getData());
+            AbstractDataPackagePool.returnPackage(read);
+
+            read = reader.read();
+            clientCryptoHelper.setAlgorithmParametersEncoded(read.getData());
+            AbstractDataPackagePool.returnPackage(read);
+
+
+            return new ClientUser(new BaseUser(myName, myID, clientCryptoHelper.getKey(), clientCryptoHelper.getParameters()), writer, reader);
         }else {
             //error
             return null;

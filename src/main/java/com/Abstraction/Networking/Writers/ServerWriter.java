@@ -141,4 +141,20 @@ public class ServerWriter implements Writer {
                 me
         ));
     }
+
+    public void writeCipherMode(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_CIPHER_MODE, WHO.SERVER.getCode(), to));
+    }
+
+    public void writePlainMode(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_PLAIN_MODE, WHO.SERVER.getCode(), to));
+    }
+
+    public void writePublicKeyEncoded(int to, byte[] key) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, WHO.SERVER.getCode(), to, key));
+    }
+
+    public void writeAlgorithmParams(int to, byte[] params) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_ALGORITHM_PARAMETERS_ENCODED, WHO.SERVER.getCode(), to, params));
+    }
 }

@@ -8,9 +8,11 @@ import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
+import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Util.Cryptographics.BaseServerCryptoHelper;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 
@@ -69,7 +71,7 @@ public class SimpleServer extends AbstractServer {
 
     protected SimpleServer(int port, int sampleRate, int sampleSizeInBits)
             throws IOException, ProtocolValueException {
-        super(port);
+        super(port, false);
         BUFFER_SIZE_FOR_IO = Resources.getInstance().getBufferSize() * 1024;
         try {
             MIC_CAPTURE_SIZE = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
@@ -151,7 +153,24 @@ public class SimpleServer extends AbstractServer {
             final int id = getIdAndIncrement();
             writer.writeId(id);
 
-            return new ServerUser(name, id, writer);
+            if (isCipherMode){
+                writer.writeCipherMode(id);
+                dataPackage = reader.read();
+
+                BaseServerCryptoHelper cryptoHelper = new BaseServerCryptoHelper();
+                cryptoHelper.initialiseKeyGenerator(dataPackage.getData());
+                AbstractDataPackagePool.returnPackage(dataPackage);
+
+                writer.writePublicKeyEncoded(id, cryptoHelper.getPublicKeyEncoded());
+                writer.writeAlgorithmParams(id, cryptoHelper.getAlgorithmParametersEncoded());
+
+
+                return new ServerUser(new BaseUser(name, id, cryptoHelper.getKey(), cryptoHelper.getParameters()), writer);
+            }else {
+                writer.writePlainMode(id);
+                return new ServerUser(name, id, writer);
+            }
+
 
         } catch (IOException e) {
             return null;

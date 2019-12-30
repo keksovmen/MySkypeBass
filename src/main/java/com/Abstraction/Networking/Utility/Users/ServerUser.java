@@ -30,6 +30,13 @@ public class ServerUser extends UserWithLock {
         this.writer = writer;
     }
 
+    public ServerUser(BaseUser user, ServerWriter writer){
+        super(user.getName(), user.getId(), user.getSharedKey(), user.getAlgorithmParameters());
+        this.writer = writer;
+    }
+
+
+
     public Conversation getConversation() {
         return conversation;
     }

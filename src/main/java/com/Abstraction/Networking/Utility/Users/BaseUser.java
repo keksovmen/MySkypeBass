@@ -68,14 +68,14 @@ public class BaseUser implements Cloneable {
     }
 
     public Key getSharedKey() {
-        if (sharedKey == null)
-            throw new NullPointerException("Was created without cipher parameters");
+//        if (sharedKey == null)
+//            throw new NullPointerException("Was created without cipher parameters");
         return sharedKey;
     }
 
     public AlgorithmParameters getAlgorithmParameters() {
-        if (algorithmParameters == null)
-            throw new NullPointerException("Was created without cipher parameters");
+//        if (algorithmParameters == null)
+//            throw new NullPointerException("Was created without cipher parameters");
         return algorithmParameters;
     }
 

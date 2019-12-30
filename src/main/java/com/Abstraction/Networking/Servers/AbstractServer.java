@@ -25,6 +25,8 @@ public abstract class AbstractServer implements Starting {
 
     protected final ExecutorService executorService;
 
+    protected final boolean isCipherMode;
+
     /**
      * Indicator of activity state
      */
@@ -32,8 +34,9 @@ public abstract class AbstractServer implements Starting {
     private volatile boolean isWorking;
 
 
-    public AbstractServer(int port) throws IOException {
+    public AbstractServer(int port, boolean isCipherMode) throws IOException {
         serverSocket = new ServerSocket(port);
+        this.isCipherMode = isCipherMode;
         executorService = createService();
 
         isWorking = false;
