@@ -2,6 +2,7 @@ package com.Abstraction.Audio.Helper;
 
 import com.Abstraction.Audio.Input.AudioInputLine;
 import com.Abstraction.Audio.Misc.AbstractAudioFormat;
+import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Audio.Output.AudioOutputLine;
 
@@ -17,7 +18,7 @@ public abstract class AudioHelper {
      * Default format received  from server on successful connection
      */
 
-    private AbstractAudioFormat defaultFormat;
+    private AbstractAudioFormatWithMic defaultFormat;
 
     /**
      * Obtains and opens output line for specific audio format
@@ -103,27 +104,27 @@ public abstract class AudioHelper {
     public abstract Map<Integer, String> getInputLines();
 
     /**
-     * Must check if format received from a server is appropriate, and if so to {@link #setDefaultFormat(AbstractAudioFormat)}
+     * Must check if format received from a server is appropriate, and if so to {@link #setDefaultFormat(AbstractAudioFormatWithMic)}
      *
-     * @param formatAndCaptureSize see {@link com.Abstraction.Util.FormatWorker#getFullAudioPackage(AbstractAudioFormat, int)}
+     * @param format
      * @return true if can work with given format false otherwise
      */
 
-    public abstract boolean isFormatSupported(String formatAndCaptureSize);
+    public abstract boolean isFormatSupported(AbstractAudioFormatWithMic format);
 
     /**
      * @return audio format received from a server
      */
 
-    public AbstractAudioFormat getDefaultAudioFormat() {
+    public AbstractAudioFormatWithMic getDefaultAudioFormat() {
         return defaultFormat;
     }
 
     /**
-     * @param format to set as default {@link #isFormatSupported(String)}
+     * @param format to set as default {@link #isFormatSupported(AbstractAudioFormatWithMic)}
      */
 
-    protected void setDefaultFormat(AbstractAudioFormat format) {
+    protected void setDefaultFormat(AbstractAudioFormatWithMic format) {
         defaultFormat = format;
     }
 }

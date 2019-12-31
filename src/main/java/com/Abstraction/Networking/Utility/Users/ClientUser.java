@@ -3,6 +3,9 @@ package com.Abstraction.Networking.Utility.Users;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Writers.ClientWriter;
 
+import java.security.AlgorithmParameters;
+import java.security.Key;
+
 /**
  * Represent client side user
  */
@@ -29,8 +32,8 @@ public class ClientUser extends UserWithLock {
         this.reader = reader;
     }
 
-    public ClientUser(BaseUser user, ClientWriter writer, BaseReader reader) {
-        super(user.getName(), user.getId(), user.getSharedKey(), user.getAlgorithmParameters());
+    public ClientUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ClientWriter writer, BaseReader reader) {
+        super(name, id, sharedKey, algorithmParameters);
         this.writer = writer;
         this.reader = reader;
     }

@@ -1,5 +1,7 @@
 package com.Abstraction.Util;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -166,5 +168,14 @@ public class Algorithms {
             result[i] = list.get(i);
         }
         return result;
+    }
+
+    public static void closeSocketThatCouldBeClosed(Socket socket)
+    {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+            //already closed
+        }
     }
 }

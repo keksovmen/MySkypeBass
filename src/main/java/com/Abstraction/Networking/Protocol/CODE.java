@@ -16,7 +16,7 @@ public enum CODE {
     SEND_NAME(1),   //Uses when first time connect to server
     SEND_AUDIO_FORMAT(2),//sends audio format
     SEND_APPROVE(3),//when audio format is appropriate or call accepted
-    SEND_DENY(4),   // not used
+    SEND_AUDIO_FORMAT_DENY(4),   // in authenticate show is audio format not acceptable
     SEND_ID(5),     //server sends your unique id
     SEND_USERS(6),  //sendSound request or response with users on server
     SEND_MESSAGE(7),//When client sendSound message to another client, or to conference
@@ -37,7 +37,11 @@ public enum CODE {
     SEND_SERVER_CIPHER_MODE(22), // when you trying to call some one but you both in conversations
     SEND_SERVER_PLAIN_MODE(23), // when you trying to call some one but you both in conversations
     SEND_PUBLIC_ENCODED_KEY(24), // when you trying to call some one but you both in conversations
-    SEND_ALGORITHM_PARAMETERS_ENCODED(25); // when you trying to call some one but you both in conversations
+    SEND_ALGORITHM_PARAMETERS_ENCODED(25), // when you trying to call some one but you both in conversations
+    SEND_AUDIO_FORMAT_ACCEPT(26),   // in authenticate show is audio format not acceptable
+    SEND_CIPHER_MODE_ACCEPTED(27),   // in authenticate show is audio format not acceptable
+    SEND_CIPHER_MODE_DENIED(28);   // in authenticate show is audio format not acceptable
+
 
 
     private static boolean checked = false;

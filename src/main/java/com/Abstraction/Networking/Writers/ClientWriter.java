@@ -78,8 +78,12 @@ public class ClientWriter implements Writer {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CALL, myID, to));
     }
 
-    public void writeApproveAudioFormat(int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_APPROVE, myID, to));
+    public void writeApproveAudioFormat() throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_ACCEPT, myID, WHO.SERVER.getCode()));
+    }
+
+    public void writeDeclineAudioFormat() throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_DENY, myID, WHO.SERVER.getCode()));
     }
 
     public void writeAccept(int to) throws IOException {
@@ -108,6 +112,14 @@ public class ClientWriter implements Writer {
 
     public void writePublicKeyEncoded(byte[] encodedPubKey) throws IOException {
         write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, myID, WHO.SERVER.getCode(),encodedPubKey));
+    }
+
+    public void writeCipherModeAccepted() throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_ACCEPTED, myID, WHO.SERVER.getCode()));
+    }
+
+    public void writeCipherModeDenied() throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_DENIED, myID, WHO.SERVER.getCode()));
     }
 
 }

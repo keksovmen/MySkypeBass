@@ -135,6 +135,14 @@ public class Frame implements CompositeComponent {
 
                     break;
                 }
+                case CIPHER_FORMAT_IS_NOT_ACCEPTED:{
+                    showErrorMessage((String) data[0]);
+                    break;
+                }
+                case CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED:{
+                    showErrorMessage((String) data[0]);
+                    break;
+                }
             }
 
             callDialog.observe(action, data);

@@ -7,7 +7,7 @@ package com.Abstraction.Pipeline;
 public enum BUTTONS {
     CONNECT, //data[0] is my name as String, data[1] is host name as String, data[2] is port as String
     DISCONNECT, // no data
-    CREATE_SERVER, //data[0] is port, data[1] is sample rate, data[2] is sample size everything as String
+    CREATE_SERVER, //data[0] is port, data[1] is sample rate, data[2] is sample size everything as String, data[3] is Boolean encryption mode
     SEND_MESSAGE, //data[0] is message as String, data[1] is id of receiver as Integer
     CALL, // data[0] is BaseUser who you trying to call
     EXIT_CONFERENCE, // no data

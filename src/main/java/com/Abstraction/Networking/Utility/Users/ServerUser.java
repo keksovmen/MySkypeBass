@@ -4,6 +4,9 @@ import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Writers.ServerWriter;
 
+import java.security.AlgorithmParameters;
+import java.security.Key;
+
 /**
  * SimpleServer version of a user
  *
@@ -33,13 +36,11 @@ public class ServerUser extends UserWithLock {
         this.reader = reader;
     }
 
-    public ServerUser(BaseUser user, ServerWriter writer, BaseReader reader){
-        super(user.getName(), user.getId(), user.getSharedKey(), user.getAlgorithmParameters());
+    public ServerUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ServerWriter writer, BaseReader reader) {
+        super(name, id, sharedKey, algorithmParameters);
         this.writer = writer;
         this.reader = reader;
     }
-
-
 
     public Conversation getConversation() {
         return conversation;

@@ -1,28 +1,26 @@
 package com.Abstraction.Client;
 
-import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
-import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Protocol.CODE;
-import com.Abstraction.Networking.Protocol.DataPackagePool;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
-import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Networking.Writers.CipherWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
+import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
-import com.Abstraction.Util.Cryptographics.BaseClientCryptoHelper;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -50,7 +48,11 @@ public abstract class AbstractClient implements Logic {
 
     protected final Executor executor;
 
-//    protected ClientUser user;
+    /**
+     * For handling connection on client and server sides
+     */
+
+    protected final Authenticator authenticator;
 
     /**
      * Help with server incoming messages
@@ -72,73 +74,73 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
-//        networkHelper = createNetworkHelper();
+        authenticator = createAutenticator();
 
     }
 
-    /**
-     * Authenticate procedure {@link com.Abstraction.Networking.Servers.AbstractServer} has similar
-     * In future there will be flag indicating is connection ciphered or not
-     * Default implementation
-     *
-     * @param reader to read data
-     * @param writer to send to the server
-     * @param myName to send for authenticate
-     * @return my id or {@link WHO#NO_NAME}
-     */
-
-    public BaseUser authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
-        writer.writeName(myName);
-
-        AbstractDataPackage read = reader.read();
-        String formatAndCaptureSizeAsString = read.getDataAsString();
-        DataPackagePool.returnPackage(read);
-
-        //sets audio format and tell the server can speaker play format or not
-        if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
-            writer.writeDeny(WHO.SERVER.getCode());
-            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
-            throw new IOException("Audio format not accepted");
-        }
-        writer.writeApproveAudioFormat(WHO.SERVER.getCode());
-        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
-
-        read = reader.read();
-        int myID = read.getHeader().getTo();
-        AbstractDataPackagePool.returnPackage(read);
-
-        read = reader.read();
-        if (read.getHeader().getCode().equals(CODE.SEND_SERVER_PLAIN_MODE)) {
-            isSecureConnection = false;
-            return new BaseUser(myName, myID);
-        } else if (read.getHeader().getCode().equals(CODE.SEND_SERVER_CIPHER_MODE)) {
-            if (!Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)){
-                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
-                throw new IOException("Your system can't handle given cipher algorithm - " + Crypto.STANDARD_CIPHER_FORMAT);
-            }
-            isSecureConnection = true;
-
-            BaseClientCryptoHelper clientCryptoHelper = new BaseClientCryptoHelper();
-            clientCryptoHelper.initialiseKeyGenerator();
-            writer.writePublicKeyEncoded(clientCryptoHelper.getPublicKeyEncoded());
-            AbstractDataPackagePool.returnPackage(read);
-
-            read = reader.read();
-            clientCryptoHelper.finishExchange(read.getData());
-            AbstractDataPackagePool.returnPackage(read);
-
-            read = reader.read();
-            clientCryptoHelper.setAlgorithmParametersEncoded(read.getData());
-            AbstractDataPackagePool.returnPackage(read);
-
-
-            return new ClientUser(new BaseUser(myName, myID, clientCryptoHelper.getKey(), clientCryptoHelper.getParameters()), writer, reader);
-        }else {
-            //error
-            return null;
-        }
-
-    }
+//    /**
+//     * Authenticate procedure {@link com.Abstraction.Networking.Servers.AbstractServer} has similar
+//     * In future there will be flag indicating is connection ciphered or not
+//     * Default implementation
+//     *
+//     * @param reader to read data
+//     * @param writer to send to the server
+//     * @param myName to send for authenticate
+//     * @return my id or {@link WHO#NO_NAME}
+//     */
+//
+//    public BaseUser authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
+//        writer.writeName(myName);
+//
+//        AbstractDataPackage read = reader.read();
+//        String formatAndCaptureSizeAsString = read.getDataAsString();
+//        DataPackagePool.returnPackage(read);
+//
+//        //sets audio format and tell the server can speaker play format or not
+//        if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
+//            writer.writeDeclineAudioFormat();
+//            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
+//            throw new IOException("Audio format not accepted");
+//        }
+//        writer.writeApproveAudioFormat();
+//        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
+//
+//        read = reader.read();
+//        int myID = read.getHeader().getTo();
+//        AbstractDataPackagePool.returnPackage(read);
+//
+//        read = reader.read();
+//        if (read.getHeader().getCode().equals(CODE.SEND_SERVER_PLAIN_MODE)) {
+//            isSecureConnection = false;
+//            return new BaseUser(myName, myID);
+//        } else if (read.getHeader().getCode().equals(CODE.SEND_SERVER_CIPHER_MODE)) {
+//            if (!Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)){
+//                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
+//                throw new IOException("Your system can't handle given cipher algorithm - " + Crypto.STANDARD_CIPHER_FORMAT);
+//            }
+//            isSecureConnection = true;
+//
+//            BaseClientCryptoHelper clientCryptoHelper = new BaseClientCryptoHelper();
+//            clientCryptoHelper.initialiseKeyGenerator();
+//            writer.writePublicKeyEncoded(clientCryptoHelper.getPublicKeyEncoded());
+//            AbstractDataPackagePool.returnPackage(read);
+//
+//            read = reader.read();
+//            clientCryptoHelper.finishExchange(read.getData());
+//            AbstractDataPackagePool.returnPackage(read);
+//
+//            read = reader.read();
+//            clientCryptoHelper.setAlgorithmParametersEncoded(read.getData());
+//            AbstractDataPackagePool.returnPackage(read);
+//
+//
+//            return new ClientUser(new BaseUser(myName, myID, clientCryptoHelper.getKey(), clientCryptoHelper.getParameters()), writer, reader);
+//        }else {
+//            //error
+//            return null;
+//        }
+//
+//    }
 
     @Override
     public void notifyObservers(ACTIONS action, Object[] data) {
@@ -211,6 +213,10 @@ public abstract class AbstractClient implements Logic {
 
     protected abstract String createDefaultName();
 
+    protected Authenticator createAutenticator() {
+        return new Authenticator();
+    }
+
     protected final void plainNotify(ACTIONS actions) {
         notifyObservers(actions, null);
     }
@@ -226,56 +232,58 @@ public abstract class AbstractClient implements Logic {
         }
 
         String[] strings = validateConnectData(data);
-        if (strings == null) {
-            return;
-        }
+        if (strings == null) return;
+
 
         Socket socket = new Socket();
         String myName = strings[0];
 
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
         try {
             socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
-            BaseReader reader = new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
-            OutputStream outputStream = socket.getOutputStream();
-
-            BaseUser authenticate = authenticate(
-                    reader,
-                    new ClientWriter(new PlainWriter(outputStream, Resources.getInstance().getBufferSize())),
-                    myName
-            );
-
-            ClientUser me = new ClientUser(authenticate, new ClientWriter(createWriterForClient(outputStream, authenticate), authenticate.getId()), reader);
-            model.setMyself(me);
-            networkHelper = createNetworkHelper(socket);
-            networkHelper.start("Client network helper / reader");
-            stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.prettyString());
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
         } catch (IOException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-                //already closed
-            }
+            Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
 
-        /*
-        Check cipher flag
-        Create ClientUser and set it to model
-        Create ClientNetworkHandler which in future can be 2 types cipher and plain, so need some creation patterns
-        */
+        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, myName);
+        if (storage.isNetworkFailure) {
+            plainNotify(ACTIONS.CONNECT_FAILED);
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+        if (!storage.isAudioFormatAccepted) {
+            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, storage.audioFormat.toString());
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, storage.audioFormat.toString());
+
+        isSecureConnection = storage.isSecureConnection;
+        if (storage.isSecureConnection) {
+            if (!storage.isSecureConnectionAccepted) {
+                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
+                Algorithms.closeSocketThatCouldBeClosed(socket);
+                return;
+            }
+        }
 
 
-//        try {
-//            if (networkHelper.start(strings[0], socket)) {
-//                stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
-//            }else {
-//                stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, user.toString());
-//            }
-//        } catch (IOException e) {
-//
-//            networkHelper.close();
-//        }
+        ClientUser me = createClientUser(storage, outputStream, inputStream);
+        model.setMyself(me);
+        networkHelper = createNetworkHelper(socket);
+        networkHelper.start("Client network helper / reader");
+        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.prettyString());
+        try {
+            me.getWriter().writeUsersRequest();
+        } catch (IOException ignored) {
+            //networkHelper exception handler will handle it
+        }
+
     }
 
     protected void onDisconnect() {
@@ -394,11 +402,31 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected PlainWriter createWriterForClient(OutputStream outputStream, BaseUser cipherInfo) {
-        if (isSecureConnection) {
-            return new CipherWriter(outputStream, Resources.getInstance().getBufferSize(), cipherInfo.getSharedKey(), cipherInfo.getAlgorithmParameters());
+    protected Writer createWriterForClient(OutputStream outputStream, Authenticator.ClientStorage storage) {
+        if (storage.isSecureConnection) {
+            return new CipherWriter(outputStream, Resources.getInstance().getBufferSize(), storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
         } else {
             return new PlainWriter(outputStream, Resources.getInstance().getBufferSize());
+        }
+    }
+
+    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream) {
+        if (storage.isSecureConnection) {
+            return new ClientUser(
+                    storage.name,
+                    storage.myID,
+                    storage.cryptoHelper.getKey(),
+                    storage.cryptoHelper.getParameters(),
+                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+            );
+        } else {
+            return new ClientUser(
+                    storage.name,
+                    storage.myID,
+                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+            );
         }
     }
 

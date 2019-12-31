@@ -28,6 +28,7 @@ public class AudioFormatStats implements ButtonsHandler {
     private JRadioButton a16RadioButton;
     private JFormattedTextField customRate;
     private JFormattedTextField textFieldPort;
+    private JCheckBox encryptionCheckBox;
 
     private final ButtonsHandler helpHandlerPredecessor;
 
@@ -72,7 +73,7 @@ public class AudioFormatStats implements ButtonsHandler {
     private void onOK() {
         handleRequest(
                 BUTTONS.CREATE_SERVER,
-                new Object[]{getPort(), getSampleRate(), getSampleSize()}
+                new Object[]{getPort(), getSampleRate(), getSampleSize(), getEncryption()}
         );
     }
 
@@ -90,6 +91,10 @@ public class AudioFormatStats implements ButtonsHandler {
 
     private String getSampleSize() {
         return a8RadioButton.isSelected() ? "8" : "16";
+    }
+
+    private Boolean getEncryption(){
+        return encryptionCheckBox.isSelected();
     }
 
     private void createUIComponents() {

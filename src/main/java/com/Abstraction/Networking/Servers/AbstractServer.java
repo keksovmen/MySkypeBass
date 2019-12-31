@@ -2,6 +2,7 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Networking.Handlers.ServerHandler;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.ServerWriter;
@@ -9,6 +10,7 @@ import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -31,6 +33,8 @@ public abstract class AbstractServer implements Starting {
 
     protected final boolean isCipherMode;
 
+    protected final Authenticator authenticator;
+
     /**
      * Indicator of activity state
      */
@@ -38,9 +42,10 @@ public abstract class AbstractServer implements Starting {
     private volatile boolean isWorking;
 
 
-    public AbstractServer(int port, boolean isCipherMode) throws IOException {
+    public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator) throws IOException {
         serverSocket = new ServerSocket(port);
         this.isCipherMode = isCipherMode;
+        this.authenticator = authenticator;
         executorService = createService();
 
         isWorking = false;
@@ -68,15 +73,15 @@ public abstract class AbstractServer implements Starting {
         }
     }
 
-    /**
-     * Method for deciding add user on this server or not
-     *
-     * @param reader to read input
-     * @param writer to write commands
-     * @return null if user is not good enough to join our community
-     */
-
-    public abstract ServerUser authenticate(BaseReader reader, ServerWriter writer);
+//    /**
+//     * Method for deciding add user on this server or not
+//     *
+//     * @param reader to read input
+//     * @param writer to write commands
+//     * @return null if user is not good enough to join our community
+//     */
+//
+//    public abstract ServerUser authenticate(BaseReader reader, ServerWriter writer);
 
     /**
      * Basically adds user in an underlying collection
@@ -155,7 +160,9 @@ public abstract class AbstractServer implements Starting {
 
     protected abstract ServerHandler createServerHandler(Socket socket, ServerUser user);
 
-    protected abstract Writer createWriterForUser(OutputStream outputStream, BaseUser cipherInfo);
+    protected abstract Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream);
+
+    protected abstract ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream);
 
     /**
      * Server loop for it's main thread
