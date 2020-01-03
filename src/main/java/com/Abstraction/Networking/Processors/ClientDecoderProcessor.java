@@ -26,10 +26,14 @@ public class ClientDecoderProcessor extends ClientProcessor {
     @Override
     public boolean process(AbstractDataPackage dataPackage) {
         //decrypt data in package if such exists
-//        if (!dataPackage.getHeader().getCode().equals(CODE.SEND_SOUND))
-//            System.out.println(dataPackage.getHeader());
         return super.process(decodeDataPackage(dataPackage));
     }
+
+    /**
+     * Will decode only if a package contains data, and have key to decode
+     * @param dataPackage to decode
+     * @return same package if there is no data and modified one if is
+     */
 
     protected AbstractDataPackage decodeDataPackage(AbstractDataPackage dataPackage) {
         if (dataPackage.getHeader().getLength() == 0)
@@ -39,6 +43,13 @@ public class ClientDecoderProcessor extends ClientProcessor {
         dataPackage.setData(decodeData(dataPackage.getData()));
         return dataPackage;
     }
+
+    /**
+     * Trying to initialise cipher with DECODE_MODE
+     * @param idOfDude to fetch key and algorithm params
+     * @param instruction of dataPackage
+     * @return true if cipher ready to decode, false if there is no such dude or exceptions
+     */
 
     protected boolean initCipher(int idOfDude, CODE instruction) {
         BaseUser user = getCorrespondUser(idOfDude, instruction);
@@ -54,6 +65,13 @@ public class ClientDecoderProcessor extends ClientProcessor {
         }
         return true;
     }
+
+    /**
+     * Fetch particular dude with key and algorithm, parameters
+     * @param idOfDude to fetch
+     * @param instruction to more specific task depend on server
+     * @return
+     */
 
     protected BaseUser getCorrespondUser(int idOfDude, CODE instruction) {
         switch (instruction) {

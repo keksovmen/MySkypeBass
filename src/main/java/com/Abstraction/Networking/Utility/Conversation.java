@@ -80,11 +80,11 @@ public class Conversation {
      */
 
     public synchronized void addDude(ServerUser dude, ServerUser except) {
-        users.forEach(serverController -> {
-            if (serverController.getId() == except.getId())
+        users.forEach(user -> {
+            if (user.getId() == except.getId())
                 return;
             try {
-                serverController.getWriter().writeAddToConv(dude.getId(), serverController.getId());
+                user.getWriter().writeAddToConv(dude.getId(), user.getId());
             } catch (IOException ignored) {
                 //who you send message is offline ignore it. His thread will handleDataPackageRouting shit
             }

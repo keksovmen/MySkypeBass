@@ -40,7 +40,8 @@ public enum CODE {
     SEND_ALGORITHM_PARAMETERS_ENCODED(25), // when you trying to call some one but you both in conversations
     SEND_AUDIO_FORMAT_ACCEPT(26),   // in authenticate show is audio format not acceptable
     SEND_CIPHER_MODE_ACCEPTED(27),   // in authenticate show is audio format not acceptable
-    SEND_CIPHER_MODE_DENIED(28);   // in authenticate show is audio format not acceptable
+    SEND_CIPHER_MODE_DENIED(28),   // in authenticate show is audio format not acceptable
+    SEND_ADD_WHOLE_CONVERSATION(29);   // contain string with all dudes to add in conversation model
 
 
 

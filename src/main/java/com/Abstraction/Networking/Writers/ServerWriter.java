@@ -157,4 +157,8 @@ public class ServerWriter implements Writer {
     public void writeAlgorithmParams(int to, byte[] params) throws IOException {
         write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_ALGORITHM_PARAMETERS_ENCODED, WHO.SERVER.getCode(), to, params));
     }
+
+    public void writeAddWholeConversation(int to, String dudes) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_ADD_WHOLE_CONVERSATION, WHO.SERVER.getCode(), to, dudes));
+    }
 }

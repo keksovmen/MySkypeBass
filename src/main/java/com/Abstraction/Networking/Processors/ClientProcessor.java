@@ -85,6 +85,8 @@ public class ClientProcessor implements Processable {
                 return onCallCanceled(dataPackage);
             case SEND_BOTH_IN_CONVERSATIONS:
                 return onBothInConversation(dataPackage);
+            case SEND_ADD_WHOLE_CONVERSATION:
+                return onAddWholeConversation(dataPackage);
         }
         return false;
     }
@@ -204,8 +206,7 @@ public class ClientProcessor implements Processable {
     protected boolean onCallAccept(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
         BaseUser dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
-
-        AbstractClient.callAcceptRoutine(dude, dataPackage.getDataAsString(), logic, model);
+        AbstractClient.callAcceptRoutine(logic, model, dude);
         return true;
     }
 
@@ -231,6 +232,14 @@ public class ClientProcessor implements Processable {
         logic.notifyObservers(ACTIONS.BOTH_IN_CONVERSATION, new Object[]{
                 model.getUserMap().get(dataPackage.getHeader().getFrom())
         });
+        return true;
+    }
+
+    protected boolean onAddWholeConversation(AbstractDataPackage dataPackage){
+        BaseUser[] baseUsers = BaseUser.parseUsers(dataPackage.getDataAsString());
+        for (BaseUser user : baseUsers) {
+            model.addToConversation(user);
+        }
         return true;
     }
 }

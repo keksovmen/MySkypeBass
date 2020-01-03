@@ -5,6 +5,7 @@ import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
 
@@ -219,15 +220,18 @@ public class ServerProcessor implements Processable {
         Runnable release = doubleLock(me, receiver);
         //here goes atomic code
         Conversation conversation;
+        ServerUser receiverOfAllDudes = null;//dude who will get notification that contain all dudes in conversation, for that who is not in conversation
         if (me.inConversation()) {
             //add dude to conv and put all dudes from conf to notifyObservers him
             conversation = me.getConversation();
             dataPackage.setData(conversation.getAllToString(me));
             conversation.addDude(receiver, me);
+            receiverOfAllDudes = receiver;
         } else if (receiver.inConversation()) {
             //add me to dude's conv I already know about dudes in conf
             conversation = receiver.getConversation();
             conversation.addDude(me, receiver);
+            receiverOfAllDudes = me;
         } else {
             //create conv for us
             conversation = new Conversation(me, receiver);
@@ -238,6 +242,8 @@ public class ServerProcessor implements Processable {
 
         try {
             receiver.getWriter().transferPacket(dataPackage);
+            if (receiverOfAllDudes != null)
+                receiverOfAllDudes.getWriter().writeAddWholeConversation(receiverOfAllDudes.getId(), conversation.getAllToString(receiverOfAllDudes));
         } catch (IOException ignored) {
             //Dude disconnected before so it's thread will handle
         }

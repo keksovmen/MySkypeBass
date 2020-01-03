@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -349,7 +350,6 @@ public abstract class AbstractClient implements Logic {
 
     protected void onCallAccepted(Object[] data) {
         BaseUser dude = (BaseUser) data[0];
-        String others = (String) data[1];
 
         ClientUser myself = model.getMyself();
         myself.drop();
@@ -359,7 +359,7 @@ public abstract class AbstractClient implements Logic {
             //Handler and its reader thread will close connection on failure
             return;
         }
-        callAcceptRoutine(dude, others, this, model);
+        callAcceptRoutine(this, model, dude);
     }
 
     protected void onCallDenied(Object[] data) {
@@ -487,20 +487,25 @@ public abstract class AbstractClient implements Logic {
     }
 
 
-    /**
-     * For client side
-     *
-     * @param dude   who to add in a conversation
-     * @param others who may present in the conversation
-     * @param logic  what to notifyObservers about progress
-     * @param model  to modelObservation about progress
-     */
+//    /**
+//     * For client side
+//     *
+//     * @param dude   who to add in a conversation
+//     * @param others who may present in the conversation
+//     * @param logic  what to notifyObservers about progress
+//     * @param model  to modelObservation about progress
+//     */
 
-    public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {
+//    public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {
+//        logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
+//        model.addToConversation(dude);
+//        for (BaseUser baseUser : BaseUser.parseUsers(others)) {
+//            model.addToConversation(baseUser);
+//        }
+//    }
+
+    public static void callAcceptRoutine(Logic logic, ChangeableModel model, BaseUser user){
         logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
-        model.addToConversation(dude);
-        for (BaseUser baseUser : BaseUser.parseUsers(others)) {
-            model.addToConversation(baseUser);
-        }
+        model.addToConversation(user);
     }
 }
