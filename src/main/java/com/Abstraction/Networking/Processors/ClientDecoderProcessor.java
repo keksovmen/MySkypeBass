@@ -26,8 +26,8 @@ public class ClientDecoderProcessor extends ClientProcessor {
     @Override
     public boolean process(AbstractDataPackage dataPackage) {
         //decrypt data in package if such exists
-        if (!dataPackage.getHeader().getCode().equals(CODE.SEND_SOUND))
-            System.out.println(dataPackage.getHeader());
+//        if (!dataPackage.getHeader().getCode().equals(CODE.SEND_SOUND))
+//            System.out.println(dataPackage.getHeader());
         return super.process(decodeDataPackage(dataPackage));
     }
 

@@ -2,19 +2,15 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Networking.Handlers.ServerHandler;
-import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Networking.Writers.*;
 import com.Abstraction.Util.Algorithms;
-import com.Abstraction.Util.Cryptographics.BaseServerCryptoHelper;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -241,7 +237,7 @@ public class SimpleServer extends AbstractServer {
         StringBuilder stringBuilder = new StringBuilder(100);
         users.forEach((integer, user) -> {
             if (integer != exclusiveId) {
-                stringBuilder.append(user.toString()).append("\n");
+                stringBuilder.append(user.toNetworkFormat()).append("\n");
             }
         });
         return stringBuilder.toString();
@@ -310,7 +306,7 @@ public class SimpleServer extends AbstractServer {
 //        }
 
         ServerHandler serverHandler = createServerHandler(socket, user);
-        if (!serverHandler.start("Server - " + user.prettyString())) {
+        if (!serverHandler.start("Server - " + user.toString())) {
             //already started
         }
     }
@@ -389,7 +385,7 @@ public class SimpleServer extends AbstractServer {
                         try {
                             user.getWriter().writeAddToUserList(
                                     user.getId(),
-                                    userToAdd.toString()
+                                    userToAdd.toNetworkFormat()
                             );
                         } catch (IOException ignored) {
                             //If exception with io, it must be handled by corresponding thread not yours

@@ -227,7 +227,7 @@ public abstract class AbstractClient implements Logic {
 
     protected void onConnect(Object[] data) {
         if (networkHelper != null && networkHelper.isWorking()) {
-            stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, model.getMyself().prettyString());
+            stringNotify(ACTIONS.ALREADY_CONNECTED_TO_SERVER, model.getMyself().toString());
             return;
         }
 
@@ -277,7 +277,7 @@ public abstract class AbstractClient implements Logic {
         model.setMyself(me);
         networkHelper = createNetworkHelper(socket);
         networkHelper.start("Client network helper / reader");
-        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.prettyString());
+        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
         try {
             me.getWriter().writeUsersRequest();
         } catch (IOException ignored) {

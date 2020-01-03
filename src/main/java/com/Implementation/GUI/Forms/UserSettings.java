@@ -16,7 +16,7 @@ class UserSettings {
     private JPanel mainPane;
 
     UserSettings(BaseUser user, BiConsumer<Integer, Integer> changeVolume) {
-        this.name.setText(user.prettyString());
+        this.name.setText(user.toString());
 
         volumeLevel.addChangeListener(e -> changeVolume.accept(user.getId(), volumeLevel.getValue()));
     }

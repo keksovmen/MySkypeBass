@@ -1,12 +1,11 @@
 package com.Abstraction.Networking.Utility.Users;
 
 import com.Abstraction.Util.Algorithms;
+import com.Abstraction.Util.Cryptographics.Crypto;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.security.AlgorithmParameters;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -31,6 +30,9 @@ public class BaseUser implements Cloneable {
 
     /**
      * Shared secret with server and this dude
+     * <p>
+     * "Linked together with {@link #algorithmParameters}"
+     * if key is null then 100% params too
      */
 
     private final Key sharedKey;
@@ -68,38 +70,20 @@ public class BaseUser implements Cloneable {
     }
 
     public Key getSharedKey() {
-//        if (sharedKey == null)
-//            throw new NullPointerException("Was created without cipher parameters");
         return sharedKey;
     }
 
     public AlgorithmParameters getAlgorithmParameters() {
-//        if (algorithmParameters == null)
-//            throw new NullPointerException("Was created without cipher parameters");
         return algorithmParameters;
     }
 
     /**
-     * DO NOT OVERRIDE
-     * MANY FUNCTIONS EXPECT DATA IN THIS FORMAT
-     *
      * @return string representation
      */
 
     @Override
     public final String toString() {
-        String base = name + " - " + id;
-        String addition = "";
-        try {
-            addition = sharedKey == null ? "" :
-                    " : " + Algorithms.byteArrayToString(sharedKey.getEncoded()) +
-                            "- " + Algorithms.byteArrayToString(algorithmParameters.getEncoded());
-        } catch (IOException e) {
-            e.printStackTrace();
-            //won't happen i hope so
-        }
-
-        return base + addition;
+        return name + " - " + id;
     }
 
     @Override
@@ -121,8 +105,26 @@ public class BaseUser implements Cloneable {
         return Objects.hash(name, id);
     }
 
-    public String prettyString(){
-        return name + " - " + id;
+    /**
+     * Do not override server sends it and client parse in this format
+     * Must look same as {@link #parser}
+     *
+     * @return this user as a string withh full info to be parsed in {@link #parse(String)}
+     */
+
+    public final String toNetworkFormat() {
+        String base = name + " - " + id;
+        String addition = "";
+        try {
+            addition = sharedKey == null ? "" :
+                    " : " + Algorithms.byteArrayToString(sharedKey.getEncoded()) +
+                            "- " + Algorithms.byteArrayToString(algorithmParameters.getEncoded());
+        } catch (IOException e) {
+            e.printStackTrace();
+            //won't happen i hope so
+        }
+
+        return base + addition;
     }
 
     /**
@@ -136,22 +138,18 @@ public class BaseUser implements Cloneable {
         Matcher matcher = parser.matcher(data);
         if (!matcher.matches())
             throw new IllegalArgumentException("Base user is in wrong format - " + data);
-        String name = matcher.group(1);
-        String id = matcher.group(2);
+        final String name = matcher.group(1);
+        final int id = Integer.parseInt(matcher.group(2));
         String keyAndParam = matcher.group(3);
         if (keyAndParam == null) {
-            return new BaseUser(name, Integer.parseInt(id));
+            return new BaseUser(name, id);
         } else {
-            Key key = new SecretKeySpec(Algorithms.stringToByteArray(matcher.group(4)), "AES");
-            AlgorithmParameters parameters = null;
-            try {
-                parameters = AlgorithmParameters.getInstance("AES");
-                parameters.init(Algorithms.stringToByteArray(matcher.group(6)));
-            } catch (NoSuchAlgorithmException | IOException e) {
-                e.printStackTrace();
-                return new BaseUser(name, Integer.parseInt(id));
+            final Key key = Crypto.createCipherKey(matcher.group(4));
+            final AlgorithmParameters parameters = Crypto.createParameters(matcher.group(6));
+            if (parameters == null) {
+                return new BaseUser(name, id);
             }
-            return new BaseUser(name, Integer.parseInt(id), key, parameters);
+            return new BaseUser(name, id, key, parameters);
         }
     }
 
@@ -164,7 +162,7 @@ public class BaseUser implements Cloneable {
 
     public static BaseUser[] parseUsers(String data) {
         String[] split = data.split("\n");
-        return Arrays.stream(split)/*.map(String::trim)*/.filter(s ->
+        return Arrays.stream(split).filter(s ->
                 BaseUser.parser.matcher(s).matches()).map(BaseUser::parse).toArray(BaseUser[]::new);
     }
 

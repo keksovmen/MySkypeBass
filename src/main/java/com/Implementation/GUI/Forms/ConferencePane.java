@@ -247,7 +247,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
     }
 
     private void showMessage(BaseUser from, String message) {
-        showMessage(from.prettyString(), message);
+        showMessage(from.toString(), message);
     }
 
     private boolean sendMessage(String message) {

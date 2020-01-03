@@ -7,7 +7,6 @@ import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * Handle calls
@@ -146,7 +145,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
 
         setTitle("Calling");
 
-        nameTo.setText(who.prettyString());
+        nameTo.setText(who.toString());
 
         nameTo.setVisible(true);
         buttonCancel.setVisible(true);
@@ -177,7 +176,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
 
         setTitle("Incoming");
 
-        nameTo.setText(fromWho.prettyString());
+        nameTo.setText(fromWho.toString());
 
         if (conversationInfo.length() == 0) {
             this.conversationInfo.setVisible(false);

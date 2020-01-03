@@ -248,13 +248,13 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
             return;
         if (isCashed(selected)) {
             callTable.addTab(
-                    selected.prettyString(),
+                    selected.toString(),
                     new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()),
                     tabs.get(selected).getMainPane()
             );
         } else {
             callTable.addTab(
-                    selected.prettyString(),
+                    selected.toString(),
                     new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()),
                     createPane(selected).getMainPane());
         }
@@ -265,7 +265,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
             if (messagePane.isShown()) {
                 if (!model.contains(user)) {
                     callTable.setIconAt(
-                            callTable.indexOfTab(user.prettyString()),
+                            callTable.indexOfTab(user.toString()),
                             new ImageIcon(((DesktopResources) Resources.getInstance()).getOfflineIcon())
                     );
                 }
@@ -287,7 +287,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     }
 
     private boolean isShownAlready(BaseUser user) {
-        return isShownAlready(user.prettyString());
+        return isShownAlready(user.toString());
     }
 
     private boolean isCashed(BaseUser user) {
@@ -310,7 +310,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      */
 
     private MessagePane createPane(BaseUser user) {
-        MessagePane messagePane = new MessagePane(user, () -> closeTab(user.prettyString()), this);
+        MessagePane messagePane = new MessagePane(user, () -> closeTab(user.toString()), this);
         tabs.put(user, messagePane);
         return messagePane;
     }
@@ -337,15 +337,15 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
             } else {
                 if (isCashed(from)) {
                     MessagePane messagePane = tabs.get(from);
-                    callTable.addTab(from.prettyString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), messagePane.getMainPane());
+                    callTable.addTab(from.toString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), messagePane.getMainPane());
                     messagePane.showMessage(message, false);
                 } else {
                     MessagePane pane = createPane(from);
-                    callTable.addTab(from.prettyString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), pane.getMainPane());
+                    callTable.addTab(from.toString(), new ImageIcon(((DesktopResources) Resources.getInstance()).getOnlineIcon()), pane.getMainPane());
                     pane.showMessage(message, false);
                 }
             }
-            tabName = from.prettyString();
+            tabName = from.toString();
         }
         colorForMessage(callTable.indexOfTab(tabName));
     }
@@ -403,7 +403,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         usersList.setCellRenderer(new DefaultListCellRenderer(){
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, ((BaseUser)value).prettyString(), index, isSelected, cellHasFocus);
+                return super.getListCellRendererComponent(list, ((BaseUser)value).toString(), index, isSelected, cellHasFocus);
             }
 
         });

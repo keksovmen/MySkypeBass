@@ -135,7 +135,7 @@ public class Conversation {
         users.forEach(user -> {
             if (user.getId() == exclusive.getId())
                 return;
-            result.append(user.prettyString()).append("\n");
+            result.append(user.toString()).append("\n");
         });
         return result.toString();
     }

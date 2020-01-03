@@ -42,7 +42,7 @@ class MessagePane implements ButtonsHandler {
      */
 
     MessagePane(BaseUser forWho, Runnable closeTabAction, ButtonsHandler helpHandlerPredecessor) {
-        nameWho.setText(forWho.prettyString());
+        nameWho.setText(forWho.toString());
 
         sendButton.addActionListener(e -> sendMessage(forWho));
 

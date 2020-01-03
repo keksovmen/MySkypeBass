@@ -1,7 +1,13 @@
 package com.Abstraction.Util.Cryptographics;
 
+import com.Abstraction.Util.Algorithms;
+
 import javax.crypto.Cipher;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.IOException;
+import java.security.AlgorithmParameters;
+import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +24,6 @@ public class Crypto {
     }
 
     /**
-     *
      * @param cipher algorithm/mode/padding
      * @return true if can create such Cipher
      */
@@ -54,4 +59,54 @@ public class Crypto {
         return null;
     }
 
+    /**
+     * Create particular key
+     *
+     * @param key as {@link Key#getEncoded()}
+     * @return the key
+     */
+
+    public static Key createCipherKey(byte[] key) {
+        return new SecretKeySpec(key, STANDARD_CIPHEER_ALGORITM);
+    }
+
+    /**
+     * @param key as {@link Key#getEncoded()} then {@link Algorithms#byteArrayToString(byte[])}
+     * @return the key
+     */
+
+    public static Key createCipherKey(String key) {
+        return createCipherKey(Algorithms.stringToByteArray(key));
+    }
+
+    /**
+     * Create particular parameters for my implementation
+     *
+     * @param initializer as {@link AlgorithmParameters#getEncoded()}
+     * @return initialised parameters or null if input is ill formatted
+     */
+
+    public static AlgorithmParameters createParameters(byte[] initializer) {
+        try {
+            AlgorithmParameters instance = AlgorithmParameters.getInstance(STANDARD_CIPHEER_ALGORITM);
+            instance.init(initializer);
+            return instance;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            //Won't be thrown because Java specification reburies to implement AES algorithm
+        } catch (IOException e) {
+            e.printStackTrace();
+            //If input data is wrong
+        }
+        return null;
+    }
+
+    /**
+     * @param initializer as {@link AlgorithmParameters#getEncoded()} then {@link Algorithms#byteArrayToString(byte[])}
+     * @return initialised parameters or null if input is ill formatted
+     */
+
+    public static AlgorithmParameters createParameters(String initializer) {
+        return createParameters(Algorithms.stringToByteArray(initializer));
+    }
 }
