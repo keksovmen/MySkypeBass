@@ -26,13 +26,11 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /**
  * Represent client logic part
- * Contain ClientUser, ClientHandler -> ClientProcessor -> ClientController
  */
 
 public abstract class AbstractClient implements Logic {
@@ -75,73 +73,10 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
-        authenticator = createAutenticator();
+        authenticator = createAuthenticator();
 
     }
 
-//    /**
-//     * Authenticate procedure {@link com.Abstraction.Networking.Servers.AbstractServer} has similar
-//     * In future there will be flag indicating is connection ciphered or not
-//     * Default implementation
-//     *
-//     * @param reader to read data
-//     * @param writer to send to the server
-//     * @param myName to send for authenticate
-//     * @return my id or {@link WHO#NO_NAME}
-//     */
-//
-//    public BaseUser authenticate(BaseReader reader, ClientWriter writer, String myName) throws IOException {
-//        writer.writeName(myName);
-//
-//        AbstractDataPackage read = reader.read();
-//        String formatAndCaptureSizeAsString = read.getDataAsString();
-//        DataPackagePool.returnPackage(read);
-//
-//        //sets audio format and tell the server can speaker play format or not
-//        if (!AudioSupplier.getInstance().isFormatSupported(formatAndCaptureSizeAsString)) {
-//            writer.writeDeclineAudioFormat();
-//            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, formatAndCaptureSizeAsString);
-//            throw new IOException("Audio format not accepted");
-//        }
-//        writer.writeApproveAudioFormat();
-//        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, formatAndCaptureSizeAsString);
-//
-//        read = reader.read();
-//        int myID = read.getHeader().getTo();
-//        AbstractDataPackagePool.returnPackage(read);
-//
-//        read = reader.read();
-//        if (read.getHeader().getCode().equals(CODE.SEND_SERVER_PLAIN_MODE)) {
-//            isSecureConnection = false;
-//            return new BaseUser(myName, myID);
-//        } else if (read.getHeader().getCode().equals(CODE.SEND_SERVER_CIPHER_MODE)) {
-//            if (!Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)){
-//                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
-//                throw new IOException("Your system can't handle given cipher algorithm - " + Crypto.STANDARD_CIPHER_FORMAT);
-//            }
-//            isSecureConnection = true;
-//
-//            BaseClientCryptoHelper clientCryptoHelper = new BaseClientCryptoHelper();
-//            clientCryptoHelper.initialiseKeyGenerator();
-//            writer.writePublicKeyEncoded(clientCryptoHelper.getPublicKeyEncoded());
-//            AbstractDataPackagePool.returnPackage(read);
-//
-//            read = reader.read();
-//            clientCryptoHelper.finishExchange(read.getData());
-//            AbstractDataPackagePool.returnPackage(read);
-//
-//            read = reader.read();
-//            clientCryptoHelper.setAlgorithmParametersEncoded(read.getData());
-//            AbstractDataPackagePool.returnPackage(read);
-//
-//
-//            return new ClientUser(new BaseUser(myName, myID, clientCryptoHelper.getKey(), clientCryptoHelper.getParameters()), writer, reader);
-//        }else {
-//            //error
-//            return null;
-//        }
-//
-//    }
 
     @Override
     public void notifyObservers(ACTIONS action, Object[] data) {
@@ -204,7 +139,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     /**
-     * Override to put more BUTTON cases to networkHelper
+     * Override to put more BUTTON cases in to {@link #handleRequest(BUTTONS, Object[])}
      *
      * @param buttons to handle
      * @param data    to use
@@ -214,7 +149,7 @@ public abstract class AbstractClient implements Logic {
 
     protected abstract String createDefaultName();
 
-    protected Authenticator createAutenticator() {
+    protected Authenticator createAuthenticator() {
         return new Authenticator();
     }
 
@@ -235,10 +170,7 @@ public abstract class AbstractClient implements Logic {
         String[] strings = validateConnectData(data);
         if (strings == null) return;
 
-
         Socket socket = new Socket();
-        String myName = strings[0];
-
         InputStream inputStream = null;
         OutputStream outputStream = null;
         try {
@@ -251,40 +183,14 @@ public abstract class AbstractClient implements Logic {
             return;
         }
 
-        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, myName);
-        if (storage.isNetworkFailure) {
-            plainNotify(ACTIONS.CONNECT_FAILED);
+
+        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0]);
+        if (!handleAuthenticationResults(storage)) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (!storage.isAudioFormatAccepted) {
-            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, storage.audioFormat.toString());
-            Algorithms.closeSocketThatCouldBeClosed(socket);
-            return;
-        }
-        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, storage.audioFormat.toString());
 
-        isSecureConnection = storage.isSecureConnection;
-        if (storage.isSecureConnection) {
-            if (!storage.isSecureConnectionAccepted) {
-                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
-                Algorithms.closeSocketThatCouldBeClosed(socket);
-                return;
-            }
-        }
-
-
-        ClientUser me = createClientUser(storage, outputStream, inputStream);
-        model.setMyself(me);
-        networkHelper = createNetworkHelper(socket);
-        networkHelper.start("Client network helper / reader");
-        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
-        try {
-            me.getWriter().writeUsersRequest();
-        } catch (IOException ignored) {
-            //networkHelper exception handler will handle it
-        }
-
+        finishSucceededConnection(storage, inputStream, outputStream, socket);
     }
 
     protected void onDisconnect() {
@@ -477,6 +383,57 @@ public abstract class AbstractClient implements Logic {
     }
 
     /**
+     * Sends notifies about particular states of authentication
+     *
+     * @param storage contain flags
+     * @return false if you can't connect to server for some reason
+     */
+
+    protected boolean handleAuthenticationResults(Authenticator.ClientStorage storage) {
+        if (storage.isNetworkFailure) {
+            plainNotify(ACTIONS.CONNECT_FAILED);
+            return false;
+        }
+        if (!storage.isAudioFormatAccepted) {
+            stringNotify(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED, storage.audioFormat.toString());
+            return false;
+        }
+        stringNotify(ACTIONS.AUDIO_FORMAT_ACCEPTED, storage.audioFormat.toString());
+
+        isSecureConnection = storage.isSecureConnection;
+        if (storage.isSecureConnection) {
+            if (!storage.isSecureConnectionAccepted) {
+                stringNotify(ACTIONS.CIPHER_FORMAT_IS_NOT_ACCEPTED, "Can't handle given format - " + Crypto.STANDARD_CIPHER_FORMAT);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Handle succeeded connection, send some notifies and changes model state
+     *
+     * @param storage      contain data about authentication
+     * @param inputStream  opened
+     * @param outputStream opened
+     * @param socket       connected
+     */
+
+    protected void finishSucceededConnection(Authenticator.ClientStorage storage, InputStream inputStream, OutputStream outputStream, Socket socket) {
+        ClientUser me = createClientUser(storage, outputStream, inputStream);
+        model.setMyself(me);
+        networkHelper = createNetworkHelper(socket);
+        networkHelper.start("Client network helper / reader");
+        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
+        try {
+            me.getWriter().writeUsersRequest();
+        } catch (IOException ignored) {
+            //networkHelper exception handler will handle it
+        }
+    }
+
+
+    /**
      * Short cut for gaining writer from user
      *
      * @return my writer
@@ -487,24 +444,7 @@ public abstract class AbstractClient implements Logic {
     }
 
 
-//    /**
-//     * For client side
-//     *
-//     * @param dude   who to add in a conversation
-//     * @param others who may present in the conversation
-//     * @param logic  what to notifyObservers about progress
-//     * @param model  to modelObservation about progress
-//     */
-
-//    public static void callAcceptRoutine(BaseUser dude, String others, Logic logic, ChangeableModel model) {
-//        logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
-//        model.addToConversation(dude);
-//        for (BaseUser baseUser : BaseUser.parseUsers(others)) {
-//            model.addToConversation(baseUser);
-//        }
-//    }
-
-    public static void callAcceptRoutine(Logic logic, ChangeableModel model, BaseUser user){
+    public static void callAcceptRoutine(Logic logic, ChangeableModel model, BaseUser user) {
         logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
         model.addToConversation(user);
     }
