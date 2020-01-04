@@ -90,7 +90,7 @@ public class Authenticator {
      * @param outputStream       of connected socket
      * @param audioFormat        that server proposes
      * @param hisID              unique for server identification
-     * @param isSecureConnection server oprion
+     * @param isSecureConnection server option
      * @return structure with flags
      */
 

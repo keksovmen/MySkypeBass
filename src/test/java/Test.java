@@ -1,6 +1,3 @@
-
-import com.Abstraction.Util.Algorithms;
-
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
 import javax.crypto.interfaces.DHPublicKey;
@@ -271,7 +268,7 @@ public class Test {
 
 
     private static class Body {
-        private Semaphore semaphore = new Semaphore(1);
+        private final Semaphore semaphore = new Semaphore(1);
 
         private void acquireSam() {
             try {

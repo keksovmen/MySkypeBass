@@ -27,7 +27,7 @@ public enum CODE {
     SEND_ADD_TO_CONVERSATION(12),   //server sendSound it when some one was added to your conversation
     SEND_REMOVE_FROM_CONVERSATION(13),//server sendSound it when some one was removed to your conversation
     SEND_CONFIRM(14), // not used
-    SEND_DISCONNECT_FROM_CONV(15),//when client exited a conversation he sends it
+    SEND_DISCONNECT_FROM_CONVERSATION(15),//when client exited a conversation he sends it
     SEND_ADD_TO_USER_LIST(16),//when you connected to the server it will tell every one that you are online
     SEND_REMOVE_FROM_USER_LIST(17),//when you disconnect from the server it will tell every one that you are gone
     SEND_ACCEPT_CALL(18), // when dude accepts an incoming call

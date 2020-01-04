@@ -98,7 +98,7 @@ public class ServerWriter implements Writer {
 
     public void writeStopConv(int to) throws IOException {
         write(AbstractDataPackagePool.getPackage().initZeroLength(
-                CODE.SEND_DISCONNECT_FROM_CONV,
+                CODE.SEND_DISCONNECT_FROM_CONVERSATION,
                 WHO.CONFERENCE.getCode(),
                 to
         ));

@@ -171,7 +171,7 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
     }
 
     /**
-     * Setes default audio output id
+     * Sets default audio output id
      */
 
     @Override

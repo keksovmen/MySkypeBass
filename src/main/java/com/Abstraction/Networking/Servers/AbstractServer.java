@@ -1,11 +1,8 @@
 package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Networking.Handlers.ServerHandler;
-import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Utility.Authenticator;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
-import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Interfaces.Starting;
 
@@ -73,15 +70,6 @@ public abstract class AbstractServer implements Starting {
         }
     }
 
-//    /**
-//     * Method for deciding add user on this server or not
-//     *
-//     * @param reader to read input
-//     * @param writer to write commands
-//     * @return null if user is not good enough to join our community
-//     */
-//
-//    public abstract ServerUser authenticate(BaseReader reader, ServerWriter writer);
 
     /**
      * Basically adds user in an underlying collection
@@ -94,7 +82,7 @@ public abstract class AbstractServer implements Starting {
     /**
      * Remove user from an underlying collection
      *
-     * @param user_id
+     * @param user_id to remove
      */
 
     public abstract void removeUser(int user_id);

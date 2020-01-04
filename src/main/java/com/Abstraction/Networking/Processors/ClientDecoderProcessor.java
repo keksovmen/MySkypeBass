@@ -56,7 +56,7 @@ public class ClientDecoderProcessor extends ClientProcessor {
     protected boolean initCipher(int idOfDude, CODE instruction) {
         BaseUser user = getCorrespondUser(idOfDude, instruction);
         if (user == null) {
-            //handle not existing in udnerlying map
+            //handle not existing in underlying map
             return false;
         }
         try {

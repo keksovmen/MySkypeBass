@@ -5,7 +5,6 @@ import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.ServerWriter;
 
 import java.io.IOException;
 
@@ -57,7 +56,7 @@ public class ServerProcessor implements Processable {
             case SEND_CANCEL_CALL: {
                 return onTransferData(dataPackage);
             }
-            case SEND_DISCONNECT_FROM_CONV: {
+            case SEND_DISCONNECT_FROM_CONVERSATION: {
                 return onExitConversation(dataPackage);
             }
             case SEND_SOUND: {

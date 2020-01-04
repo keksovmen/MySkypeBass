@@ -109,7 +109,7 @@ public class BaseUser implements Cloneable {
      * Do not override server sends it and client parse in this format
      * Must look same as {@link #parser}
      *
-     * @return this user as a string withh full info to be parsed in {@link #parse(String)}
+     * @return this user as a string with full info to be parsed in {@link #parse(String)}
      */
 
     public final String toNetworkFormat() {

@@ -18,7 +18,7 @@ public class DesktopResources extends AbstractResources {
     public DesktopResources() {
         notificationTracks = new HashMap<>();
         int id = 0;
-        List<Pair<String, String>> pairs = null;
+        List<Pair<String, String>> pairs;
         try {
             pairs = XMLWorker.retrieveNames(Checker.getCheckedInput("/sound/Notifications.xml"));
         } catch (NoSuchFileException e) {

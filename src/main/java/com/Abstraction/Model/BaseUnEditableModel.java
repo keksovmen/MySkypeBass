@@ -1,7 +1,6 @@
 package com.Abstraction.Model;
 
 import com.Abstraction.Networking.Utility.Users.BaseUser;
-import com.Abstraction.Networking.Utility.Users.ClientUser;
 
 import java.util.HashSet;
 import java.util.Map;

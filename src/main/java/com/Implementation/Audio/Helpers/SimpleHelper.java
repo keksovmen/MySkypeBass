@@ -7,7 +7,6 @@ import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Audio.Output.AudioOutputLine;
 import com.Implementation.Util.Checker;
-import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Audio.Input.AudioInputDesktop;
 import com.Implementation.Audio.Output.AudioOutputDesktop;

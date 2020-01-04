@@ -171,8 +171,8 @@ public abstract class AbstractClient implements Logic {
         if (strings == null) return;
 
         Socket socket = new Socket();
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
+        InputStream inputStream;
+        OutputStream outputStream;
         try {
             socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
             inputStream = socket.getInputStream();

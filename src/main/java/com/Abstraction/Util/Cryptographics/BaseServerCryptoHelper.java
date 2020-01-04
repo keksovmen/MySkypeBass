@@ -16,7 +16,7 @@ public class BaseServerCryptoHelper extends BaseCommonCryptoHelper implements Se
 
     @Override
     public void initialiseKeyGenerator(byte[] clientEncodedPublicKey) {
-        KeyFactory keyFactory = null;
+        KeyFactory keyFactory;
         try {
             keyFactory = KeyFactory.getInstance(Crypto.STANDARD_KEY_EXCHANGE_ALGORITHM);
             X509EncodedKeySpec keySpec = new X509EncodedKeySpec(clientEncodedPublicKey);

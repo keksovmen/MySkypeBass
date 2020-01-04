@@ -107,7 +107,7 @@ public class ClientWriter implements Writer {
     }
 
     public void writeDisconnectFromConv() throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT_FROM_CONV, myID, WHO.CONFERENCE.getCode()));
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT_FROM_CONVERSATION, myID, WHO.CONFERENCE.getCode()));
     }
 
     public void writePublicKeyEncoded(byte[] encodedPubKey) throws IOException {

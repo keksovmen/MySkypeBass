@@ -30,9 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SimpleServer extends AbstractServer {
 
 
-    public final int BUFFER_SIZE_FOR_IO;
-
-//    /**
+    //    /**
 //     * Must be less or equal ProtocolBitMap.MAX_VALUE
 //     */
 //
@@ -71,7 +69,6 @@ public class SimpleServer extends AbstractServer {
     protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits)
             throws IOException, ProtocolValueException {
         super(port, isCipher, authenticator);
-        BUFFER_SIZE_FOR_IO = Resources.getInstance().getBufferSize() * 1024;
         final int micCapSize;
         try {
             micCapSize = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
@@ -125,62 +122,6 @@ public class SimpleServer extends AbstractServer {
         );
     }
 
-
-//    /**
-//     * Trying to register a new user for the server
-//     * first read name from the user
-//     * second writes audio format
-//     * third gets true or false on the audio format
-//     * forth write him his id
-//     *
-//     * @param reader used to read packages
-//     * @param writer used to write to the dude
-//     * @return null if not able to use this audio format
-//     */
-//
-//    @Override
-//    public ServerUser authenticate(BaseReader reader, ServerWriter writer) {
-//        try {
-//            AbstractDataPackage dataPackage = reader.read();
-//            final String name = dataPackage.getDataAsString();
-//            AbstractDataPackagePool.returnPackage(dataPackage);
-//
-//            writer.writeAudioFormat(WHO.NO_NAME.getCode(), getAudioFormat());
-//            dataPackage = reader.read();
-//
-//            if (dataPackage.getHeader().getCode() != CODE.SEND_APPROVE) {
-//                //Then dude just disconnects so do we
-//                AbstractDataPackagePool.returnPackage(dataPackage);
-//                return null;
-//            }
-//            AbstractDataPackagePool.returnPackage(dataPackage);
-//
-//            final int id = getIdAndIncrement();
-//            writer.writeId(id);
-//
-//            if (isCipherMode) {
-//                writer.writeCipherMode(id);
-//                dataPackage = reader.read();
-//
-//                BaseServerCryptoHelper cryptoHelper = new BaseServerCryptoHelper();
-//                cryptoHelper.initialiseKeyGenerator(dataPackage.getData());
-//                AbstractDataPackagePool.returnPackage(dataPackage);
-//
-//                writer.writePublicKeyEncoded(id, cryptoHelper.getPublicKeyEncoded());
-//                writer.writeAlgorithmParams(id, cryptoHelper.getAlgorithmParametersEncoded());
-//
-//
-//                return new ServerUser(new BaseUser(name, id, cryptoHelper.getKey(), cryptoHelper.getParameters()), writer, reader);
-//            } else {
-//                writer.writePlainMode(id);
-//                return new ServerUser(name, id, writer, reader);
-//            }
-//
-//
-//        } catch (IOException e) {
-//            return null;
-//        }
-//    }
 
     /**
      * Put new user
@@ -267,13 +208,12 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected void acceptSocket(Socket socket) {
-        InputStream inputStream = null;
-        OutputStream outputStream = null;
+        InputStream inputStream;
+        OutputStream outputStream;
         try {
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
         } catch (IOException ignored) {
-//            e.printStackTrace();
             //fuck him
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
@@ -297,18 +237,9 @@ public class SimpleServer extends AbstractServer {
         ServerUser user = createUser(storage, inputStream, outputStream);
         registerUser(user);
 
-//        try {
-//            user.getWriter().writeUsers(user.getId(), getUsersExceptYou(user.getId()));
-//        } catch (IOException e) {
-////            e.printStackTrace();
-//            removeUser(user.getId());
-//            Algorithms.closeSocketThatCouldBeClosed(socket);
-//        }
 
         ServerHandler serverHandler = createServerHandler(socket, user);
-        if (!serverHandler.start("Server - " + user.toString())) {
-            //already started
-        }
+        serverHandler.start("Server - " + user.toString());//already started if true returned
     }
 
     @Override

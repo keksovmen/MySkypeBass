@@ -106,7 +106,7 @@ public abstract class AudioHelper {
     /**
      * Must check if format received from a server is appropriate, and if so to {@link #setDefaultFormat(AbstractAudioFormatWithMic)}
      *
-     * @param format
+     * @param format with mic size
      * @return true if can work with given format false otherwise
      */
 

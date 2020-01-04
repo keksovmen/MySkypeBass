@@ -71,7 +71,7 @@ public class ClientProcessor implements Processable {
                 return onAddToConversation(dataPackage);
             case SEND_REMOVE_FROM_CONVERSATION:
                 return onRemoveDudeFromConversation(dataPackage);
-            case SEND_DISCONNECT_FROM_CONV:
+            case SEND_DISCONNECT_FROM_CONVERSATION:
                 return onExitConversation(dataPackage);
             case SEND_ADD_TO_USER_LIST:
                 return onAddToUserList(dataPackage);

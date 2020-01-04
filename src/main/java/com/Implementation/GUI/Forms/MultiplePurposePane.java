@@ -362,7 +362,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * Paint a tab which has received a message and not in focus
      * it red
      *
-     * @param indexOfTab wich to paint
+     * @param indexOfTab which to paint
      */
 
     private void colorForMessage(final int indexOfTab) {

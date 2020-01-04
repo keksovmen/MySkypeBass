@@ -59,7 +59,7 @@ public abstract class BasicAudioPlayer extends AbstractAudioPlayer {
     }
 
     /**
-     * Treis to play particular sound with given delay
+     * Tries to play particular sound with given delay
      *
      * @param track id in {@link AbstractResources#getNotificationTracks()}
      * @param delay time in millis
