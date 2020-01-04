@@ -31,6 +31,7 @@ public class ClientDecoderProcessor extends ClientProcessor {
 
     /**
      * Will decode only if a package contains data, and have key to decode
+     *
      * @param dataPackage to decode
      * @return same package if there is no data and modified one if is
      */
@@ -46,7 +47,8 @@ public class ClientDecoderProcessor extends ClientProcessor {
 
     /**
      * Trying to initialise cipher with DECODE_MODE
-     * @param idOfDude to fetch key and algorithm params
+     *
+     * @param idOfDude    to fetch key and algorithm params
      * @param instruction of dataPackage
      * @return true if cipher ready to decode, false if there is no such dude or exceptions
      */
@@ -68,9 +70,10 @@ public class ClientDecoderProcessor extends ClientProcessor {
 
     /**
      * Fetch particular dude with key and algorithm, parameters
-     * @param idOfDude to fetch
+     *
+     * @param idOfDude    to fetch
      * @param instruction to more specific task depend on server
-     * @return
+     * @return dude that contain key and alg parameters for this package
      */
 
     protected BaseUser getCorrespondUser(int idOfDude, CODE instruction) {
@@ -85,6 +88,11 @@ public class ClientDecoderProcessor extends ClientProcessor {
             return model.getUserMap().get(idOfDude);
         }
     }
+
+    /**
+     * @param input coded data
+     * @return will never return null if algorithm is not changed
+     */
 
     protected byte[] decodeData(byte[] input) {
         try {

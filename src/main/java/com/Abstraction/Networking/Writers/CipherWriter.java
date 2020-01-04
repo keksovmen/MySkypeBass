@@ -1,15 +1,19 @@
 package com.Abstraction.Networking.Writers;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Util.Cryptographics.Crypto;
 
-import javax.crypto.*;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.security.*;
-import java.util.function.Function;
+import java.security.AlgorithmParameters;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.Key;
 
 /**
  * In each method encode data with AES
@@ -72,7 +76,7 @@ public class CipherWriter extends PlainWriter {
         return dataPackage;
     }
 
-    protected boolean checkPackageForEncoding(AbstractDataPackage dataPackage){
+    protected boolean checkPackageForEncoding(AbstractDataPackage dataPackage) {
         return dataPackage.getHeader().getLength() != 0;
     }
 
@@ -110,18 +114,4 @@ public class CipherWriter extends PlainWriter {
         return input.capacity() + encoder.getBlockSize();
     }
 
-//    private boolean initCipher(int id){
-//        BaseUser user = userFetcher.apply(id);
-//        if (user == null){
-//            //handle not existence of user in underlying model
-//            return false;
-//        }
-//        try {
-//            encoder.init(Cipher.ENCRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameters());
-//        } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//        return true;
-//    }
 }

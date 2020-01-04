@@ -34,7 +34,7 @@ public class BaseServerCryptoHelper extends BaseCommonCryptoHelper implements Se
             keyAgreement.init(keyPair.getPrivate());
             keyAgreement.doPhase(clientPublicKey, true);
 
-            keyForAlgorithm = new SecretKeySpec(keyAgreement.generateSecret(), 0, 16, Crypto.STANDARD_CIPHEER_ALGORITM);
+            keyForAlgorithm = new SecretKeySpec(keyAgreement.generateSecret(), 0, 16, Crypto.STANDARD_CIPHER_ALGORITHM);
             Cipher cipher = Crypto.getCipherWithoutExceptions(Crypto.STANDARD_CIPHER_FORMAT);
             cipher.init(Cipher.ENCRYPT_MODE, keyForAlgorithm);
             cipher.doFinal(new byte[cipher.getBlockSize()]);
@@ -54,11 +54,6 @@ public class BaseServerCryptoHelper extends BaseCommonCryptoHelper implements Se
             e.printStackTrace();
         }
     }
-
-//    @Override
-//    public void fnishExchange() {
-//
-//    }
 
     @Override
     public byte[] getAlgorithmParametersEncoded() {

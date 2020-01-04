@@ -15,7 +15,7 @@ import java.util.List;
 public class Crypto {
 
     public static final String STANDARD_KEY_EXCHANGE_ALGORITHM = "DH";
-    public static final String STANDARD_CIPHEER_ALGORITM = "AES";
+    public static final String STANDARD_CIPHER_ALGORITHM = "AES";
     public static final String STANDARD_CIPHER_FORMAT = "AES/CBC/PKCS5Padding";
 
     private static final List<String> formats = new ArrayList<>();
@@ -67,7 +67,7 @@ public class Crypto {
      */
 
     public static Key createCipherKey(byte[] key) {
-        return new SecretKeySpec(key, STANDARD_CIPHEER_ALGORITM);
+        return new SecretKeySpec(key, STANDARD_CIPHER_ALGORITHM);
     }
 
     /**
@@ -88,12 +88,12 @@ public class Crypto {
 
     public static AlgorithmParameters createParameters(byte[] initializer) {
         try {
-            AlgorithmParameters instance = AlgorithmParameters.getInstance(STANDARD_CIPHEER_ALGORITM);
+            AlgorithmParameters instance = AlgorithmParameters.getInstance(STANDARD_CIPHER_ALGORITHM);
             instance.init(initializer);
             return instance;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
-            //Won't be thrown because Java specification reburies to implement AES algorithm
+            //Won't be thrown because Java specification swear to implement AES algorithm
         } catch (IOException e) {
             e.printStackTrace();
             //If input data is wrong

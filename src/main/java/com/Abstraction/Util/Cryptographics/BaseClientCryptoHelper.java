@@ -47,9 +47,9 @@ public class BaseClientCryptoHelper extends BaseCommonCryptoHelper implements Cl
     @Override
     public void setAlgorithmParametersEncoded(byte[] parametersEncoded) {
         try {
-            algorithmParameters = AlgorithmParameters.getInstance(Crypto.STANDARD_CIPHEER_ALGORITM);
+            algorithmParameters = AlgorithmParameters.getInstance(Crypto.STANDARD_CIPHER_ALGORITHM);
             algorithmParameters.init(parametersEncoded);
-            keyForAlgorithm = new SecretKeySpec(keyAgreement.generateSecret(), 0, 16, Crypto.STANDARD_CIPHEER_ALGORITM);
+            keyForAlgorithm = new SecretKeySpec(keyAgreement.generateSecret(), 0, 16, Crypto.STANDARD_CIPHER_ALGORITHM);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
             //won't happen cause java must implement it, that is what api says
