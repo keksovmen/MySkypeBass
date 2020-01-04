@@ -16,11 +16,35 @@ import com.Abstraction.Util.Collection.Pair;
 
 import java.util.List;
 
+/**
+ * Handles incoming {@link ACTIONS}
+ */
+
 public class BaseAudio implements SimpleComponent {
 
+    /**
+     * To play notifications and incoming sound
+     */
+
     protected final Playable player;
+
+    /**
+     * To start and close mic thread
+     */
+
     protected final DefaultMic mic;
+
+    /**
+     * To delegate some {@link BUTTONS} actions
+     */
+
     protected final BaseAudioSettings audioSettings;
+
+    /**
+     *
+     * @param helpHandlerPredecessor chain of responsibility pattern
+     * @param factory for platform independence
+     */
 
     public BaseAudio(ButtonsHandler helpHandlerPredecessor, AudioFactory factory) {
         AbstractAudioPlayer abstractPlayer = factory.createPlayer();
@@ -86,8 +110,8 @@ public class BaseAudio implements SimpleComponent {
     }
 
     @Override
-    public void update(UnEditableModel model) {
-        player.update(model);
+    public void modelObservation(UnEditableModel model) {
+        player.modelObservation(model);
     }
 
     /**
@@ -127,9 +151,15 @@ public class BaseAudio implements SimpleComponent {
         audioSettings.handleRequest(button, data);
     }
 
+
     protected void dropCallAction() {
         player.stopCall();
     }
+
+    /**
+     *
+     * @param message that may contain meta info as {@link FormatWorker#retrieveMessageMeta(String)}
+     */
 
     protected void onIncomingMessage(String message) {
         List<Pair<Integer, Integer>> pairs = FormatWorker.retrieveMessageMeta(message);

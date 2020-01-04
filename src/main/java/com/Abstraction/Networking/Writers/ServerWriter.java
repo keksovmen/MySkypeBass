@@ -4,10 +4,9 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -19,7 +18,9 @@ import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
  * Contain not all possible server write actions
  */
 
-public class ServerWriter extends BaseWriter {
+public class ServerWriter implements Writer {
+
+    private final Writer writer;
 
     /**
      * Need for conference writing
@@ -36,12 +37,23 @@ public class ServerWriter extends BaseWriter {
 
     private final int LOCK_TIME; //default 300
 
-    public ServerWriter(OutputStream outputStream, int bufferSize) {
-        super(outputStream, bufferSize);
+
+    public ServerWriter(Writer writer) {
+//        super(outputStream, bufferSize);
+        this.writer = writer;
         lock = new ReentrantLock();
         LOCK_TIME = Resources.getInstance().getLockTime();
     }
 
+    @Override
+    public void write(AbstractDataPackage dataPackage) throws IOException {
+        writer.write(dataPackage);
+    }
+
+    @Override
+    public void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
+        writer.writeWithoutReturnToPool(dataPackage);
+    }
 
     public void writeAudioFormat(int id, String format) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(
@@ -93,7 +105,7 @@ public class ServerWriter extends BaseWriter {
 
     public void writeStopConv(int to) throws IOException {
         write(AbstractDataPackagePool.getPackage().initZeroLength(
-                CODE.SEND_DISCONNECT_FROM_CONV,
+                CODE.SEND_DISCONNECT_FROM_CONVERSATION,
                 WHO.CONFERENCE.getCode(),
                 to
         ));
@@ -141,5 +153,25 @@ public class ServerWriter extends BaseWriter {
                 from,
                 me
         ));
+    }
+
+    public void writeCipherMode(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_CIPHER_MODE, WHO.SERVER.getCode(), to));
+    }
+
+    public void writePlainMode(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_PLAIN_MODE, WHO.SERVER.getCode(), to));
+    }
+
+    public void writePublicKeyEncoded(int to, byte[] key) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, WHO.SERVER.getCode(), to, key));
+    }
+
+    public void writeAlgorithmParams(int to, byte[] params) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_ALGORITHM_PARAMETERS_ENCODED, WHO.SERVER.getCode(), to, params));
+    }
+
+    public void writeAddWholeConversation(int to, String dudes) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_ADD_WHOLE_CONVERSATION, WHO.SERVER.getCode(), to, dudes));
     }
 }

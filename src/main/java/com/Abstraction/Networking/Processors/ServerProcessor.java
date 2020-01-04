@@ -8,21 +8,26 @@ import com.Abstraction.Networking.Utility.WHO;
 
 import java.io.IOException;
 
+/**
+ * Handler for incoming messages from client socket
+ */
+
 public class ServerProcessor implements Processable {
 
-    private final ServerUser correspondUser;
+
+    private final ServerUser me;
     private final AbstractServer server;
 
-    public ServerProcessor(ServerUser correspondUser, AbstractServer server) {
-        this.correspondUser = correspondUser;
+    public ServerProcessor(ServerUser me, AbstractServer server) {
+        this.me = me;
         this.server = server;
     }
 
     /**
      * Handle the data package command
      *
-     * @param dataPackage to handleRequest
-     * @return true if handled request without network failures
+     * @param dataPackage to handleDataPackageRouting
+     * @return true if handles request without network failures
      */
 
     @Override
@@ -51,7 +56,7 @@ public class ServerProcessor implements Processable {
             case SEND_CANCEL_CALL: {
                 return onTransferData(dataPackage);
             }
-            case SEND_DISCONNECT_FROM_CONV: {
+            case SEND_DISCONNECT_FROM_CONVERSATION: {
                 return onExitConversation(dataPackage);
             }
             case SEND_SOUND: {
@@ -59,29 +64,34 @@ public class ServerProcessor implements Processable {
             }
             //And so on
         }
-        System.err.println("There is no such handler for given CODE - " + dataPackage.getHeader().getCode());
+        System.err.println("There is no such networkHelper for given CODE - " + dataPackage.getHeader().getCode());
         return false;
     }
 
+    /**
+     * First remove user from server observation
+     * Then kick him from his conversation if such exists
+     */
+
     @Override
     public void close() {
-        server.removeUser(correspondUser.getId());
-        if (correspondUser.inConversation()) {
-            correspondUser.getConversation().removeDude(correspondUser);
+        server.removeUser(me.getId());
+        if (me.inConversation()) {
+            me.getConversation().removeDude(me);
         }
     }
 
     /**
-     * Grabs every correspondUser on the server except you and send it to you
+     * Grabs every user on the server except you and send it to you as String
      *
      * @param dataPackage contain info
      * @return true if handled without connection failure
      */
 
     protected boolean sendUsers(AbstractDataPackage dataPackage) {
-        String users = server.getUsersExceptYou(correspondUser.getId());
+        String users = server.getUsersExceptYou(me.getId());
         try {
-            correspondUser.getWriter().writeUsers(correspondUser.getId(), users);
+            me.getWriter().writeUsers(me.getId(), users);
         } catch (IOException e) {
             return false;
         }
@@ -89,7 +99,7 @@ public class ServerProcessor implements Processable {
     }
 
     /**
-     * Transfer given dataPackage to correspond correspondUser or conversation
+     * Transfer given dataPackage to correspond user or conversation
      * Without creating new ones
      *
      * @param dataPackage contain message and receiver id
@@ -100,13 +110,13 @@ public class ServerProcessor implements Processable {
         int to = dataPackage.getHeader().getTo();
         //To conversation
         if (to == WHO.CONFERENCE.getCode()) {
-            Conversation conversation = correspondUser.getConversation();
+            Conversation conversation = me.getConversation();
             if (conversation != null) {
-                conversation.sendMessage(dataPackage, correspondUser);
+                conversation.sendMessage(dataPackage, me);
             } else {
                 //tell him that he is not in a conversation
                 try {
-                    correspondUser.getWriter().writeStopConv(correspondUser.getId());
+                    me.getWriter().writeStopConv(me.getId());
                 } catch (IOException e) {
                     return false;
                 }
@@ -138,7 +148,7 @@ public class ServerProcessor implements Processable {
 
     private boolean onDudeIsMissing(int dudeId) {
         try {
-            correspondUser.getWriter().writeRemoveFromUserList(correspondUser.getId(), dudeId);
+            me.getWriter().writeRemoveFromUserList(me.getId(), dudeId);
         } catch (IOException e) {
             return false;
         }
@@ -162,24 +172,24 @@ public class ServerProcessor implements Processable {
         }
 
         //check if we both in conversations
-        Runnable release = doubleLock(correspondUser, receiver);
+        Runnable release = doubleLock(me, receiver);
         try {
-            if (correspondUser.inConversation() && receiver.inConversation()) {
+            if (me.inConversation() && receiver.inConversation()) {
                 try {
-                    correspondUser.getWriter().writeBothInConversations(correspondUser.getId(), receiver.getId());
+                    me.getWriter().writeBothInConversations(me.getId(), receiver.getId());
                 } catch (IOException e) {
                     return false;
                 }
                 try {
-                    receiver.getWriter().writeBothInConversations(receiver.getId(), correspondUser.getId());
+                    receiver.getWriter().writeBothInConversations(receiver.getId(), me.getId());
                 } catch (IOException ignored) {
-                    //His thread will handleRequest shit
+                    //His thread will handle network failure
                 }
                 return true;
             }
             try {
-                if (correspondUser.inConversation()) {
-                    dataPackage.setData(correspondUser.getConversation().getAllToString(correspondUser));
+                if (me.inConversation()) {
+                    dataPackage.setData(me.getConversation().getAllToString(me));
                 }
                 receiver.getWriter().transferPacket(dataPackage);
             } catch (IOException e) {
@@ -206,30 +216,35 @@ public class ServerProcessor implements Processable {
             return onDudeIsMissing(to);
         }
 
-        Runnable release = doubleLock(correspondUser, receiver);
+        Runnable release = doubleLock(me, receiver);
         //here goes atomic code
         Conversation conversation;
-        if (correspondUser.inConversation()) {
+        ServerUser receiverOfAllDudes = null;//dude who will get notification that contain all dudes in conversation, for that who is not in conversation
+        if (me.inConversation()) {
             //add dude to conv and put all dudes from conf to notifyObservers him
-            conversation = correspondUser.getConversation();
-            dataPackage.setData(conversation.getAllToString(correspondUser));
-            conversation.addDude(receiver, correspondUser);
+            conversation = me.getConversation();
+            dataPackage.setData(conversation.getAllToString(me));
+            conversation.addDude(receiver, me);
+            receiverOfAllDudes = receiver;
         } else if (receiver.inConversation()) {
             //add me to dude's conv I already know about dudes in conf
             conversation = receiver.getConversation();
-            conversation.addDude(correspondUser, receiver);
+            conversation.addDude(me, receiver);
+            receiverOfAllDudes = me;
         } else {
             //create conv for us
-            conversation = new Conversation(correspondUser, receiver);
-            correspondUser.setConversation(conversation);
+            conversation = new Conversation(me, receiver);
+            me.setConversation(conversation);
             receiver.setConversation(conversation);
         }
         release.run();
 
         try {
             receiver.getWriter().transferPacket(dataPackage);
+            if (receiverOfAllDudes != null)
+                receiverOfAllDudes.getWriter().writeAddWholeConversation(receiverOfAllDudes.getId(), conversation.getAllToString(receiverOfAllDudes));
         } catch (IOException ignored) {
-            //Dude disconnected before so it's thread will handleRequest
+            //Dude disconnected before so it's thread will handle
         }
         return true;
     }
@@ -242,11 +257,11 @@ public class ServerProcessor implements Processable {
      */
 
     protected boolean onExitConversation(AbstractDataPackage dataPackage) {
-        Conversation conversation = correspondUser.getConversation();
+        Conversation conversation = me.getConversation();
         //check if it is null because some other thread could make you leave
         if (conversation == null)
             return true;
-        conversation.removeDude(correspondUser);
+        conversation.removeDude(me);
         return true;
     }
 
@@ -258,10 +273,10 @@ public class ServerProcessor implements Processable {
      */
 
     protected boolean onSendSound(AbstractDataPackage dataPackage) {
-        Conversation conversation = correspondUser.getConversation();
+        Conversation conversation = me.getConversation();
         if (conversation == null)
             return true;
-        conversation.sendSound(dataPackage, correspondUser.getId());
+        conversation.sendSound(dataPackage, me.getId());
         return true;
     }
 
@@ -270,8 +285,8 @@ public class ServerProcessor implements Processable {
      * to avoid dead locks
      * USERS MUST HAVE UNIQUE ID
      *
-     * @param me   first correspondUser
-     * @param dude second correspondUser
+     * @param me   first me
+     * @param dude second me
      * @return anonymous function to unlock the boys
      */
 

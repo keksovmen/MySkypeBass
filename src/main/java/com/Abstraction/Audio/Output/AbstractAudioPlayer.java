@@ -1,25 +1,45 @@
 package com.Abstraction.Audio.Output;
 
 import com.Abstraction.Audio.AudioSupplier;
+import com.Abstraction.Audio.Helper.AudioHelper;
 import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.ServerUser;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Represents high level interaction with audio parts
+ * Main purpose play sound notifications and incoming voice from a conversation
+ */
+
 public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable {
 
+    /**
+     * Key is {@link BaseUser#id} so must be unique,
+     * handled by {@link com.Abstraction.Networking.Servers.AbstractServer#registerUser(ServerUser)}
+     */
+
     protected final Map<Integer, AudioOutputLine> outputLines;
+
+    /**
+     * Handles call notifications, because they can not be played full
+     */
+
     protected final AbstractCallNotificator callNotificator;
 
     /**
-     * For not blocking main thread while playing message notifications
+     * See {@link AudioHelper#getOutputLines()}
      */
 
+    protected volatile int outputDeviceId;
 
-    protected volatile int outputMixerId;
+    /**
+     * Template method pattern, override 2 factory methods
+     */
 
     public AbstractAudioPlayer() {
         outputLines = createLinesStorage();
@@ -64,17 +84,17 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
     /**
      * Changes output device
      *
-     * @param indexOfParticularMixer index of desired output
+     * @param indexOfParticularDevice index of desired output
      */
 
     @Override
-    public synchronized void changeOutput(int indexOfParticularMixer) {
-        outputMixerId = indexOfParticularMixer;
+    public synchronized void changeOutputDevice(int indexOfParticularDevice) {
+        outputDeviceId = indexOfParticularDevice;
         outputLines.forEach((integer, line) -> {
             line.close();
             addOutput(integer);
         });
-        callNotificator.changeOutput(indexOfParticularMixer);
+        callNotificator.changeOutputDevice(indexOfParticularDevice);
     }
 
     /**
@@ -88,20 +108,32 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
     @Override
     public synchronized void playSound(int who, byte[] data) {
         AudioOutputLine outputLine = outputLines.get(who);
-        if (outputLine == null)            //Just ignore it until update is occurs
+        if (outputLine == null)            //Just ignore it until modelObservation is occurs
             return;
         outputLine.writeNonBlocking(data);
     }
+
+    /**
+     * {@inheritDoc}
+     */
 
     @Override
     public synchronized void playCall() {
         callNotificator.start("Call sound thread");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+
     @Override
     public synchronized void stopCall() {
         callNotificator.close();
     }
+
+    /**
+     * {@inheritDoc}
+     */
 
     @Override
     public synchronized void close() {
@@ -110,8 +142,14 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
         stopCall();
     }
 
+    /**
+     * Add and/or remove output sources
+     *
+     * @param model where you can get copy of map
+     */
+
     @Override
-    public synchronized void update(UnEditableModel model) {
+    public synchronized void modelObservation(UnEditableModel model) {
         Set<BaseUser> conversation = model.getConversation();
         Map<Integer, BaseUser> userMap = model.getUserMap();
 
@@ -132,14 +170,24 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
         });
     }
 
+    /**
+     * Sets default audio output id
+     */
+
     @Override
     public void init() {
-        changeOutput(AudioSupplier.getInstance().getDefaultForOutput());
+        changeOutputDevice(AudioSupplier.getInstance().getDefaultForOutput());
     }
+
+    /**
+     * Obtain and opens new line for particular id
+     *
+     * @param id for who line will be opened
+     */
 
     private synchronized void addOutput(int id) {
         try {
-            outputLines.put(id, AudioSupplier.getInstance().getOutput(outputMixerId));
+            outputLines.put(id, AudioSupplier.getInstance().getOutput(outputDeviceId));
         } catch (AudioLineException e) {
             e.printStackTrace();
             //Will be thrown when audio line is already opened

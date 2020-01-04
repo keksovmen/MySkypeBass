@@ -5,6 +5,7 @@ import com.Abstraction.Audio.Helper.AudioHelper;
 /**
  * Access point for helper
  * First you need set your instance
+ * Singleton
  */
 
 public class AudioSupplier {

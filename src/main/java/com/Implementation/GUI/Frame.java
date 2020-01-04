@@ -6,7 +6,7 @@ import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Pipeline.CompositeComponent;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.GUI.Forms.AudioFormatStats;
 import com.Implementation.GUI.Forms.CallDialog;
 import com.Implementation.GUI.Forms.EntrancePane;
@@ -54,8 +54,8 @@ public class Frame implements CompositeComponent {
     }
 
     @Override
-    public void update(UnEditableModel model) {
-        SwingUtilities.invokeLater(() -> purposePane.update(model));
+    public void modelObservation(UnEditableModel model) {
+        SwingUtilities.invokeLater(() -> purposePane.modelObservation(model));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class Frame implements CompositeComponent {
                 }
                 case AUDIO_FORMAT_NOT_ACCEPTED: {
                     showErrorMessage(
-                            "Not connected, because your audio system can't handleRequest this format {" +
+                            "Not connected, because your audio system can't handleDataPackageRouting this format {" +
                                     " " + data[0] + " }");
                     break;
                 }
@@ -133,6 +133,14 @@ public class Frame implements CompositeComponent {
                 case INCOMING_CALL: {
                     //need to remove Joption pane dialog cause blocking call dialog
 
+                    break;
+                }
+                case CIPHER_FORMAT_IS_NOT_ACCEPTED:{
+                    showErrorMessage((String) data[0]);
+                    break;
+                }
+                case CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED:{
+                    showErrorMessage((String) data[0]);
                     break;
                 }
             }

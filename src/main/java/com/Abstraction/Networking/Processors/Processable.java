@@ -3,7 +3,7 @@ package com.Abstraction.Networking.Processors;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 
 /**
- * Handle Abstract Data Package instance in any way possible
+ * Handle Abstract Data Package instance in any possible way
  */
 
 public interface Processable {

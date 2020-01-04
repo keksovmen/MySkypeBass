@@ -1,6 +1,10 @@
 package com.Abstraction.Networking.Utility.Users;
 
+import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Writers.ClientWriter;
+
+import java.security.AlgorithmParameters;
+import java.security.Key;
 
 /**
  * Represent client side user
@@ -8,14 +12,30 @@ import com.Abstraction.Networking.Writers.ClientWriter;
 
 public class ClientUser extends UserWithLock {
 
+    /**
+     * Indicate that you are not calling anyone
+     */
+
     public static final int NO_ONE = -1;
-    private int whoCalling = NO_ONE;
+
 
     private final ClientWriter writer;
+    private final BaseReader reader;
 
-    public ClientUser(String name, int id, ClientWriter writer) {
+
+    private int whoCalling = NO_ONE;
+
+
+    public ClientUser(String name, int id, ClientWriter writer, BaseReader reader) {
         super(name, id);
         this.writer = writer;
+        this.reader = reader;
+    }
+
+    public ClientUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ClientWriter writer, BaseReader reader) {
+        super(name, id, sharedKey, algorithmParameters);
+        this.writer = writer;
+        this.reader = reader;
     }
 
     /**
@@ -40,11 +60,15 @@ public class ClientUser extends UserWithLock {
 
 
 
-    public int isCalling(){
-        return whoCalling;
-    }
-
     public ClientWriter getWriter() {
         return writer;
+    }
+
+    public BaseReader getReader() {
+        return reader;
+    }
+
+    public int isCalling(){
+        return whoCalling;
     }
 }

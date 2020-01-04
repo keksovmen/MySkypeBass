@@ -1,7 +1,7 @@
 package com.Implementation.Audio.Output;
 
 import com.Abstraction.Audio.Output.AudioOutputLine;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Util.DesktopResources;
 
 import javax.sound.sampled.AudioInputStream;
@@ -32,7 +32,7 @@ public class Player {
         int amount;
         int frameSize = outputLine.getFormat().getFrameSize();
         while ((amount = inputStream.read(data)) != -1) {
-            //handleRequest odd number in case of sample size = 2 bytes
+            //handleDataPackageRouting odd number in case of sample size = 2 bytes
             int j = amount % frameSize;
             if (j != 0) {
                 amount -= j;
@@ -59,7 +59,7 @@ public class Player {
         if (amount == -1) {
             return amount;
         }
-        //handleRequest odd number in case of sample size = 2 bytes
+        //handleDataPackageRouting odd number in case of sample size = 2 bytes
         int j = amount % frameSize;
         if (j != 0) {
             amount -= j;

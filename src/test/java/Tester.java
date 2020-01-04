@@ -209,7 +209,7 @@
 //        assert (server.start("SimpleServer"));
 //        assert (!server.start("SimpleServer"));
 //
-//        System.out.println("Creating ClientResponder controller");
+//        System.out.println("Creating ClientResponder packageRouter");
 //        ExecutorService executorService = Executors.newFixedThreadPool(20);
 //        List<ClientController> clientControllers = new ArrayList<>();
 //        ClientModelBase clientModel = new ClientModelBase();
@@ -220,12 +220,12 @@
 ////        clientModel2.setMe(new ClientUser("Loh", 0));
 //        ClientProcessor processor = new ClientProcessor();
 //        ClientController clientController = new ClientController(clientModel);
-//        System.out.println("ClientResponder controller connect");
+//        System.out.println("ClientResponder packageRouter connect");
 //        assert (clientController.connect(
 //                "",
 //                "127.0.0.1",
 //                8188));
-//        assert clientController.start("ClientResponder controller");
+//        assert clientController.start("ClientResponder packageRouter");
 //        for (int i = 0; i < 20; i++) {
 //            ClientController clientController1 = new ClientController(clientModel1);
 //            clientControllers.add(clientController1);
@@ -237,7 +237,7 @@
 //                        "",
 //                        "127.0.0.1",
 //                        8188);
-//                assert clientController1.start("ClientResponder controller");
+//                assert clientController1.start("ClientResponder packageRouter");
 ////                } catch (IOException e) {
 ////                    e.printStackTrace();
 ////                    System.exit(-1);
@@ -250,7 +250,7 @@
 //                        "",
 //                        "127.0.0.1",
 //                        8188);
-//                assert clientController2.start("ClientResponder controller");
+//                assert clientController2.start("ClientResponder packageRouter");
 //                clientController2.close();
 ////                } catch (IOException e) {
 ////                    e.printStackTrace();
@@ -306,7 +306,7 @@
 //        System.out.println("Connecting");
 //
 //        assert clientController.connect("","127.0.0.1", 8188);
-//        assert clientController.start("ClientResponder controller");
+//        assert clientController.start("ClientResponder packageRouter");
 //        ExecutorService service = Executors.newFixedThreadPool(10);
 //
 //        System.out.println("Connected");
@@ -370,7 +370,7 @@
 //                        "127.0.0.1",
 //                        8188
 //                );
-//                clientController.start("ClientResponder controller test");
+//                clientController.start("ClientResponder packageRouter test");
 //            });
 //        }
 //        System.out.println("GO");

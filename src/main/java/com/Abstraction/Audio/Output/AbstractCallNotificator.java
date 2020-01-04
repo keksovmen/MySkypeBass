@@ -2,19 +2,39 @@ package com.Abstraction.Audio.Output;
 
 import com.Abstraction.Util.Interfaces.Starting;
 
-public abstract class AbstractCallNotificator implements Starting, ChangeOutput {
+/**
+ * Handles call notifications
+ */
+
+public abstract class AbstractCallNotificator implements Starting, ChangeOutputDevice {
 
     /**
      * Use for getting particular audio output
      */
 
     protected volatile int indexOfOutput;
+
+    /**
+     * State for thread play call message sound
+     */
+
     protected volatile boolean isWorking;
 
+    /**
+     * @param indexOfParticularDevice key in {@link com.Abstraction.Audio.Helper.AudioHelper#getOutputLines()}
+     */
+
     @Override
-    public void changeOutput(int indexOfParticularMixer) {
-        indexOfOutput = indexOfParticularMixer;
+    public void changeOutputDevice(int indexOfParticularDevice) {
+        indexOfOutput = indexOfParticularDevice;
     }
+
+    /**
+     * Tries to start new thread that will play call sound
+     *
+     * @param name with given name
+     * @return true if new thread started
+     */
 
     @Override
     public boolean start(String name) {
@@ -23,7 +43,7 @@ public abstract class AbstractCallNotificator implements Starting, ChangeOutput 
         isWorking = true;
 
         new Thread(() -> {
-            while (isWorking){
+            while (isWorking) {
                 playCallSound();
             }
         }, name).start();

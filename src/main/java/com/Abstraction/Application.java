@@ -8,8 +8,13 @@ import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Pipeline.SimpleComponent;
+import com.Abstraction.Util.Resources.Resources;
 import com.Abstraction.Util.Logging.LoggerUtils;
-import com.Abstraction.Util.Resources;
+
+
+/**
+ * Represent basic application initialisation
+ */
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,13 +23,26 @@ import java.util.logging.LogManager;
 
 public class Application {
 
+    /**
+     * From which you will get platform dependent resources
+     */
+
     protected final AbstractApplicationFactory factory;
+
+    private ClientModelBase model;
+    private AbstractClient client;
+    private CompositeComponent gui;
+    private SimpleComponent audio;
 
     public Application(AbstractApplicationFactory factory) {
         this.factory = factory;
     }
 
-    protected void uniqueChecks(){
+    /**
+     * Initialise enums, make sure they unique
+     */
+
+    protected void uniqueChecks() {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
         logInitialisation();
@@ -44,17 +62,26 @@ public class Application {
         }
     }
 
-    protected void singletonInitialisation(){
+    /**
+     * Singletons initialisation
+     */
+
+    protected void singletonInitialisation() {
         AbstractDataPackagePool.init(factory.createPool());
         AudioSupplier.setHelper(factory.createAudioHelper());
         Resources.setInstance(factory.createResources());
     }
 
-    protected void createAndCommutateComponents(){
-        ClientModelBase model = factory.createModel();
-        AbstractClient client = factory.createClient(model);
-        CompositeComponent gui = factory.createGUI();
-        SimpleComponent audio = factory.createAudio(client, factory.createAudioFactory());
+    /**
+     * Initialisation of all components
+     * and connecting them together
+     */
+
+    protected void createAndCommutateComponents() {
+        model = factory.createModel();
+        client = factory.createClient(model);
+        gui = factory.createGUI();
+        audio = factory.createAudio(client, factory.createAudioFactory());
 
         model.attach(gui);
         model.attach(audio);
@@ -66,7 +93,11 @@ public class Application {
         gui.attach(audio);
     }
 
-    public void start(){
+    /**
+     * Lazy start of the application
+     */
+
+    public void start() {
         uniqueChecks();
         singletonInitialisation();
         createAndCommutateComponents();

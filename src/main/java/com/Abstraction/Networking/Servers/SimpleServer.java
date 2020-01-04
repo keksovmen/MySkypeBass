@@ -1,20 +1,21 @@
 package com.Abstraction.Networking.Servers;
 
-import com.Abstraction.Audio.Misc.AbstractAudioFormat;
+import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Networking.Handlers.ServerHandler;
-import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.ServerWriter;
-import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Networking.Writers.*;
+import com.Abstraction.Util.Algorithms;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,19 +27,17 @@ import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
  * Implementation of server with my protocol
  * Basic TCP, but best way is made this was use TCP for everything
  * except sound data for that should be better UDP
- * but I too lazy to implement it
+ * but I am too lazy to implement it
  */
 
 public class SimpleServer extends AbstractServer {
 
 
-    public final int BUFFER_SIZE_FOR_IO;
-
-    /**
-     * Must be less or equal ProtocolBitMap.MAX_VALUE
-     */
-
-    private final int MIC_CAPTURE_SIZE;
+    //    /**
+//     * Must be less or equal ProtocolBitMap.MAX_VALUE
+//     */
+//
+//    private final int MIC_CAPTURE_SIZE;
 
     /**
      * Place where you get your unique id
@@ -54,11 +53,11 @@ public class SimpleServer extends AbstractServer {
     private final ConcurrentHashMap<Integer, ServerUser> users;
 
     /**
-     * Format for audio data, if client can't handleRequest it on mic or speaker
+     * Format for audio data, if client can't handleDataPackageRouting it on mic or speaker
      * he must be disconnected, but i will rewrite this
      */
 
-    private final AbstractAudioFormat audioFormat;
+    private final AbstractAudioFormatWithMic audioFormat;
 
     /**
      * Creates server with give parameters
@@ -70,19 +69,20 @@ public class SimpleServer extends AbstractServer {
      * @throws ProtocolValueException if mic capture size is grater than possible length of the protocol
      */
 
-    protected SimpleServer(int port, int sampleRate, int sampleSizeInBits)
+    protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits)
             throws IOException, ProtocolValueException {
-        super(port);
-        BUFFER_SIZE_FOR_IO = Resources.getInstance().getBufferSize() * 1024;
+        super(port, isCipher, authenticator);
+        final int micCapSize;
         try {
-            MIC_CAPTURE_SIZE = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
+            micCapSize = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
         } catch (ProtocolValueException e) {
             serverSocket.close();
             throw e;
         }
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
         users = new ConcurrentHashMap<>();//change to one of concurrent maps
-        audioFormat = new AbstractAudioFormat(sampleRate, sampleSizeInBits);
+        audioFormat = new AbstractAudioFormatWithMic(sampleRate, sampleSizeInBits,
+                micCapSize);
     }
 
     /**
@@ -94,10 +94,12 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits)
+    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 port,
+                isCipher,
+                authenticator,
                 sampleRate,
                 sampleSizeInBits
         );
@@ -112,56 +114,17 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits)
+    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 Integer.valueOf(port),
+                isCipher,
+                authenticator,
                 Integer.valueOf(sampleRate),
                 Integer.parseInt(sampleSizeInBits)
         );
     }
 
-
-    /**
-     * Trying to register a new user for the server
-     * first read name from the user
-     * second writes audio format
-     * third gets true or false on the audio format
-     * than add user or disconnect him
-     * after write all users on server to him
-     * and notifyObservers all other users
-     *
-     * @param reader used to read packages
-     * @param writer used to write to the dude
-     * @return true only if you are able to use this audio format
-     */
-
-    @Override
-    public ServerUser authenticate(BaseReader reader, ServerWriter writer) {
-        try {
-            AbstractDataPackage dataPackage = reader.read();
-            final String name = dataPackage.getDataAsString();
-            AbstractDataPackagePool.returnPackage(dataPackage);
-
-            writer.writeAudioFormat(WHO.NO_NAME.getCode(), getAudioFormat());
-            dataPackage = reader.read();
-
-            if (dataPackage.getHeader().getCode() != CODE.SEND_APPROVE) {
-                //Then dude just disconnects so do we
-                AbstractDataPackagePool.returnPackage(dataPackage);
-                return null;
-            }
-            AbstractDataPackagePool.returnPackage(dataPackage);
-
-            final int id = getIdAndIncrement();
-            writer.writeId(id);
-
-            return new ServerUser(name, id, writer);
-
-        } catch (IOException e) {
-            return null;
-        }
-    }
 
     /**
      * Put new user
@@ -204,7 +167,7 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     public String getAudioFormat() {
-        return FormatWorker.getFullAudioPackage(audioFormat, MIC_CAPTURE_SIZE);
+        return AbstractAudioFormatWithMic.intoString(audioFormat);
     }
 
     /**
@@ -217,17 +180,17 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     public String getUsersExceptYou(final int exclusiveId) {
-        StringBuilder stringBuilder = new StringBuilder(50);
+        StringBuilder stringBuilder = new StringBuilder(100);
         users.forEach((integer, user) -> {
             if (integer != exclusiveId) {
-                stringBuilder.append(user.toString()).append("\n");
+                stringBuilder.append(user.toNetworkFormat()).append("\n");
             }
         });
         return stringBuilder.toString();
     }
 
     /**
-     * Get controller for other usages
+     * Get packageRouter for other usages
      *
      * @param who to get id
      * @return null if there is no such dude
@@ -250,12 +213,73 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected void acceptSocket(Socket socket) {
-        ServerHandler serverHandler = new ServerHandler(this, socket);
-        if (!serverHandler.start("SimpleServer controller - ")) {
-            try {
-                socket.close();
-            } catch (IOException ignored) {
+        InputStream inputStream;
+        OutputStream outputStream;
+        try {
+            inputStream = socket.getInputStream();
+            outputStream = socket.getOutputStream();
+        } catch (IOException ignored) {
+            //fuck him
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+        Authenticator.CommonStorage storage = authenticator.serverAuthentication(inputStream, outputStream, getAudioFormat(), getIdAndIncrement(), isCipherMode);
+
+        if (storage.isNetworkFailure){
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+        if (!storage.isAudioFormatAccepted){
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+        if (storage.isSecureConnection){
+            if (!storage.isSecureConnectionAccepted){
+                Algorithms.closeSocketThatCouldBeClosed(socket);
+                return;
             }
+        }
+        ServerUser user = createUser(storage, inputStream, outputStream);
+        registerUser(user);
+
+
+        ServerHandler serverHandler = createServerHandler(socket, user);
+        serverHandler.start("Server - " + user.toString());//already started if true returned
+    }
+
+    @Override
+    protected ServerHandler createServerHandler(Socket socket, ServerUser user) {
+        return new ServerHandler(this, socket, user);
+    }
+
+    @Override
+    protected Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream) {
+        final int bufferSize = Resources.getInstance().getBufferSize();
+        if (storage.isSecureConnection) {
+            return new ServerCipherWriter(outputStream, bufferSize, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
+        } else {
+            return new PlainWriter(outputStream, bufferSize);
+        }
+    }
+
+    @Override
+    protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream) {
+        if (storage.isSecureConnection){
+            return new ServerUser(
+                    storage.name,
+                    storage.myID,
+                    storage.cryptoHelper.getKey(),
+                    storage.cryptoHelper.getParameters(),
+                    new ServerWriter(createWriterForUser(storage, outputStream)),
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+            );
+        }else {
+            return new ServerUser(
+                    storage.name,
+                    storage.myID,
+                    new ServerWriter(createWriterForUser(storage, outputStream)),
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+            );
         }
     }
 
@@ -299,10 +323,10 @@ public class SimpleServer extends AbstractServer {
                         try {
                             user.getWriter().writeAddToUserList(
                                     user.getId(),
-                                    userToAdd.toString()
+                                    userToAdd.toNetworkFormat()
                             );
                         } catch (IOException ignored) {
-                            //If exception with io, is must be handled by corresponding thread not yours
+                            //If exception with io, it must be handled by corresponding thread not yours
                         }
                     });
                 }
@@ -325,7 +349,7 @@ public class SimpleServer extends AbstractServer {
                                 dudesId
                         );
                     } catch (IOException ignored) {
-                        //If exception with io, is must be handled by corresponding thread not yours
+                        //If exception with io, it must be handled by corresponding thread not yours
                     }
                 })
         );

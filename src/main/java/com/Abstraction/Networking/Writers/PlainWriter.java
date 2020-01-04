@@ -13,7 +13,7 @@ import java.io.OutputStream;
  * Thread safe can call write methods then will be sent sequentially
  */
 
-public class BaseWriter {
+public class PlainWriter implements Writer {
 
     /**
      * Where to write
@@ -21,7 +21,8 @@ public class BaseWriter {
 
     protected final DataOutputStream outputStream;
 
-    protected BaseWriter(OutputStream outputStream, int bufferSize) {
+
+    public PlainWriter(OutputStream outputStream, int bufferSize) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
     }
 
@@ -32,19 +33,21 @@ public class BaseWriter {
      * @throws IOException if network failing occurs
      */
 
+    @Override
     public synchronized void write(AbstractDataPackage dataPackage) throws IOException {
         writeWithoutReturnToPool(dataPackage);
         AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
     /**
-     * Same as above but doesn't return data package in to pull
+     * Same as above but doesn't return data package in to pool
      * for cash purposes
      *
      * @param dataPackage to write
      * @throws IOException if network fails
      */
 
+    @Override
     public synchronized void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         outputStream.write(dataPackage.getHeader().getRawHeader());// cashed in other implementation @see serverWriter
         if (dataPackage.getHeader().getLength() != 0) {

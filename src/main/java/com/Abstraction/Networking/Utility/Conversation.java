@@ -83,13 +83,13 @@ public class Conversation {
      */
 
     public synchronized void addDude(ServerUser dude, ServerUser except) {
-        users.forEach(serverController -> {
-            if (serverController.getId() == except.getId())
+        users.forEach(user -> {
+            if (user.getId() == except.getId())
                 return;
             try {
-                serverController.getWriter().writeAddToConv(dude.getId(), serverController.getId());
+                user.getWriter().writeAddToConv(dude.getId(), user.getId());
             } catch (IOException ignored) {
-                //who you send message is offline ignore it. His thread will handleRequest shit
+                //who you send message is offline ignore it. His thread will handleDataPackageRouting shit
             }
         });
         users.add(dude);
@@ -115,7 +115,7 @@ public class Conversation {
             try {
                 serverController.getWriter().writeRemoveFromConv(user.getId(), serverController.getId());
             } catch (IOException ignored) {
-                //Ignore this dude's thread will handleRequest the mess
+                //Ignore this dude's thread will handleDataPackageRouting the mess
             }
         });
         if (users.size() == 1){
@@ -126,7 +126,7 @@ public class Conversation {
                 last.getWriter().writeStopConv(last.getId());
                 last.setConversation(null);
             } catch (IOException ignored) {
-                //Ignore this dude's thread will handleRequest the mess
+                //Ignore this dude's thread will handleDataPackageRouting the mess
             }
         }
     }

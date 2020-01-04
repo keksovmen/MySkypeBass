@@ -1,6 +1,7 @@
 package com.Abstraction.Model;
 
 import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Util.Interfaces.Registration;
 
 import java.util.Arrays;
@@ -11,13 +12,20 @@ import java.util.logging.Level;
 import static com.Abstraction.Util.Logging.LoggerUtils.clientLogger;
 
 /**
- * Contain listeners for users update
+ * Contain listeners for users modelObservation
  * And can register and remove them
  */
 
-public class ClientModelBase extends BaseUnEditableModel implements Registration<Updater>, ChangeableModel {
+public class ClientModelBase extends BaseUnEditableModel implements Registration<ModelObserver>, ChangeableModel {
 
-    private final Set<Updater> listeners;
+    private final Set<ModelObserver> listeners;
+
+    /**
+     * Represents you on server
+     * Will be set after connection to a server is established, and removed on disconnect
+     */
+
+    private ClientUser myself;
 
     /**
      * LinkedHashSet because want order dependency, just in case
@@ -28,12 +36,12 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public void attach(Updater listener) {
+    public void attach(ModelObserver listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void detach(Updater listener) {
+    public void detach(ModelObserver listener) {
         listeners.remove(listener);
     }
 
@@ -131,9 +139,19 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
         notifyListeners();
     }
 
+    @Override
+    public ClientUser getMyself() {
+        return myself;
+    }
+
+    @Override
+    public void setMyself(ClientUser me) {
+        myself = me;
+    }
+
     private void notifyListeners() {
         clientLogger.entering(this.getClass().getName(),"notifyListeners");
-        listeners.forEach(updater -> updater.update(this));
+        listeners.forEach(updater -> updater.modelObservation(this));
         clientLogger.exiting(this.getClass().getName(),"notifyListeners");
     }
 }

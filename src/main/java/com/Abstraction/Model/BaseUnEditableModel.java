@@ -37,6 +37,11 @@ public abstract class BaseUnEditableModel implements UnEditableModel{
         return new TreeMap<>(userMap);
     }
 
+    /**
+     *
+     * @return Copy of this set, as instant snapshot
+     */
+
     @Override
     public Set<BaseUser> getConversation(){
         return new HashSet<>(conversation);

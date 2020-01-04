@@ -7,6 +7,7 @@ import com.Abstraction.Networking.Servers.SimpleServer;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
+import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class Client extends AbstractClient {
             return;
         }
         try {
-            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2]);
+            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2], (Boolean) data[3], authenticator);
         } catch (IOException e) {
             stringNotify(ACTIONS.PORT_ALREADY_BUSY, strings[0]);
             return;
@@ -76,6 +77,15 @@ public class Client extends AbstractClient {
                 || !FormatWorker.verifyOnlyDigits(sampleSize)) {
             stringNotify(ACTIONS.WRONG_SAMPLE_SIZE_FORMAT, sampleSize);
             return null;
+        }
+
+        Boolean encryption = (Boolean) data[3];
+        if (encryption){
+            if (!Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)) {
+                stringNotify(ACTIONS.CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED, "Server can't be created in encrypted mode, not supported, by your JVM. Format is - "
+                        + Crypto.STANDARD_CIPHER_FORMAT);
+                return null;
+            }
         }
 
         return new String[]{port, sampleRate, sampleSize};

@@ -12,8 +12,10 @@ public interface LogicObserver {
     /**
      * Implementer should react some how on given action with
      * correspond resources
+     *
      * @param action command
-     * @param data see ACTIONS enum for more info what it could be
+     * @param data   see {@link com.Abstraction.Pipeline.ACTIONS} enum for more info what it could be
+     * @see ACTIONS
      */
 
     void observe(ACTIONS action, Object[] data);

@@ -11,7 +11,15 @@ import java.util.Set;
 
 public interface UnEditableModel {
 
+    /**
+     * @return copy or unmodifiable map of underlying data structure
+     */
+
     Map<Integer, BaseUser> getUserMap();
+
+    /**
+     * @return copy or unmodifiable set of underlying data structure
+     */
 
     Set<BaseUser> getConversation();
 

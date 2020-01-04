@@ -5,7 +5,7 @@ import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Implementation.GUI.Frame;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import javax.swing.*;
 import java.awt.*;

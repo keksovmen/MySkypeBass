@@ -33,6 +33,8 @@ public enum ACTIONS {
     INCOMING_SOUND, //data[0] is BaseUser who sent or null if not present in model, data[1] is byte[] sound, data[2] is Integer id of the dude who sent it
     INVALID_AUDIO_FORMAT, //data[0] is message as String
     ALREADY_CONNECTED_TO_SERVER, //data[0] is your BaseUser.toString() need in case of something
+    CIPHER_FORMAT_IS_NOT_ACCEPTED, //data[0] is String contain message
+    CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED, //data[0] is String contain message
 
 
 }

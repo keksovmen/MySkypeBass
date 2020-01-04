@@ -1,6 +1,7 @@
 package com.Abstraction.Model;
 
 import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.ClientUser;
 
 /**
  * Interface for model that can change its values
@@ -23,5 +24,9 @@ public interface ChangeableModel extends UnEditableModel {
     void clear();
 
     void clearConversation();
+
+    ClientUser getMyself();
+
+    void setMyself(ClientUser me);
 
 }

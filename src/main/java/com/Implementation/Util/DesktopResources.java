@@ -1,9 +1,9 @@
 package com.Implementation.Util;
 
-import com.Abstraction.Util.AbstractResources;
+import com.Abstraction.Util.Resources.AbstractResources;
 import com.Abstraction.Util.Collection.Pair;
 import com.Abstraction.Util.Collection.Track;
-import com.Abstraction.Util.Resources;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,7 +18,7 @@ public class DesktopResources extends AbstractResources {
     public DesktopResources() {
         notificationTracks = new HashMap<>();
         int id = 0;
-        List<Pair<String, String>> pairs = null;
+        List<Pair<String, String>> pairs;
         try {
             pairs = XMLWorker.retrieveNames(Checker.getCheckedInput("/sound/Notifications.xml"));
         } catch (NoSuchFileException e) {
