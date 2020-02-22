@@ -21,16 +21,18 @@ public abstract class AbstractResources {
 
         properties.setProperty("HistorySize", "10");//gui
 
-        properties.setProperty("ReaderWriterBuffer", "32"); //in kB client, server logic
+        properties.setProperty("ReaderWriterBuffer", "64"); //in kB client, server logic
 
-        properties.setProperty("WriterLockTime", "300");//server
+        properties.setProperty("WriterLockTime", "50");//server
         properties.setProperty("TimeOut", "10");//client logic -> gui
 
         properties.setProperty("DefaultName", "");//client logic -> gui
         properties.setProperty("DefaultIP", "127.0.0.1");//client logic -> gui
         properties.setProperty("DefaultPort", "8188");//client logic -> gui
 
-        properties.setProperty("DefaultRate", "44100");//server logic -> gui
+        properties.setProperty("DefaultRate", "24000");//server logic -> gui
+
+        properties.setProperty("AudioDurationDivider", "2");//server logic
 
         return properties;
     }
@@ -88,5 +90,9 @@ public abstract class AbstractResources {
     public String getDefaultRate() {
         return properties.getProperty("DefaultRate");
 
+    }
+
+    public int getServerAudioDividerForLags(){
+        return Integer.parseInt(properties.getProperty("AudioDurationDivider"));
     }
 }

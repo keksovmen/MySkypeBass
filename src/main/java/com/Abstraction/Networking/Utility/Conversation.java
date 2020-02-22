@@ -2,11 +2,14 @@ package com.Abstraction.Networking.Utility;
 
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
+import com.Abstraction.Networking.Utility.Users.ConversationServerUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Consumer;
 
 /**
  * Handles all conversation actions
@@ -20,7 +23,18 @@ public class Conversation {
      * CopyOnWriteArrayList works well
      */
 
-    private final List<ServerUser> users;
+    private final List<ConversationServerUser> users;
+
+    /**
+     * Displays duration of 1 audio fragment
+     * Measured in microseconds
+     */
+
+    private final int AUDIO_FRAME_DURATION = 1_000_000 / Resources.getInstance().getMiCaptureSizeDivider();
+
+    private final int AUDIO_FRAME_DURATION_PART = AUDIO_FRAME_DURATION / Resources.getInstance().getServerAudioDividerForLags();
+
+    private final Consumer<Runnable> serverExecutorService;
 
     /**
      * Creates conversation for two dudes that know about each other
@@ -29,10 +43,11 @@ public class Conversation {
      * @param second dude
      */
 
-    public Conversation(ServerUser first, ServerUser second) {
+    public Conversation(ServerUser first, ServerUser second, Consumer<Runnable> serverExecutorService) {
         users = new CopyOnWriteArrayList<>();
-        users.add(first);
-        users.add(second);
+        users.add(new ConversationServerUser(first));
+        users.add(new ConversationServerUser(second));
+        this.serverExecutorService = serverExecutorService;
     }
 
     /**
@@ -43,11 +58,27 @@ public class Conversation {
      */
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
-        for (ServerUser user : users) {
-            if (user.getId() == from)
+        for (ConversationServerUser user : users) {
+            if (user.IsSuspended() || user.getId() == from)
                 continue;
             try {
+                long before = System.nanoTime();
                 user.getWriter().transferAudio(dataPackage);
+                long after = (System.nanoTime() - before) / 1_000;
+//                System.out.println(after + "\t" + user.toString());
+                if (after > AUDIO_FRAME_DURATION_PART){
+                    //This dude has shitty internet connection fuck him, let him chill some time
+                    if (user.suspend()) {
+                        serverExecutorService.accept(() -> {
+                            try {
+                                Thread.sleep(3000);
+                                user.unSuspend();
+                            } catch (InterruptedException ignored) {
+                                //if happens server is dead by this time
+                            }
+                        });
+                    }
+                }
             } catch (IOException ignored) {
                 //His thread will fix it
             }
@@ -60,9 +91,9 @@ public class Conversation {
      * @param dataPackage contains message data
      */
 
-    public void sendMessage(AbstractDataPackage dataPackage, ServerUser me) {
-        for (ServerUser user : users) {
-            if (user.equals(me))
+    public void sendMessage(AbstractDataPackage dataPackage, int me) {
+        for (ConversationServerUser user : users) {
+            if (user.getId() == me)
                 continue;
             try {
                 user.getWriter().transferPacket(dataPackage);
@@ -89,7 +120,7 @@ public class Conversation {
                 //who you send message is offline ignore it. His thread will handleDataPackageRouting shit
             }
         });
-        users.add(dude);
+        users.add(new ConversationServerUser(dude));
         dude.setConversation(this);
     }
 
@@ -102,7 +133,7 @@ public class Conversation {
      */
 
     public synchronized void removeDude(ServerUser user) {
-        users.remove(user);
+        users.remove(new ConversationServerUser(user)); //Supa retarded code but will work, due to our object is proxy and on remove it compares through equals()
         user.setConversation(null);
         users.forEach(serverController -> {
             try {
@@ -112,7 +143,7 @@ public class Conversation {
             }
         });
         if (users.size() == 1){
-            ServerUser last = users.get(0);
+            ConversationServerUser last = users.get(0);
             try {
                 last.getWriter().writeStopConv(last.getId());
                 last.setConversation(null);

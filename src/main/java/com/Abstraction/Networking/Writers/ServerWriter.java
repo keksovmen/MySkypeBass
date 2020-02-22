@@ -32,7 +32,7 @@ public class ServerWriter implements Writer {
      * in millis, not calculated
      */
 
-    private final int LOCK_TIME; //default 300
+    private final int LOCK_TIME; //default 50
 
 
     public ServerWriter(Writer writer) {

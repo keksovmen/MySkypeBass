@@ -70,6 +70,12 @@ public abstract class AbstractServer implements Starting {
         }
     }
 
+    public void asyncTusk(Runnable task){
+        if (executorService == null)
+            throw new IllegalStateException("Execute service is null, mean it wasn't initialised");
+        executorService.execute(task);
+    }
+
 
     /**
      * Basically adds user in an underlying collection

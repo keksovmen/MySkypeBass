@@ -112,7 +112,7 @@ public class ServerProcessor implements Processable {
         if (to == WHO.CONFERENCE.getCode()) {
             Conversation conversation = me.getConversation();
             if (conversation != null) {
-                conversation.sendMessage(dataPackage, me);
+                conversation.sendMessage(dataPackage, me.getId());
             } else {
                 //tell him that he is not in a conversation
                 try {
@@ -233,7 +233,7 @@ public class ServerProcessor implements Processable {
             receiverOfAllDudes = me;
         } else {
             //create conv for us
-            conversation = new Conversation(me, receiver);
+            conversation = new Conversation(me, receiver, server::asyncTusk);
             me.setConversation(conversation);
             receiver.setConversation(conversation);
         }
