@@ -35,6 +35,6 @@ public enum ACTIONS {
     ALREADY_CONNECTED_TO_SERVER, //data[0] is your BaseUser.toString() need in case of something
     CIPHER_FORMAT_IS_NOT_ACCEPTED, //data[0] is String contain message
     CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED, //data[0] is String contain message
-
+    UDP_SOCKET_NOT_BINDED,  //data[0] is String contain message
 
 }

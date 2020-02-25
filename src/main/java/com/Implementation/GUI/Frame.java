@@ -143,6 +143,10 @@ public class Frame implements CompositeComponent {
                     showErrorMessage((String) data[0]);
                     break;
                 }
+                case UDP_SOCKET_NOT_BINDED:{
+                    showErrorMessage((String) data[0]);
+                    break;
+                }
             }
 
             callDialog.observe(action, data);

@@ -176,6 +176,9 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public void init(final byte[] data) {
+        if (data.length < ProtocolBitMap.PACKET_SIZE)
+            throw new IllegalArgumentException("Raw header has wrong size! Yours - " +
+                    data.length + ". Needed - " + ProtocolBitMap.PACKET_SIZE);
         code = CODE.parse(Algorithms.combineTwoBytes(data[0], data[1]));
         length = Algorithms.combineTwoBytes(data[2], data[3]);
         from = Algorithms.combineTwoBytes(data[4], data[5]);

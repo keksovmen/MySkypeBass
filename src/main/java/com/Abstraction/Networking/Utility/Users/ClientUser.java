@@ -1,6 +1,6 @@
 package com.Abstraction.Networking.Utility.Users;
 
-import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Networking.Writers.ClientWriter;
 
 import java.security.AlgorithmParameters;
@@ -20,22 +20,25 @@ public class ClientUser extends UserWithLock {
 
 
     private final ClientWriter writer;
-    private final BaseReader reader;
+    private final Reader readerTCP;
+    private final Reader readerUDP;
 
 
     private int whoCalling = NO_ONE;
 
 
-    public ClientUser(String name, int id, ClientWriter writer, BaseReader reader) {
+    public ClientUser(String name, int id, ClientWriter writer, Reader readerTCP, Reader readerUDP) {
         super(name, id);
         this.writer = writer;
-        this.reader = reader;
+        this.readerTCP = readerTCP;
+        this.readerUDP = readerUDP;
     }
 
-    public ClientUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ClientWriter writer, BaseReader reader) {
+    public ClientUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ClientWriter writer, Reader readerTCP, Reader readerUDP) {
         super(name, id, sharedKey, algorithmParameters);
         this.writer = writer;
-        this.reader = reader;
+        this.readerTCP = readerTCP;
+        this.readerUDP = readerUDP;
     }
 
     /**
@@ -64,8 +67,12 @@ public class ClientUser extends UserWithLock {
         return writer;
     }
 
-    public BaseReader getReader() {
-        return reader;
+    public Reader getReaderTCP() {
+        return readerTCP;
+    }
+
+    public Reader getReaderUDP() {
+        return readerUDP;
     }
 
     public int isCalling(){

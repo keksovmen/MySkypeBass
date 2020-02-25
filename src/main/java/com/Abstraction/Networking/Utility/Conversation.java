@@ -7,6 +7,7 @@ import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -59,19 +60,21 @@ public class Conversation {
 
     public void sendSound(AbstractDataPackage dataPackage, int from) {
         for (ConversationServerUser user : users) {
-            if (user.IsSuspended() || user.getId() == from)
+//            if (user.IsSuspended() && user.getId() == from)
+//                break;
+            if (user.getId() == from || user.IsSuspended())
                 continue;
             try {
                 long before = System.nanoTime();
                 user.getWriter().transferAudio(dataPackage);
                 long after = (System.nanoTime() - before) / 1_000;
-//                System.out.println(after + "\t" + user.toString());
+                System.out.println(after + "\t" + user.toString());
                 if (after > AUDIO_FRAME_DURATION_PART){
                     //This dude has shitty internet connection fuck him, let him chill some time
                     if (user.suspend()) {
                         serverExecutorService.accept(() -> {
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(1000);
                                 user.unSuspend();
                             } catch (InterruptedException ignored) {
                                 //if happens server is dead by this time
@@ -133,7 +136,7 @@ public class Conversation {
      */
 
     public synchronized void removeDude(ServerUser user) {
-        users.remove(new ConversationServerUser(user)); //Supa retarded code but will work, due to our object is proxy and on remove it compares through equals()
+        removeDuded(user.getId());
         user.setConversation(null);
         users.forEach(serverController -> {
             try {
@@ -169,5 +172,10 @@ public class Conversation {
             result.append(user.toString()).append("\n");
         });
         return result.toString();
+    }
+
+
+    private void removeDuded(int id){
+        users.removeIf(conversationServerUser -> conversationServerUser.getId() == id);
     }
 }

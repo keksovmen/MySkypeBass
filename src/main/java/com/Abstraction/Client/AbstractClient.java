@@ -1,10 +1,13 @@
 package com.Abstraction.Client;
 
+import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
+import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
@@ -22,8 +25,10 @@ import com.Abstraction.Util.Resources.Resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -171,15 +176,24 @@ public abstract class AbstractClient implements Logic {
         if (strings == null) return;
 
         Socket socket = new Socket();
+        DatagramSocket datagramSocket = null;
         InputStream inputStream;
         OutputStream outputStream;
         try {
+            datagramSocket = new DatagramSocket(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])));
             socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
+        } catch (SocketException e) {
+            plainNotify(ACTIONS.CONNECT_FAILED);
+            stringNotify(ACTIONS.UDP_SOCKET_NOT_BINDED, "Your UDP socket is already in use by other software!");
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
+            return;
         } catch (IOException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
             Algorithms.closeSocketThatCouldBeClosed(socket);
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
             return;
         }
 
@@ -190,7 +204,7 @@ public abstract class AbstractClient implements Logic {
             return;
         }
 
-        finishSucceededConnection(storage, inputStream, outputStream, socket);
+        finishSucceededConnection(storage, inputStream, outputStream, socket, datagramSocket);
     }
 
     protected void onDisconnect() {
@@ -300,11 +314,11 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected ClientNetworkHelper createNetworkHelper(Socket socket) {
+    protected ClientNetworkHelper createNetworkHelper(Socket socket, DatagramSocket datagramSocket) {
         if (isSecureConnection) {
-            return new ClientCipherNetworkHelper(this, socket);
+            return new ClientCipherNetworkHelper(this, socket, datagramSocket);
         } else {
-            return new ClientNetworkHelper(this, socket);
+            return new ClientNetworkHelper(this, socket, datagramSocket);
         }
     }
 
@@ -316,7 +330,7 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream) {
+    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket) {
         if (storage.isSecureConnection) {
             return new ClientUser(
                     storage.name,
@@ -324,14 +338,16 @@ public abstract class AbstractClient implements Logic {
                     storage.cryptoHelper.getKey(),
                     storage.cryptoHelper.getParameters(),
                     new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
+                    new UDPReader(datagramSocket, ProtocolBitMap.PACKET_SIZE + AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize())
             );
         } else {
             return new ClientUser(
                     storage.name,
                     storage.myID,
                     new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
+                    new UDPReader(datagramSocket, ProtocolBitMap.PACKET_SIZE + AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize())
             );
         }
     }
@@ -419,10 +435,10 @@ public abstract class AbstractClient implements Logic {
      * @param socket       connected
      */
 
-    protected void finishSucceededConnection(Authenticator.ClientStorage storage, InputStream inputStream, OutputStream outputStream, Socket socket) {
-        ClientUser me = createClientUser(storage, outputStream, inputStream);
+    protected void finishSucceededConnection(Authenticator.ClientStorage storage, InputStream inputStream, OutputStream outputStream, Socket socket, DatagramSocket datagramSocket) {
+        ClientUser me = createClientUser(storage, outputStream, inputStream, datagramSocket);
         model.setMyself(me);
-        networkHelper = createNetworkHelper(socket);
+        networkHelper = createNetworkHelper(socket, datagramSocket);
         networkHelper.start("Client network helper / reader");
         stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
         try {

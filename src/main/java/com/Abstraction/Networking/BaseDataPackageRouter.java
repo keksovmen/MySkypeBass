@@ -4,6 +4,7 @@ import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 
 import java.io.IOException;
 
@@ -13,16 +14,16 @@ import java.io.IOException;
 
 public class BaseDataPackageRouter {
 
-    /**
-     * From which will fetch Data Packages
-     */
-
-    protected final BaseReader reader;
-
-
-    public BaseDataPackageRouter(BaseReader reader) {
-        this.reader = reader;
-    }
+//    /**
+//     * From which will fetch Data Packages
+//     */
+//
+//    protected final Reader reader;
+//
+//
+//    public BaseDataPackageRouter(Reader reader) {
+//        this.reader = reader;
+//    }
 
     /**
      * Action that will happen each time in a loop
@@ -33,7 +34,7 @@ public class BaseDataPackageRouter {
      * @throws IOException if network fails
      */
 
-    public boolean handleDataPackageRouting(Processable processor) throws IOException {
+    public boolean handleDataPackageRouting(Reader reader, Processable processor) throws IOException {
         AbstractDataPackage read = reader.read();
         if (!processor.process(read)) {
             DataPackagePool.returnPackage(read);

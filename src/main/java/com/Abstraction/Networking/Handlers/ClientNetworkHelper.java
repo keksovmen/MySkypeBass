@@ -5,11 +5,13 @@ import com.Abstraction.Networking.BaseDataPackageRouter;
 import com.Abstraction.Networking.ClientDataPackageRouter;
 import com.Abstraction.Networking.Processors.ClientProcessor;
 import com.Abstraction.Networking.Processors.Processable;
-import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Pipeline.ACTIONS;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.Socket;
 
 public class ClientNetworkHelper implements Starting {
@@ -19,15 +21,20 @@ public class ClientNetworkHelper implements Starting {
     protected final Socket socket;
     protected final Processable processor;
     protected final BaseDataPackageRouter packageRouter;
+    protected final DatagramSocket datagramSocket;
+//    protected final BaseDataPackageRouter packageRouterUDP;
 
     protected volatile boolean isWorking;
 
-    public ClientNetworkHelper(AbstractClient client, Socket socket) {
+    public ClientNetworkHelper(AbstractClient client, Socket socket, DatagramSocket datagramSocket) {
         this.client = client;
         this.socket = socket;
         processor = createProcessor();
 //        packageRouter = createPackageRouter(createReader());
-        packageRouter = createPackageRouter(client.getModel().getMyself().getReader());
+        packageRouter = createPackageRouter();
+        this.datagramSocket = datagramSocket;
+//        packageRouterUDP = createPackageRouter(new UDPReader(datagramSocket,
+//                ProtocolBitMap.PACKET_SIZE + AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize()));
     }
 
 //    /**
@@ -50,7 +57,7 @@ public class ClientNetworkHelper implements Starting {
 //        packageRouter = createPackageRouter(reader);
 //
 //        isWorking = true;
-//        new Thread(this::handleLoop, name + " Reader").start();
+//        new Thread(this::handleLoopTCP, name + " Reader").start();
 //
 //        return true;
 //    }
@@ -61,7 +68,8 @@ public class ClientNetworkHelper implements Starting {
         if (isWorking) return false;
 
         isWorking = true;
-        new Thread(this::handleLoop, name).start();
+        new Thread(this::handleLoopTCP, name + " TCP").start();
+        new Thread(this::handleLoopUDP, name + " UDP").start();
         return true;
     }
 
@@ -72,12 +80,9 @@ public class ClientNetworkHelper implements Starting {
         isWorking = false;
         processor.close();
         if (socket.isConnected()) {
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-                //already closed
-            }
+            Algorithms.closeSocketThatCouldBeClosed(socket);
         }
+        datagramSocket.close();
     }
 
     public boolean isWorking() {
@@ -100,14 +105,15 @@ public class ClientNetworkHelper implements Starting {
         return new ClientProcessor(client.getModel(), client);
     }
 
-    protected BaseDataPackageRouter createPackageRouter(BaseReader reader) {
-        return new ClientDataPackageRouter(reader);
+    protected BaseDataPackageRouter createPackageRouter() {
+        return new ClientDataPackageRouter();
     }
 
-    private void handleLoop() {
+    private void handleLoopTCP() {
+        Reader readerTCP = client.getModel().getMyself().getReaderTCP();
         while (isWorking) {
             try {
-                if (!packageRouter.handleDataPackageRouting(processor)) {
+                if (!packageRouter.handleDataPackageRouting(readerTCP, processor)) {
                     //if router did route but processor didn't handle it
                     close();
                 }
@@ -117,6 +123,21 @@ public class ClientNetworkHelper implements Starting {
                     client.notifyObservers(ACTIONS.CONNECTION_TO_SERVER_FAILED, null);
                     close();
                 }
+            }
+        }
+    }
+
+    private void handleLoopUDP(){
+        Reader readerUDP = client.getModel().getMyself().getReaderUDP();
+        while (isWorking) {
+            try {
+                if (!packageRouter.handleDataPackageRouting(readerUDP, processor)) {
+                    //if router did route but processor didn't handle it
+                    close();
+                }
+            } catch (IOException e) {
+                //if router didn't route due to network failure
+                //tcp will handle all errors
             }
         }
     }
