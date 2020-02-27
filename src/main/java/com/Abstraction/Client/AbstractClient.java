@@ -176,35 +176,41 @@ public abstract class AbstractClient implements Logic {
         if (strings == null) return;
 
         Socket socket = new Socket();
-        DatagramSocket datagramSocket = null;
+        DatagramSocket datagramSocket;
         InputStream inputStream;
         OutputStream outputStream;
+        InetSocketAddress socketAddress = new InetSocketAddress(strings[1], Integer.parseInt(strings[2]));
         try {
-            datagramSocket = new DatagramSocket(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])));
-            socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
+            socket.connect(socketAddress, Resources.getInstance().getTimeOut() * 1000);
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
+        } catch (IOException e) {
+            plainNotify(ACTIONS.CONNECT_FAILED);
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            return;
+        }
+
+        try {
+            datagramSocket = new DatagramSocket();
         } catch (SocketException e) {
             plainNotify(ACTIONS.CONNECT_FAILED);
             stringNotify(ACTIONS.UDP_SOCKET_NOT_BINDED, "Your UDP socket is already in use by other software!");
             Algorithms.closeSocketThatCouldBeClosed(socket);
-            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
-            return;
-        } catch (IOException e) {
-            plainNotify(ACTIONS.CONNECT_FAILED);
-            Algorithms.closeSocketThatCouldBeClosed(socket);
-            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
             return;
         }
 
-
-        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0]);
+        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0], datagramSocket.getLocalPort());
         if (!handleAuthenticationResults(storage)) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
 
-        finishSucceededConnection(storage, inputStream, outputStream, socket, datagramSocket);
+        finishSucceededConnection(createClientUser(storage,
+                outputStream, inputStream, datagramSocket,
+                new InetSocketAddress(socket.getInetAddress(),
+                        socket.getPort())),
+                createNetworkHelper(socket, datagramSocket)
+        );
     }
 
     protected void onDisconnect() {
@@ -322,32 +328,39 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected Writer createWriterForClient(OutputStream outputStream, Authenticator.ClientStorage storage) {
+    protected Writer createWriterForClient(OutputStream outputStream, Authenticator.ClientStorage storage, DatagramSocket datagramSocket) {
+        Writer writer = new PlainWriter(outputStream, Resources.getInstance().getBufferSize(), datagramSocket);
         if (storage.isSecureConnection) {
-            return new CipherWriter(outputStream, Resources.getInstance().getBufferSize(), storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
+            return new CipherWriter(writer, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
         } else {
-            return new PlainWriter(outputStream, Resources.getInstance().getBufferSize());
+            return writer;
         }
     }
 
-    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket) {
+    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
+        final int datagramSize = FormatWorker.getPackageSizeUDP(storage.isSecureConnection,
+                AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize());
+        final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
+        final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
+        final UDPReader readerUDP = new UDPReader(datagramSocket, datagramSize);
+
         if (storage.isSecureConnection) {
             return new ClientUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
                     storage.cryptoHelper.getParameters(),
-                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
-                    new UDPReader(datagramSocket, ProtocolBitMap.PACKET_SIZE + AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize())
+                    writer,
+                    readerTCP,
+                    readerUDP
             );
         } else {
             return new ClientUser(
                     storage.name,
                     storage.myID,
-                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
-                    new UDPReader(datagramSocket, ProtocolBitMap.PACKET_SIZE + AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize())
+                    writer,
+                    readerTCP,
+                    readerUDP
             );
         }
     }
@@ -428,21 +441,15 @@ public abstract class AbstractClient implements Logic {
 
     /**
      * Handle succeeded connection, send some notifies and changes model state
-     *
-     * @param storage      contain data about authentication
-     * @param inputStream  opened
-     * @param outputStream opened
-     * @param socket       connected
      */
 
-    protected void finishSucceededConnection(Authenticator.ClientStorage storage, InputStream inputStream, OutputStream outputStream, Socket socket, DatagramSocket datagramSocket) {
-        ClientUser me = createClientUser(storage, outputStream, inputStream, datagramSocket);
-        model.setMyself(me);
-        networkHelper = createNetworkHelper(socket, datagramSocket);
+    protected void finishSucceededConnection(ClientUser user, ClientNetworkHelper networkHelper) {
+        model.setMyself(user);
+        this.networkHelper = networkHelper;
         networkHelper.start("Client network helper / reader");
-        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
+        stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
         try {
-            me.getWriter().writeUsersRequest();
+            user.getWriter().writeUsersRequest();
         } catch (IOException ignored) {
             //networkHelper exception handler will handle it
         }

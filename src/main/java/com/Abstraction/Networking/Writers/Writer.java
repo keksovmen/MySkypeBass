@@ -3,6 +3,8 @@ package com.Abstraction.Networking.Writers;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 /**
  * Represents basic writer, needed for bridge pattern implementation
@@ -28,5 +30,15 @@ public interface Writer {
      */
 
     void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException;
+
+
+    void writeUDP(AbstractDataPackage dataPackage) throws IOException;
+
+    void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException;
+
+
+    void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException;
+
+    void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException;
 
 }

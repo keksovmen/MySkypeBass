@@ -29,9 +29,10 @@ public class Authenticator {
      * 1 - write my name
      * 2 - read audio format and my id
      * 3 - write response to audio format
-     * 4 - read cipher mode
-     * 5 - write response to cipher mode
-     * 6 - discuss cipher details
+     * 4 - write my UDP port
+     * 5 - read cipher mode
+     * 6 - write response to cipher mode
+     * 7 - discuss cipher details
      *
      * @param inputStream  of connected socket
      * @param outputStream of connected socket
@@ -39,7 +40,7 @@ public class Authenticator {
      * @return structure with flags
      */
 
-    public ClientStorage clientAuthentication(InputStream inputStream, OutputStream outputStream, String desiredName) {
+    public ClientStorage clientAuthentication(InputStream inputStream, OutputStream outputStream, String desiredName, int portUDP) {
         BaseReader reader = createClientReader(inputStream);
         ClientWriter writer = createClientWriter(outputStream);
 
@@ -54,6 +55,7 @@ public class Authenticator {
                 writer.writeDeclineAudioFormat();
                 return createClientAudioNotAccepted(format);
             }
+            writer.writeMyPortUDP(portUDP);
 
             if (reader.read().getHeader().getCode().equals(CODE.SEND_SERVER_CIPHER_MODE)) {
                 if (Crypto.isCipherAcceptable(Crypto.STANDARD_CIPHER_FORMAT)) {
@@ -64,13 +66,13 @@ public class Authenticator {
                     writer.writePublicKeyEncoded(cryptoHelper.getPublicKeyEncoded());
                     cryptoHelper.finishExchange(reader.read().getData());
                     cryptoHelper.setAlgorithmParametersEncoded(reader.read().getData());
-                    return createClientAudioAcceptedCipherAccepted(myID, format, cryptoHelper, desiredName);
-                }else {
+                    return createClientAudioAcceptedCipherAccepted(myID, portUDP, format, cryptoHelper, desiredName);
+                } else {
                     writer.writeCipherModeDenied();
                     return createClientAudioAcceptedCipherNotAccepted(format);
                 }
             } else {
-                return createClientAudioAcceptedPlain(myID, format, desiredName);
+                return createClientAudioAcceptedPlain(myID, portUDP, format, desiredName);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,9 +84,10 @@ public class Authenticator {
      * 1 - read his name
      * 2 - write audio format
      * 3 - read response on audio format
-     * 4 - write cipher mode
-     * 5 - read cipher response
-     * 6 - discuss cipher details
+     * 4 - read UDP port
+     * 5 - write cipher mode
+     * 6 - read cipher response
+     * 7 - discuss cipher details
      *
      * @param inputStream        of connected socket
      * @param outputStream       of connected socket
@@ -102,6 +105,7 @@ public class Authenticator {
             final String name = reader.read().getDataAsString();
             writer.writeAudioFormat(hisID, audioFormat);
             if (reader.read().getHeader().getCode().equals(CODE.SEND_AUDIO_FORMAT_ACCEPT)) {
+                final int portUDP = reader.read().getDataAsInt();
                 if (isSecureConnection) {
                     writer.writeCipherMode(hisID);
                     if (reader.read().getHeader().getCode().equals(CODE.SEND_CIPHER_MODE_ACCEPTED)) {
@@ -110,13 +114,13 @@ public class Authenticator {
                         writer.writePublicKeyEncoded(hisID, cryptoHelper.getPublicKeyEncoded());
                         writer.writeAlgorithmParams(hisID, cryptoHelper.getAlgorithmParametersEncoded());
 
-                        return createServerAudioAcceptedCipherAccepted(hisID, name, cryptoHelper);
-                    }else {
+                        return createServerAudioAcceptedCipherAccepted(hisID, portUDP, name, cryptoHelper);
+                    } else {
                         return createServerAudioAcceptedCipherNotAccepted();
                     }
                 } else {
                     writer.writePlainMode(hisID);
-                    return createServerAudioAcceptedPlain(hisID, name);
+                    return createServerAudioAcceptedPlain(hisID, portUDP, name);
                 }
             } else {
                 return createServerAudioNotAccepted();
@@ -147,48 +151,48 @@ public class Authenticator {
 
 
     private Writer createPlainWriter(OutputStream stream) {
-        return new PlainWriter(stream, Resources.getInstance().getBufferSize());
+        return new PlainWriter(stream, Resources.getInstance().getBufferSize(), null);
     }
 
-    private static ClientStorage createClientNetworkFailure(){
-        return new ClientStorage(false, true, false, false, -1, null, null, null);
+    private static ClientStorage createClientNetworkFailure() {
+        return new ClientStorage(false, true, false, false, -1, -1, null, null, null);
     }
 
-    private static ClientStorage createClientAudioNotAccepted(AbstractAudioFormatWithMic format){
-        return new ClientStorage(true, false, false, false, -1, null, null, format);
+    private static ClientStorage createClientAudioNotAccepted(AbstractAudioFormatWithMic format) {
+        return new ClientStorage(true, false, false, false, -1, -1, null, null, format);
     }
 
-    private static ClientStorage createClientAudioAcceptedPlain(int id, AbstractAudioFormatWithMic format, String name){
-        return new ClientStorage(true, false, false, false, id, name, null, format);
+    private static ClientStorage createClientAudioAcceptedPlain(int id, int portUDP, AbstractAudioFormatWithMic format, String name) {
+        return new ClientStorage(true, false, false, false, id, portUDP, name, null, format);
     }
 
-    private static ClientStorage createClientAudioAcceptedCipherNotAccepted(AbstractAudioFormatWithMic format){
-        return new ClientStorage(true, false, true, false, -1, null,null, format);
+    private static ClientStorage createClientAudioAcceptedCipherNotAccepted(AbstractAudioFormatWithMic format) {
+        return new ClientStorage(true, false, true, false, -1, -1, null, null, format);
     }
 
-    private static ClientStorage createClientAudioAcceptedCipherAccepted(int id, AbstractAudioFormatWithMic format, CommonCryptoHelper helper, String name){
-        return new ClientStorage(true, false, true, true, id, name, helper, format);
+    private static ClientStorage createClientAudioAcceptedCipherAccepted(int id, int portUDP, AbstractAudioFormatWithMic format, CommonCryptoHelper helper, String name) {
+        return new ClientStorage(true, false, true, true, id, portUDP, name, helper, format);
     }
 
 
-    private static CommonStorage createServerNetworkFailure(){
-        return new CommonStorage(false, true, false, false, -1, null,null);
+    private static CommonStorage createServerNetworkFailure() {
+        return new CommonStorage(false, true, false, false, -1, -1, null, null);
     }
 
-    private static CommonStorage createServerAudioNotAccepted(){
-        return new CommonStorage(false, false, false, false, -1, null, null);
+    private static CommonStorage createServerAudioNotAccepted() {
+        return new CommonStorage(false, false, false, false, -1, -1, null, null);
     }
 
-    private static CommonStorage createServerAudioAcceptedPlain(int id, String name){
-        return new CommonStorage(true, false, false, false, id, name, null);
+    private static CommonStorage createServerAudioAcceptedPlain(int id, int portUDP, String name) {
+        return new CommonStorage(true, false, false, false, id, portUDP, name, null);
     }
 
-    private static CommonStorage createServerAudioAcceptedCipherNotAccepted(){
-        return new CommonStorage(true, false, true, false, -1, null, null);
+    private static CommonStorage createServerAudioAcceptedCipherNotAccepted() {
+        return new CommonStorage(true, false, true, false, -1, -1, null, null);
     }
 
-    private static CommonStorage createServerAudioAcceptedCipherAccepted(int id, String name, CommonCryptoHelper helper){
-        return new CommonStorage(true, false, true, true, id, name, helper);
+    private static CommonStorage createServerAudioAcceptedCipherAccepted(int id, int portUDP, String name, CommonCryptoHelper helper) {
+        return new CommonStorage(true, false, true, true, id, portUDP, name, helper);
     }
 
     /**
@@ -207,17 +211,19 @@ public class Authenticator {
         public final boolean isSecureConnectionAccepted;
 
         public final int myID;
-
+        public final int portUDP;
 
         public final String name;
         public final CommonCryptoHelper cryptoHelper;
 
-        public CommonStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, String name, CommonCryptoHelper cryptoHelper) {
+
+        public CommonStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper) {
             this.isAudioFormatAccepted = isAudioFormatAccepted;
             this.isNetworkFailure = isNetworkFailure;
             this.isSecureConnection = isSecureConnection;
             this.isSecureConnectionAccepted = isSecureConnectionAccepted;
             this.myID = myID;
+            this.portUDP = portUDP;
             this.name = name;
             this.cryptoHelper = cryptoHelper;
         }
@@ -228,8 +234,8 @@ public class Authenticator {
 
         public final AbstractAudioFormatWithMic audioFormat;
 
-        public ClientStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, String name, CommonCryptoHelper cryptoHelper, AbstractAudioFormatWithMic audioFormat) {
-            super(isAudioFormatAccepted, isNetworkFailure, isSecureConnection, isSecureConnectionAccepted, myID, name, cryptoHelper);
+        public ClientStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper, AbstractAudioFormatWithMic audioFormat) {
+            super(isAudioFormatAccepted, isNetworkFailure, isSecureConnection, isSecureConnectionAccepted, myID, portUDP, name, cryptoHelper);
             this.audioFormat = audioFormat;
         }
     }

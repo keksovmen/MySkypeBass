@@ -233,7 +233,7 @@ public class ServerProcessor implements Processable {
             receiverOfAllDudes = me;
         } else {
             //create conv for us
-            conversation = new Conversation(me, receiver, server::asyncTusk);
+            conversation = new Conversation(me, receiver);
             me.setConversation(conversation);
             receiver.setConversation(conversation);
         }

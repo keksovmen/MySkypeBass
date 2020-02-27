@@ -2,10 +2,13 @@ package com.Abstraction.Networking.Writers;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
+import com.Abstraction.Networking.Protocol.BaseDataPackage;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 /**
  * Contain all possible write actions for a client
@@ -14,11 +17,12 @@ import java.io.IOException;
  * Part of Bridge pattern it's abstraction
  */
 
-public class ClientWriter implements Writer {
+public class ClientWriter {
 
     private final Writer bridgeImplementor;
     private final int myID;
 
+    private final InetSocketAddress address;
 
     /**
      * Base client writer with {@link #myID} = {@link WHO#NO_NAME}
@@ -29,6 +33,7 @@ public class ClientWriter implements Writer {
     public ClientWriter(Writer bridgeImplementor) {
         this.bridgeImplementor = bridgeImplementor;
         myID = WHO.NO_NAME.getCode();
+        address = null;
     }
 
     /**
@@ -38,20 +43,35 @@ public class ClientWriter implements Writer {
      * @param myID              received from server
      */
 
-    public ClientWriter(Writer bridgeImplementor, int myID) {
+    public ClientWriter(Writer bridgeImplementor, int myID, InetSocketAddress address) {
         this.bridgeImplementor = bridgeImplementor;
         this.myID = myID;
+        this.address = address;
     }
 
 
-    @Override
-    public void write(AbstractDataPackage dataPackage) throws IOException {
+    protected void write(AbstractDataPackage dataPackage) throws IOException {
         bridgeImplementor.write(dataPackage);
     }
 
-    @Override
-    public void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
+    protected void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         bridgeImplementor.writeWithoutReturnToPool(dataPackage);
+    }
+
+    protected void writeUDP(AbstractDataPackage dataPackage) throws IOException {
+        bridgeImplementor.writeUDP(dataPackage);
+    }
+
+    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
+        bridgeImplementor.writeWithoutReturnToPoolUDP(dataPackage);
+    }
+
+    protected void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        bridgeImplementor.writeUDP(dataPackage, address, port);
+    }
+
+    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        bridgeImplementor.writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
 
@@ -99,7 +119,8 @@ public class ClientWriter implements Writer {
     }
 
     public void writeSound(byte[] data) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+        writeUDP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data), address.getAddress(), address.getPort());
+//        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
     }
 
     public void writeDisconnect() throws IOException {
@@ -120,6 +141,10 @@ public class ClientWriter implements Writer {
 
     public void writeCipherModeDenied() throws IOException {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_DENIED, myID, WHO.SERVER.getCode()));
+    }
+
+    public void writeMyPortUDP(int port) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PORT, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), String.valueOf(port)));
     }
 
 }

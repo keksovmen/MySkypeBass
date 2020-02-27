@@ -17,6 +17,7 @@ public class Crypto {
     public static final String STANDARD_KEY_EXCHANGE_ALGORITHM = "DH";
     public static final String STANDARD_CIPHER_ALGORITHM = "AES";
     public static final String STANDARD_CIPHER_FORMAT = "AES/CBC/PKCS5Padding";
+    public static final int STANDARD_PADDING = 16;
 
     private static final List<String> formats = new ArrayList<>();
 

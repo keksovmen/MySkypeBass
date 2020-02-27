@@ -7,6 +7,8 @@ import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Contain not all possible server write actions
  */
 
-public class ServerWriter implements Writer {
+public class ServerWriter {
 
     private final Writer writer;
 
@@ -42,15 +44,31 @@ public class ServerWriter implements Writer {
         LOCK_TIME = Resources.getInstance().getLockTime();
     }
 
-    @Override
-    public void write(AbstractDataPackage dataPackage) throws IOException {
+
+    protected void write(AbstractDataPackage dataPackage) throws IOException {
         writer.write(dataPackage);
     }
 
-    @Override
-    public void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
+    protected void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         writer.writeWithoutReturnToPool(dataPackage);
     }
+
+    protected void writeUDP(AbstractDataPackage dataPackage) throws IOException {
+        writer.writeUDP(dataPackage);
+    }
+
+    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
+        writer.writeWithoutReturnToPoolUDP(dataPackage);
+    }
+
+    protected void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writer.writeUDP(dataPackage, address, port);
+    }
+
+    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);
+    }
+
 
     public void writeAudioFormat(int id, String format) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(
@@ -74,18 +92,8 @@ public class ServerWriter implements Writer {
      * @throws IOException if networking fails
      */
 
-    public void transferAudio(AbstractDataPackage dataPackage) throws IOException {
-        try {
-            if (lock.tryLock(LOCK_TIME, TimeUnit.MILLISECONDS)) {
-                try {
-                    writeWithoutReturnToPool(dataPackage);
-                } finally {
-                    lock.unlock();
-                }
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {

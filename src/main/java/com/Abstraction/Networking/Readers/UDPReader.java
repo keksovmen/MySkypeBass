@@ -12,13 +12,11 @@ import java.util.Arrays;
 public class UDPReader implements Reader {
 
     private final DatagramSocket socket;
-//    private final int packetSize;
     private final DatagramPacket packet;
 
 
     public UDPReader(DatagramSocket socket, int packetSize) {
         this.socket = socket;
-//        this.packetSize = packetSize;
         packet = new DatagramPacket(new byte[packetSize], 0, packetSize);
     }
 
@@ -28,6 +26,8 @@ public class UDPReader implements Reader {
         byte[] data = packet.getData();
         AbstractDataPackage dataPackage = AbstractDataPackagePool.getPackage();
         dataPackage.getHeader().init(data);
+        if (dataPackage.getHeader().getLength() == 0)
+            return dataPackage;
         dataPackage.setData(Arrays.copyOfRange(data, ProtocolBitMap.PACKET_SIZE, data.length));
         return dataPackage;
     }

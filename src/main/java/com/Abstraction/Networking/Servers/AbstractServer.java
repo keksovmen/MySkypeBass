@@ -4,11 +4,14 @@ import com.Abstraction.Networking.Handlers.ServerHandler;
 import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.Writer;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 public abstract class AbstractServer implements Starting {
 
     protected final ServerSocket serverSocket;
+    protected final DatagramSocket serverSocketUDP;
 
     /**
      * Does all dirty work, for server thread
@@ -36,11 +40,12 @@ public abstract class AbstractServer implements Starting {
      * Indicator of activity state
      */
 
-    private volatile boolean isWorking;
+    protected volatile boolean isWorking;
 
 
     public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator) throws IOException {
         serverSocket = new ServerSocket(port);
+        serverSocketUDP = new DatagramSocket(port);
         this.isCipherMode = isCipherMode;
         this.authenticator = authenticator;
         executorService = createService();
@@ -54,7 +59,8 @@ public abstract class AbstractServer implements Starting {
             return false;
 
         isWorking = true;
-        new Thread(this::workLoop, name).start();
+        new Thread(this::workLoopTCP, name + " TCP").start();
+        new Thread(this::workLoopUDP, name + " UDP").start();
         return true;
     }
 
@@ -64,15 +70,11 @@ public abstract class AbstractServer implements Starting {
             return;
         isWorking = false;
         executorService.shutdown();
-        try {
-            serverSocket.close();
-        } catch (IOException ignored) {
-        }
+        Algorithms.closeSocketThatCouldBeClosed(serverSocket);
+        Algorithms.closeSocketThatCouldBeClosed(serverSocketUDP);
     }
 
     public void asyncTusk(Runnable task){
-        if (executorService == null)
-            throw new IllegalStateException("Execute service is null, mean it wasn't initialised");
         executorService.execute(task);
     }
 
@@ -156,13 +158,13 @@ public abstract class AbstractServer implements Starting {
 
     protected abstract Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream);
 
-    protected abstract ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream);
+    protected abstract ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address);
 
     /**
      * Server loop for it's main thread
      */
 
-    private void workLoop() {
+    private void workLoopTCP() {
         while (isWorking) {
             try {
                 Socket socket = serverSocket.accept();
@@ -172,4 +174,6 @@ public abstract class AbstractServer implements Starting {
             }
         }
     }
+
+    protected abstract void workLoopUDP();
 }

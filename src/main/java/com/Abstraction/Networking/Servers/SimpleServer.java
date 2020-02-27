@@ -2,20 +2,28 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Networking.Handlers.ServerHandler;
+import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
+import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.*;
+import com.Abstraction.Networking.Writers.PlainWriter;
+import com.Abstraction.Networking.Writers.ServerCipherWriter;
+import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
+import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -220,21 +228,21 @@ public class SimpleServer extends AbstractServer {
         }
         Authenticator.CommonStorage storage = authenticator.serverAuthentication(inputStream, outputStream, getAudioFormat(), getIdAndIncrement(), isCipherMode);
 
-        if (storage.isNetworkFailure){
+        if (storage.isNetworkFailure) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (!storage.isAudioFormatAccepted){
+        if (!storage.isAudioFormatAccepted) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (storage.isSecureConnection){
-            if (!storage.isSecureConnectionAccepted){
+        if (storage.isSecureConnection) {
+            if (!storage.isSecureConnectionAccepted) {
                 Algorithms.closeSocketThatCouldBeClosed(socket);
                 return;
             }
         }
-        ServerUser user = createUser(storage, inputStream, outputStream);
+        ServerUser user = createUser(storage, inputStream, outputStream, socket.getInetAddress());
         registerUser(user);
 
 
@@ -249,39 +257,69 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream) {
-        final int bufferSize = Resources.getInstance().getBufferSize();
+        Writer writer = new PlainWriter(outputStream, Resources.getInstance().getBufferSize(), serverSocketUDP);
         if (storage.isSecureConnection) {
-            return new ServerCipherWriter(outputStream, bufferSize, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
+            return new ServerCipherWriter(writer, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
         } else {
-            return new PlainWriter(outputStream, bufferSize);
+            return writer;
         }
     }
 
     @Override
-    protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream) {
-        if (storage.isSecureConnection){
+    protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
+        if (storage.isSecureConnection) {
             return new ServerUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
                     storage.cryptoHelper.getParameters(),
                     new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
+                    address,
+                    storage.portUDP
+
             );
-        }else {
+        } else {
             return new ServerUser(
                     storage.name,
                     storage.myID,
                     new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
+                    address,
+                    storage.portUDP
             );
         }
+    }
+
+    @Override
+    protected void workLoopUDP() {
+        UDPReader udpReader = new UDPReader(serverSocketUDP, FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize()));
+        while (isWorking) {
+            try {
+                AbstractDataPackage dataPackage = udpReader.read();
+                final int from = dataPackage.getHeader().getFrom();
+                ServerUser user = getUser(from);
+                if (user != null) {
+                    Conversation conversation = user.getConversation();
+                    if (conversation != null) {
+                        conversation.sendSound(dataPackage, from);
+                    }
+                }
+                AbstractDataPackagePool.returnPackage(dataPackage);
+
+            } catch (IOException ignored) {
+                //TCP socket will handle closing
+                break;
+            }
+        }
+
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
         int i = (sampleRate / Resources.getInstance().getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
         i = i - i % (sampleSizeInBits / 8);
-        if (ProtocolBitMap.MAX_VALUE < i)
+        int udpPackage = FormatWorker.getPackageSizeUDP(isCipherMode, i);
+        if (ProtocolBitMap.MAX_VALUE < i || ProtocolBitMap.MAX_VALUE < udpPackage)
             throw new ProtocolValueException("Audio capture size is larger than length of the protocol! " +
                     i + " must be " + "<= " + ProtocolBitMap.MAX_VALUE);
         return i;
