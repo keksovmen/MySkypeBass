@@ -2,7 +2,6 @@ package com.Abstraction.Networking.Writers;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Protocol.BaseDataPackage;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 
@@ -54,24 +53,8 @@ public class ClientWriter {
         bridgeImplementor.write(dataPackage);
     }
 
-    protected void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
-        bridgeImplementor.writeWithoutReturnToPool(dataPackage);
-    }
-
-    protected void writeUDP(AbstractDataPackage dataPackage) throws IOException {
-        bridgeImplementor.writeUDP(dataPackage);
-    }
-
-    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
-        bridgeImplementor.writeWithoutReturnToPoolUDP(dataPackage);
-    }
-
     protected void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         bridgeImplementor.writeUDP(dataPackage, address, port);
-    }
-
-    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
-        bridgeImplementor.writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
 

@@ -3,7 +3,6 @@ package com.Abstraction.Networking;
 import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
-import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Readers.Reader;
 
 import java.io.IOException;

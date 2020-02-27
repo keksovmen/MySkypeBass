@@ -4,14 +4,9 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Contain not all possible server write actions
@@ -21,27 +16,9 @@ public class ServerWriter {
 
     private final Writer writer;
 
-    /**
-     * Need for conference writing
-     */
-
-    private final Lock lock;
-
-    /**
-     * If internet of one of the users is garbage
-     * it will skip him through this time
-     * <p>
-     * in millis, not calculated
-     */
-
-    private final int LOCK_TIME; //default 50
-
 
     public ServerWriter(Writer writer) {
-//        super(outputStream, bufferSize);
         this.writer = writer;
-        lock = new ReentrantLock();
-        LOCK_TIME = Resources.getInstance().getLockTime();
     }
 
 
@@ -53,17 +30,6 @@ public class ServerWriter {
         writer.writeWithoutReturnToPool(dataPackage);
     }
 
-    protected void writeUDP(AbstractDataPackage dataPackage) throws IOException {
-        writer.writeUDP(dataPackage);
-    }
-
-    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
-        writer.writeWithoutReturnToPoolUDP(dataPackage);
-    }
-
-    protected void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
-        writer.writeUDP(dataPackage, address, port);
-    }
 
     protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);

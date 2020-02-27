@@ -11,8 +11,6 @@ import java.io.OutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.Arrays;
 
 /**
  * Base writer that only can write AbstractDataPackage or its children
@@ -65,21 +63,9 @@ public class PlainWriter implements Writer {
     }
 
     @Override
-    public synchronized void writeUDP(AbstractDataPackage dataPackage) throws IOException {
-        writeWithoutReturnToPoolUDP(dataPackage);
-        AbstractDataPackagePool.returnPackage(dataPackage);
-
-    }
-
-    @Override
     public synchronized void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         writeWithoutReturnToPoolUDP(dataPackage, address, port);
         AbstractDataPackagePool.returnPackage(dataPackage);
-    }
-
-    @Override
-    public synchronized void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
-        socket.send(fillPacket(dataPackage));
     }
 
     @Override
@@ -94,14 +80,8 @@ public class PlainWriter implements Writer {
         final int packetSize = ProtocolBitMap.PACKET_SIZE;
         final int length = dataPackage.getHeader().getLength();
         byte[] tmp = new byte[packetSize + length];
-        fillBuffer(tmp, 0, dataPackage.getHeader().getRawHeader(), 0, packetSize);
-        fillBuffer(tmp, packetSize, dataPackage.getData(), 0, length);
+        System.arraycopy(dataPackage.getHeader().getRawHeader(), 0, tmp, 0, packetSize);
+        System.arraycopy(dataPackage.getData(), 0, tmp, packetSize, length);
         return new DatagramPacket(tmp, 0, tmp.length);
-    }
-
-    private static void fillBuffer(byte[] buffer, int offset1, byte[] filler, int offset2, int count){
-        for (int i = 0; i < count; i++) {
-            buffer[offset1 + i] = filler[offset2 + i];
-        }
     }
 }

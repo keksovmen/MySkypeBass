@@ -76,6 +76,7 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
+//        executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new ArrayBlockingQueueWithWait<>(12), r -> new Thread(r, "Buttons handler"));
         authenticator = createAuthenticator();
 
     }

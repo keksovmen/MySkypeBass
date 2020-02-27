@@ -8,10 +8,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.ShortBufferException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -67,29 +64,21 @@ public class CipherWriter implements Writer {
     }
 
     @Override
-    public void write(AbstractDataPackage dataPackage) throws IOException {
+    public synchronized void write(AbstractDataPackage dataPackage) throws IOException {
         writer.write(encryptGivenPackage(dataPackage));
     }
 
     @Override
-    public void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
+    public synchronized void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         writer.writeWithoutReturnToPool(encryptGivenPackage(dataPackage));
     }
 
-    @Override
-    public void writeUDP(AbstractDataPackage dataPackage) throws IOException {
-        writer.writeUDP(encryptGivenPackage(dataPackage));
-    }
 
     @Override
     public void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         writer.writeUDP(encryptGivenPackage(dataPackage), address, port);
     }
 
-    @Override
-    public void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage) throws IOException {
-        writer.writeWithoutReturnToPoolUDP(encryptGivenPackage(dataPackage));
-    }
 
     @Override
     public void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {

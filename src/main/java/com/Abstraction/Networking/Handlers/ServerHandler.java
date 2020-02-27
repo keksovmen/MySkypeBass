@@ -3,7 +3,6 @@ package com.Abstraction.Networking.Handlers;
 import com.Abstraction.Networking.BaseDataPackageRouter;
 import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Processors.ServerProcessor;
-import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
