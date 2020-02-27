@@ -4,8 +4,8 @@ import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Audio.Helper.AudioHelper;
 import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Model.UnEditableModel;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Networking.Utility.Users.User;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.Set;
 public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable {
 
     /**
-     * Key is {@link BaseUser#id} so must be unique,
+     * Key is {@link User#getId()} so must be unique,
      * handled by {@link com.Abstraction.Networking.Servers.AbstractServer#registerUser(ServerUser)}
      */
 
@@ -150,8 +150,8 @@ public abstract class AbstractAudioPlayer implements ChangeableOutput, Playable 
 
     @Override
     public synchronized void modelObservation(UnEditableModel model) {
-        Set<BaseUser> conversation = model.getConversation();
-        Map<Integer, BaseUser> userMap = model.getUserMap();
+        Set<User> conversation = model.getConversation();
+        Map<Integer, User> userMap = model.getUserMap();
 
         Map<Integer, AudioOutputLine> tmp = new HashMap<>();
 

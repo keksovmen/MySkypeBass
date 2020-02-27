@@ -5,12 +5,10 @@ import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
 import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
-import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.*;
 import com.Abstraction.Networking.Writers.CipherWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
@@ -232,7 +230,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCall(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
         myself.lock();
         if (myself.isCalling() != ClientUser.NO_ONE) {
@@ -275,7 +273,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallAccepted(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
 
         ClientUser myself = model.getMyself();
         myself.drop();
@@ -289,7 +287,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallDenied(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
 
         myself.drop();
@@ -301,7 +299,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallCanceled(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
 
         myself.drop();
@@ -343,26 +341,18 @@ public abstract class AbstractClient implements Logic {
         final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final UDPReader readerUDP = new UDPReader(datagramSocket, datagramSize);
-
+        final User user;
         if (storage.isSecureConnection) {
-            return new ClientUser(
+            user = new CipherUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
-                    storage.cryptoHelper.getParameters(),
-                    writer,
-                    readerTCP,
-                    readerUDP
+                    storage.cryptoHelper.getParameters()
             );
         } else {
-            return new ClientUser(
-                    storage.name,
-                    storage.myID,
-                    writer,
-                    readerTCP,
-                    readerUDP
-            );
+            user = new PlainUser(storage.name, storage.myID);
         }
+        return new ClientUser(new BaseUserWithLock(user), writer, readerTCP, readerUDP);
     }
 
 
@@ -467,7 +457,7 @@ public abstract class AbstractClient implements Logic {
     }
 
 
-    public static void callAcceptRoutine(Logic logic, ChangeableModel model, BaseUser user) {
+    public static void callAcceptRoutine(Logic logic, ChangeableModel model, User user) {
         logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
         model.addToConversation(user);
     }

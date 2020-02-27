@@ -1,6 +1,6 @@
 package com.Implementation.GUI.Forms;
 
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.User;
 
 import javax.swing.*;
 import java.util.function.BiConsumer;
@@ -15,7 +15,7 @@ class UserSettings {
     private JLabel name;
     private JPanel mainPane;
 
-    UserSettings(BaseUser user, BiConsumer<Integer, Integer> changeVolume) {
+    UserSettings(User user, BiConsumer<Integer, Integer> changeVolume) {
         this.name.setText(user.toString());
 
         volumeLevel.addChangeListener(e -> changeVolume.accept(user.getId(), volumeLevel.getValue()));

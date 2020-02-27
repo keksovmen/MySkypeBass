@@ -4,7 +4,7 @@ import com.Abstraction.Client.Logic;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.CODE;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Util.Cryptographics.Crypto;
 
@@ -54,7 +54,7 @@ public class ClientDecoderProcessor extends ClientProcessor {
      */
 
     protected boolean initCipher(int idOfDude, CODE instruction) {
-        BaseUser user = getCorrespondUser(idOfDude, instruction);
+        User user = getCorrespondUser(idOfDude, instruction);
         if (user == null) {
             //handle not existing in underlying map
             return false;
@@ -76,7 +76,7 @@ public class ClientDecoderProcessor extends ClientProcessor {
      * @return dude that contain key and alg parameters for this package
      */
 
-    protected BaseUser getCorrespondUser(int idOfDude, CODE instruction) {
+    protected User getCorrespondUser(int idOfDude, CODE instruction) {
         switch (instruction) {
             case SEND_CALL:
             case SEND_ACCEPT_CALL:

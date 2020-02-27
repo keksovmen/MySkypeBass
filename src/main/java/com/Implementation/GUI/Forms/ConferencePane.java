@@ -2,9 +2,9 @@ package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
-import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Model.ModelObserver;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Model.UnEditableModel;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
@@ -40,7 +40,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
      * need for add and removal of users
      */
 
-    private final Map<BaseUser, UserSettings> conferenceMembers;
+    private final Map<User, UserSettings> conferenceMembers;
 
     /**
      * Function to call when need to change volume lvl of a particular dude
@@ -96,7 +96,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
         switch (action) {
             case INCOMING_MESSAGE: {
                 if ((int) data[2] == 1) // check if it suppose to go in conversation chat
-                    onMessage((BaseUser) data[0], (String) data[1]);
+                    onMessage((User) data[0], (String) data[1]);
                 return;
             }
             case EXITED_CONVERSATION: {
@@ -116,9 +116,9 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
 
     @Override
     public void modelObservation(UnEditableModel model) {
-        Set<BaseUser> conversation = model.getConversation();
+        Set<User> conversation = model.getConversation();
 
-        Map<BaseUser, UserSettings> tmp = new HashMap<>();
+        Map<User, UserSettings> tmp = new HashMap<>();
 
         conferenceMembers.forEach((user, userSettings) -> {
             if (!conversation.contains(user))
@@ -146,7 +146,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
         return mainPane;
     }
 
-    private void onMessage(BaseUser from, String message) {
+    private void onMessage(User from, String message) {
         showMessage(from, message);
     }
 
@@ -190,7 +190,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
      * they don't want to go beneath each other but from left to right
      */
 
-    private void addUser(BaseUser dude) {
+    private void addUser(User dude) {
         if (conferenceMembers.containsKey(dude)) {//should't happen
             return;
         }
@@ -209,7 +209,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
      * @param dude user to remove
      */
 
-    private void removeUser(BaseUser dude) {
+    private void removeUser(User dude) {
         UserSettings remove = conferenceMembers.remove(dude);
         if (remove != null) {
             settingsPane.remove(remove.getMainPane());
@@ -246,7 +246,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
         messagesDisplay.append(from + " (" + FormatWorker.getTime() + "): " + message + "\n");
     }
 
-    private void showMessage(BaseUser from, String message) {
+    private void showMessage(User from, String message) {
         showMessage(from.toString(), message);
     }
 

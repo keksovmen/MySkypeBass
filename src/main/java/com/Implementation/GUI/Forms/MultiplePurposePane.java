@@ -2,9 +2,9 @@ package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
-import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Model.ModelObserver;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Model.UnEditableModel;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Collection.Track;
@@ -41,7 +41,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * Has pop up menu
      */
 
-    private JList<BaseUser> usersList;
+    private JList<User> usersList;
     private JButton callButton;
     private JButton disconnectButton;
     private JTabbedPane callTable;
@@ -51,14 +51,14 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * Contain baseUser[] that on server
      */
 
-    private DefaultListModel<BaseUser> model;
+    private DefaultListModel<User> model;
 
     /**
      * Need for messaging isCashed.
      * Entries baseUser - pane
      */
 
-    private final Map<BaseUser, MessagePane> tabs;
+    private final Map<User, MessagePane> tabs;
 
     private final ConferencePane conferencePane;
 
@@ -108,7 +108,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case INCOMING_MESSAGE: {
-                showMessage((BaseUser) data[0], (String) data[1], (int) data[2] == 1);
+                showMessage((User) data[0], (String) data[1], (int) data[2] == 1);
                 break;
             }
             case DISCONNECTED: {
@@ -116,7 +116,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case CALLED_BUT_BUSY: {
-                onCalledButBusy((BaseUser) data[0]);
+                onCalledButBusy((User) data[0]);
                 break;
             }
             case CALL_ACCEPTED: {
@@ -124,7 +124,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case BOTH_IN_CONVERSATION: {
-                onBothInConv((BaseUser) data[0]);
+                onBothInConv((User) data[0]);
                 break;
             }
             case EXITED_CONVERSATION: {
@@ -176,11 +176,11 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         showConversationPane();
     }
 
-    private void onCalledButBusy(BaseUser who) {
+    private void onCalledButBusy(User who) {
         showMessage(who, "I called, but you had been calling already, call me back", false);
     }
 
-    private void onBothInConv(BaseUser from) {
+    private void onBothInConv(User from) {
         showMessage(from, "I called, but You and I are in different conversations, call me later", false);
     }
 
@@ -243,7 +243,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     private void onSendMessage() {
         if (!selected())
             return;
-        BaseUser selected = getSelected();
+        User selected = getSelected();
         if (isShownAlready(selected))
             return;
         if (isCashed(selected)) {
@@ -278,7 +278,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         return usersList.getSelectedIndex() != -1;
     }
 
-    private BaseUser getSelected() {
+    private User getSelected() {
         return model.get(usersList.getSelectedIndex());
     }
 
@@ -286,11 +286,11 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         return callTable.indexOfTab(data) != -1;
     }
 
-    private boolean isShownAlready(BaseUser user) {
+    private boolean isShownAlready(User user) {
         return isShownAlready(user.toString());
     }
 
-    private boolean isCashed(BaseUser user) {
+    private boolean isCashed(User user) {
         return tabs.containsKey(user);
     }
 
@@ -309,7 +309,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * @return ready to use MessagePane
      */
 
-    private MessagePane createPane(BaseUser user) {
+    private MessagePane createPane(User user) {
         MessagePane messagePane = new MessagePane(user, () -> closeTab(user.toString()), this);
         tabs.put(user, messagePane);
         return messagePane;
@@ -325,7 +325,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * @param message plain text
      */
 
-    private void showMessage(final BaseUser from, final String message, boolean toConv) {
+    private void showMessage(final User from, final String message, boolean toConv) {
         if (from == null) // do nothing when dude is not present in model
             return;
         String tabName;
@@ -400,10 +400,10 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         // TODO: place custom component creation code here
         model = new DefaultListModel<>();
         usersList = new JList<>(model);
-        usersList.setCellRenderer(new DefaultListCellRenderer(){
+        usersList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, ((BaseUser)value).toString(), index, isSelected, cellHasFocus);
+                return super.getListCellRendererComponent(list, value.toString(), index, isSelected, cellHasFocus);
             }
 
         });

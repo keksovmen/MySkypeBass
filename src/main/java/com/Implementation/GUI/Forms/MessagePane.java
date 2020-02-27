@@ -1,7 +1,7 @@
 package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.History.History;
@@ -41,7 +41,7 @@ class MessagePane implements ButtonsHandler {
      * //     * @param actions all your actions
      */
 
-    MessagePane(BaseUser forWho, Runnable closeTabAction, ButtonsHandler helpHandlerPredecessor) {
+    MessagePane(User forWho, Runnable closeTabAction, ButtonsHandler helpHandlerPredecessor) {
         nameWho.setText(forWho.toString());
 
         sendButton.addActionListener(e -> sendMessage(forWho));
@@ -102,7 +102,7 @@ class MessagePane implements ButtonsHandler {
      * also clear messageGetter where was your message
      */
 
-    private void sendMessage(BaseUser user) {
+    private void sendMessage(User user) {
         String message = messageGetter.getText();
         if (message.length() == 0) {
             return;

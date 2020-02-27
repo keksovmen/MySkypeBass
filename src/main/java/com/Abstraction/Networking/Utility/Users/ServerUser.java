@@ -18,8 +18,10 @@ import java.security.Key;
  * last call unlock()
  */
 
-public class ServerUser extends UserWithLock {
+public class ServerUser implements UserWithLock {
 
+
+    private final UserWithLock user;
 
     private final ServerWriter writer;
     private final Reader reader;
@@ -38,21 +40,62 @@ public class ServerUser extends UserWithLock {
     private final InetAddress address;
     private final int port;
 
-
-    public ServerUser(String name, int id, ServerWriter writer, Reader reader, InetAddress address, int port) {
-        super(name, id);
+    public ServerUser(UserWithLock user, ServerWriter writer, Reader reader, InetAddress address, int port) {
+        this.user = user;
         this.writer = writer;
         this.reader = reader;
         this.address = address;
         this.port = port;
     }
 
-    public ServerUser(String name, int id, Key sharedKey, AlgorithmParameters algorithmParameters, ServerWriter writer, Reader reader, InetAddress address, int port) {
-        super(name, id, sharedKey, algorithmParameters);
-        this.writer = writer;
-        this.reader = reader;
-        this.address = address;
-        this.port = port;
+    @Override
+    public void lock() {
+        user.lock();
+    }
+
+    @Override
+    public void unlock() {
+        user.unlock();
+    }
+
+    @Override
+    public String getName() {
+        return user.getName();
+    }
+
+    @Override
+    public int getId() {
+        return user.getId();
+    }
+
+    @Override
+    public Key getSharedKey() {
+        return user.getSharedKey();
+    }
+
+    @Override
+    public AlgorithmParameters getAlgorithmParameters() {
+        return user.getAlgorithmParameters();
+    }
+
+    @Override
+    public String toNetworkFormat() {
+        return user.toNetworkFormat();
+    }
+
+    @Override
+    public String toString() {
+        return user.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return user.equals(obj);
+    }
+
+    @Override
+    public int hashCode() {
+        return user.hashCode();
     }
 
     public Conversation getConversation() {

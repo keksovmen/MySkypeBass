@@ -5,8 +5,9 @@ import com.Abstraction.Client.Logic;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.PlainUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
 
@@ -48,7 +49,6 @@ public class ClientProcessor implements Processable {
 
     /**
      * Routes to proper networkHelper method
-     *
      *
      * @param dataPackage incoming data
      * @return false in 1 case, when you can't handle given request, indicates end of loop
@@ -112,13 +112,13 @@ public class ClientProcessor implements Processable {
 
     protected boolean onUsersRequest(AbstractDataPackage dataPackage) {
         String users = dataPackage.getDataAsString();
-        model.addToModel(BaseUser.parseUsers(users));
+        model.addToModel(User.parseUsers(users));
         return true;
     }
 
 
     protected boolean onIncomingMessage(AbstractDataPackage dataPackage) {
-        BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.INCOMING_MESSAGE, new Object[]{
                 sender,
                 dataPackage.getDataAsString(),
@@ -136,7 +136,7 @@ public class ClientProcessor implements Processable {
      */
 
     protected boolean onIncomingCall(AbstractDataPackage dataPackage) {
-        BaseUser sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
         ClientUser myself = model.getMyself();
 
         myself.lock();
@@ -173,13 +173,13 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onAddToConversation(AbstractDataPackage dataPackage) {
-        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         model.addToConversation(baseUser);
         return true;
     }
 
     protected boolean onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
-        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
         model.removeFromConversation(baseUser);
         return true;
     }
@@ -193,7 +193,7 @@ public class ClientProcessor implements Processable {
 
     protected boolean onAddToUserList(AbstractDataPackage dataPackage) {
         String user = dataPackage.getDataAsString();
-        model.addToModel(BaseUser.parse(user));
+        model.addToModel(User.parse(user));
         return true;
     }
 
@@ -205,22 +205,22 @@ public class ClientProcessor implements Processable {
 
     protected boolean onCallAccept(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
-        BaseUser dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
         AbstractClient.callAcceptRoutine(logic, model, dude);
         return true;
     }
 
     protected boolean onCallDeny(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
-        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new BaseUser(baseUser.getName(), baseUser.getId())});
+        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
 
     protected boolean onCallCanceled(AbstractDataPackage dataPackage) {
         model.getMyself().drop();
-        BaseUser baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new BaseUser(baseUser.getName(), baseUser.getId())});
+        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
 
@@ -235,9 +235,9 @@ public class ClientProcessor implements Processable {
         return true;
     }
 
-    protected boolean onAddWholeConversation(AbstractDataPackage dataPackage){
-        BaseUser[] baseUsers = BaseUser.parseUsers(dataPackage.getDataAsString());
-        for (BaseUser user : baseUsers) {
+    protected boolean onAddWholeConversation(AbstractDataPackage dataPackage) {
+        User[] baseUsers = User.parseUsers(dataPackage.getDataAsString());
+        for (User user : baseUsers) {
             model.addToConversation(user);
         }
         return true;

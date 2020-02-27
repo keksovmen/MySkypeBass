@@ -2,7 +2,7 @@ package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 
@@ -24,7 +24,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
     private JLabel conversationInfo;
     private JLabel middleLabel;
 
-    private BaseUser user;
+    private User user;
     private String dudes;
 
     private final ButtonsHandler helpHandlerPredecessor;
@@ -82,11 +82,11 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
                 return;
             }
             case INCOMING_CALL: {
-                showIncoming((BaseUser) data[0], (String) data[1]);
+                showIncoming((User) data[0], (String) data[1]);
                 return;
             }
             case OUT_CALL: {
-                showOutcoming((BaseUser) data[0]);
+                showOutcoming((User) data[0]);
                 return;
             }
         }
@@ -139,7 +139,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      * @param who you are calling
      */
 
-    private void showOutcoming(BaseUser who) {
+    private void showOutcoming(User who) {
         user = who;
         dudes = "";
 
@@ -168,7 +168,7 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      * @param conversationInfo and conversation with him
      */
 
-    private void showIncoming(BaseUser fromWho, String conversationInfo) {
+    private void showIncoming(User fromWho, String conversationInfo) {
         if (isShowing())
             setVisible(false);
         user = fromWho;

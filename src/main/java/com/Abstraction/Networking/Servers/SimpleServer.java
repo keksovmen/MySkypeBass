@@ -6,11 +6,12 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
 import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
-import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Networking.Utility.Users.*;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Networking.Writers.PlainWriter;
 import com.Abstraction.Networking.Writers.ServerCipherWriter;
@@ -267,28 +268,20 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
+        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream));
+        final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
+        final User user;
         if (storage.isSecureConnection) {
-            return new ServerUser(
+            user = new CipherUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
-                    storage.cryptoHelper.getParameters(),
-                    new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
-                    address,
-                    storage.portUDP
-
+                    storage.cryptoHelper.getParameters()
             );
         } else {
-            return new ServerUser(
-                    storage.name,
-                    storage.myID,
-                    new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize()),
-                    address,
-                    storage.portUDP
-            );
+            user = new PlainUser(storage.name, storage.myID);
         }
+        return new ServerUser(new BaseUserWithLock(user), writer, reader, address, storage.portUDP);
     }
 
     @Override

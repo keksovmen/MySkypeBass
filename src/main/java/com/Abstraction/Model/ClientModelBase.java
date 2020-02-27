@@ -1,7 +1,7 @@
 package com.Abstraction.Model;
 
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Util.Interfaces.Registration;
 
 import java.util.LinkedHashSet;
@@ -50,9 +50,9 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
      */
 
     @Override
-    public synchronized void addToModel(BaseUser users[]) {
+    public synchronized void addToModel(User users[]) {
         userMap.clear();
-        for (BaseUser user : users) {
+        for (User user : users) {
             userMap.put(user.getId(), user);
         }
         notifyListeners();
@@ -66,7 +66,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
      */
 
     @Override
-    public synchronized void addToModel(BaseUser user) {
+    public synchronized void addToModel(User user) {
         userMap.put(user.getId(), user);
         notifyListeners();
     }
@@ -80,7 +80,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void removeFromModel(int user) {
-        BaseUser remove = userMap.remove(user);
+        User remove = userMap.remove(user);
         if (remove != null) {
             conversation.remove(remove);
             notifyListeners();
@@ -88,7 +88,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void clear(){
+    public synchronized void clear() {
         conversation.clear();
         if (!userMap.isEmpty()) {
             userMap.clear();
@@ -98,21 +98,21 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void addToConversation(BaseUser dude){
+    public synchronized void addToConversation(User dude) {
         if (conversation.add(dude)) {
             notifyListeners();
         }
     }
 
     @Override
-    public synchronized void removeFromConversation(BaseUser dude){
+    public synchronized void removeFromConversation(User dude) {
         if (conversation.remove(dude)) {
             notifyListeners();
         }
     }
 
     @Override
-    public synchronized void clearConversation(){
+    public synchronized void clearConversation() {
         if (conversation.isEmpty())
             return;
         conversation.clear();

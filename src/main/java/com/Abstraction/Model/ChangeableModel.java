@@ -1,7 +1,7 @@
 package com.Abstraction.Model;
 
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.User;
 
 /**
  * Interface for model that can change its values
@@ -9,17 +9,19 @@ import com.Abstraction.Networking.Utility.Users.ClientUser;
 
 public interface ChangeableModel extends UnEditableModel {
 
-    void addToModel(BaseUser user);
+    void addToModel(User user);
 
-    void addToModel(BaseUser[] users);
+    void addToModel(User[] users);
 
-    default void removeFromModel(BaseUser user){removeFromModel(user.getId());}
+    default void removeFromModel(User user) {
+        removeFromModel(user.getId());
+    }
 
     void removeFromModel(int user);
 
-    void addToConversation(BaseUser user);
+    void addToConversation(User user);
 
-    void removeFromConversation(BaseUser user);
+    void removeFromConversation(User user);
 
     void clear();
 
