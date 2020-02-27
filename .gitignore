@@ -1,6 +1,4 @@
 .idea/
 out/
 target/
-src/test/java/CppComparator.java
-src/test/
 AbstractionLogic/
