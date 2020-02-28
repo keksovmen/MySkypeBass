@@ -39,12 +39,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SimpleServer extends AbstractServer {
 
 
-    //    /**
-//     * Must be less or equal ProtocolBitMap.MAX_VALUE
-//     */
-//
-//    private final int MIC_CAPTURE_SIZE;
-
     /**
      * Place where you get your unique id
      * Must starts from WHO. last index + 1
@@ -212,7 +206,8 @@ public class SimpleServer extends AbstractServer {
                 8,
                 30,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>());
+                new LinkedBlockingQueue<>(),
+                r -> new Thread(r, "Server helper pool"));
     }
 
     @Override

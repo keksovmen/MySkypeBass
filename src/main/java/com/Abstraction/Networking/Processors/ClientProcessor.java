@@ -16,6 +16,19 @@ import java.io.IOException;
 /**
  * Represent client side networkHelper for incoming messages from server
  * But doesn't handle reading these messages from Input stream, only handle their meaning
+ *
+ * Literally thrush because, when you need new a handler
+ * you must add new case in switch statement that is garbage
+ * Solution is make functional interface which method is to handle {@link AbstractDataPackage}
+ * And dynamically add them through implementation of {@link com.Abstraction.Util.Interfaces.Registration}
+ * Then it class will looks kinda as Composite pattern
+ * Why didn't i made it this way?
+ * 'Cause my lazy ass and not sure about overhead when access through many objects
+ * Approximate overhead is O(n) to find proper handler + O(n) to see if a handler capable of handling it
+ * So O(2n) instead of hash function in switch statement O(1)
+ * But switch statement is shitty practice in this case, because if you need new case branch you have to modify
+ * existing code and not to expand through inheritance
+ *
  */
 
 public class ClientProcessor implements Processable {
@@ -26,13 +39,6 @@ public class ClientProcessor implements Processable {
 
     protected final ChangeableModel model;
 
-//    /**
-//     * When you making call you have to be properly synchronised
-//     * It lets you do that
-//     */
-//
-//    private final ClientUser user;
-
     /**
      * To notify LogicObserver about changes
      */
@@ -40,10 +46,8 @@ public class ClientProcessor implements Processable {
     private final Logic logic;
 
 
-    public ClientProcessor(ChangeableModel model, /*ClientUser user,*/ Logic logic) {
+    public ClientProcessor(ChangeableModel model, Logic logic) {
         this.model = model;
-//        this.user = user;
-//        this.user = model.getMyself();// will not be changed during life time of Processor
         this.logic = logic;
     }
 

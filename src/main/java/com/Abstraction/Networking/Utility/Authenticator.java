@@ -151,7 +151,7 @@ public class Authenticator {
 
 
     private Writer createPlainWriter(OutputStream stream) {
-        return new PlainWriter(stream, Resources.getInstance().getBufferSize(), null);
+        return new PlainWriter(stream, Resources.getInstance().getBufferSize());
     }
 
     private static ClientStorage createClientNetworkFailure() {

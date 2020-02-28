@@ -7,7 +7,7 @@ package com.Abstraction.Pipeline;
 
 public enum ACTIONS {
     CONNECT_FAILED, // doesn't contain any data
-    CONNECT_SUCCEEDED, //data[0] is your BaseUser.toString();
+    CONNECT_SUCCEEDED, //data[0] is your User.toString();
     CONNECTION_TO_SERVER_FAILED, //doesn't contain any data, for exceptional cases when server died
     AUDIO_FORMAT_NOT_ACCEPTED, //data[0] is AudioFormat
     AUDIO_FORMAT_ACCEPTED, //data[0] is AudioFormat

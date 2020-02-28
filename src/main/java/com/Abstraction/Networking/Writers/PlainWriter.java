@@ -26,6 +26,26 @@ public class PlainWriter implements Writer {
     protected final DataOutputStream outputStream;
     protected final DatagramSocket socket;
 
+    /**
+     * For only TCP protocol
+     *
+     * @param outputStream
+     * @param bufferSize
+     */
+
+    public PlainWriter(OutputStream outputStream, int bufferSize) {
+        this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
+        socket = null;
+    }
+
+    /**
+     * For both TCP and UDP
+     *
+     * @param outputStream where to write
+     * @param bufferSize   for TCP stream
+     * @param socket       could be null if you don't want to use UDP protocol
+     */
+
 
     public PlainWriter(OutputStream outputStream, int bufferSize, DatagramSocket socket) {
         this.outputStream = new DataOutputStream(new BufferedOutputStream(outputStream, bufferSize));
@@ -64,19 +84,23 @@ public class PlainWriter implements Writer {
 
     @Override
     public synchronized void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        if (socket == null)
+            throw new RuntimeException("This writer is only for TCP, datagram socket is null");
         writeWithoutReturnToPoolUDP(dataPackage, address, port);
         AbstractDataPackagePool.returnPackage(dataPackage);
     }
 
     @Override
     public synchronized void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        if (socket == null)
+            throw new RuntimeException("This writer is only for TCP, datagram socket is null");
         DatagramPacket datagramPacket = fillPacket(dataPackage);
         datagramPacket.setAddress(address);
         datagramPacket.setPort(port);
         socket.send(datagramPacket);
     }
 
-    private DatagramPacket fillPacket(AbstractDataPackage dataPackage){
+    private DatagramPacket fillPacket(AbstractDataPackage dataPackage) {
         final int packetSize = ProtocolBitMap.PACKET_SIZE;
         final int length = dataPackage.getHeader().getLength();
         byte[] tmp = new byte[packetSize + length];

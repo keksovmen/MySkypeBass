@@ -21,6 +21,8 @@ import java.security.Key;
  * Basically only 1 thread can write at same time with others
  * So why not make permanent byte buffer for cipher data
  * Problem is in its size, need to be dynamically expendable
+ *
+ * Decorator pattern
  */
 
 public class CipherWriter implements Writer {

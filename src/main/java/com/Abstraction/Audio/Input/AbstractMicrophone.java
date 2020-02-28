@@ -15,11 +15,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput {
 
-//    /**
-//     * Indicate that an input device has't been initialised
-//     */
-//
-//    private static int NOT_INITIALISED_INPUT_ID = -1;
 
     /**
      * Chain of Responsibility
@@ -62,7 +57,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
     public AbstractMicrophone(ButtonsHandler helpHandlerPredecessor) {
         this.helpHandlerPredecessor = helpHandlerPredecessor;
         muteLock = new ReentrantLock();
-//        indexOfParticularInputDevice = NOT_INITIALISED_INPUT_ID;
     }
 
     /**
@@ -222,10 +216,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
         isMuted = false;
         if (inputLine == null) {
             try {
-//            changeInput(getDeviceId());
-////            if (inputLine == null) {
-////                return false;
-////            }
                 inputLine = AudioSupplier.getInstance().getInput(indexOfParticularInputDevice);
             } catch (AudioLineException e) {
                 e.printStackTrace();
@@ -235,8 +225,4 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
         return true;
     }
 
-//    private int getDeviceId() {
-//        return indexOfParticularInputDevice == NOT_INITIALISED_INPUT_ID ?
-//                AudioSupplier.getInstance().getDefaultForInput() : indexOfParticularInputDevice;
-//    }
 }
