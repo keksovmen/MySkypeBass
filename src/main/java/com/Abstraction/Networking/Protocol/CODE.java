@@ -42,7 +42,8 @@ public enum CODE {
     SEND_CIPHER_MODE_ACCEPTED(27),   // in authenticate show is audio format not acceptable
     SEND_CIPHER_MODE_DENIED(28),   // in authenticate show is audio format not acceptable
     SEND_ADD_WHOLE_CONVERSATION(29),   // contain string with all dudes to add in conversation model
-    SEND_UDP_PORT(30);  //contain string with port number
+    SEND_UDP_PORT(30),  //contain string with port number
+    SEND_UDP_PACKAGE_SIZE(31);  //contain integer as string
 
 
 

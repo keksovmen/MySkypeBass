@@ -16,14 +16,12 @@ public abstract class AbstractResources {
     private static Properties createDefaultProperties() {
         Properties properties = new Properties();
 
-        properties.setProperty("MicQueueSize", "10");//audio
-        properties.setProperty("MicCaptureSizeDivider", "8");//server -> audio
+        properties.setProperty("MicCaptureSizeDivider", "20");//server -> audio
 
         properties.setProperty("HistorySize", "10");//gui
 
         properties.setProperty("ReaderWriterBuffer", "64"); //in kB client, server logic
 
-        properties.setProperty("WriterLockTime", "50");//server
         properties.setProperty("TimeOut", "10");//client logic -> gui
 
         properties.setProperty("DefaultName", "");//client logic -> gui
@@ -31,8 +29,6 @@ public abstract class AbstractResources {
         properties.setProperty("DefaultPort", "8188");//client logic -> gui
 
         properties.setProperty("DefaultRate", "24000");//server logic -> gui
-
-        properties.setProperty("AudioDurationDivider", "2");//server logic
 
         return properties;
     }
@@ -51,10 +47,6 @@ public abstract class AbstractResources {
 
     public abstract Map<Integer, Track> getNotificationTracks();
 
-    public int getMicQueueSize() {
-        return Integer.parseInt(properties.getProperty("MicQueueSize"));
-    }
-
     public int getMiCaptureSizeDivider() {
         return Integer.parseInt(properties.getProperty("MicCaptureSizeDivider"));
     }
@@ -65,10 +57,6 @@ public abstract class AbstractResources {
 
     public int getBufferSize() {
         return Integer.parseInt(properties.getProperty("ReaderWriterBuffer")) * 1024;
-    }
-
-    public int getLockTime() {
-        return Integer.parseInt(properties.getProperty("WriterLockTime"));
     }
 
     public int getTimeOut() {
@@ -92,7 +80,4 @@ public abstract class AbstractResources {
 
     }
 
-    public int getServerAudioDividerForLags(){
-        return Integer.parseInt(properties.getProperty("AudioDurationDivider"));
-    }
 }

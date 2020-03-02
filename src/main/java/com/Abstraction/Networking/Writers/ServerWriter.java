@@ -135,4 +135,8 @@ public class ServerWriter {
     public void writeAddWholeConversation(int to, String dudes) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_ADD_WHOLE_CONVERSATION, WHO.SERVER.getCode(), to, dudes));
     }
+
+    public void writeSizeOfUDP(int sizeUDP) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PACKAGE_SIZE, WHO.SERVER.getCode(), WHO.NO_NAME.getCode(), String.valueOf(sizeUDP)));
+    }
 }

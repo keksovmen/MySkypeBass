@@ -222,7 +222,14 @@ public class SimpleServer extends AbstractServer {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        Authenticator.CommonStorage storage = authenticator.serverAuthentication(inputStream, outputStream, getAudioFormat(), getIdAndIncrement(), isCipherMode);
+        Authenticator.CommonStorage storage = authenticator.serverAuthentication(
+                inputStream,
+                outputStream,
+                getAudioFormat(),
+                getIdAndIncrement(),
+                isCipherMode,
+                FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize())
+        );
 
         if (storage.isNetworkFailure) {
             Algorithms.closeSocketThatCouldBeClosed(socket);

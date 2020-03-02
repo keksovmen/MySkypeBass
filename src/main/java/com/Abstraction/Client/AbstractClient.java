@@ -337,11 +337,9 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
-        final int datagramSize = FormatWorker.getPackageSizeUDP(storage.isSecureConnection,
-                AudioSupplier.getInstance().getDefaultAudioFormat().getMicCaptureSize());
         final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
-        final UDPReader readerUDP = new UDPReader(datagramSocket, datagramSize);
+        final UDPReader readerUDP = new UDPReader(datagramSocket, storage.sizeUDP);
         final User user;
         if (storage.isSecureConnection) {
             user = new CipherUser(
