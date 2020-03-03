@@ -10,11 +10,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8cbeedf8-92d6-4219-870f-b1594b84f54a" name="Default Changelist" comment="Made client mic capture size independent of what he has in protocol bit map,&#10;now it is defined in server creation time">
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Client/AbstractClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Client/AbstractClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Protocol/CODE.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Protocol/CODE.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/SimpleServer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/SimpleServer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Utility/Authenticator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Utility/Authenticator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ServerWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ServerWriter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/ACTIONS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/ACTIONS.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/BUTTONS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/BUTTONS.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/Implementation/Client/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Implementation/Client/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.java" afterDir="false" />
     </list>
     <list id="2f0f1bf0-2669-4558-b4dd-6dd0ce4a1eb3" name="Added ability to preview sound when select it" comment="Added ability to preview sound when select it">
       <changelist_data name="Keksovmen" email="keksovmen@yandex.ru" date="1572021614000" />
@@ -46,7 +46,7 @@
     <session id="-2121182805">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="181" />
+          <entry key="project.closed" value="182" />
           <entry key="project.open.time.0" value="1" />
           <entry key="project.open.time.1" value="1" />
           <entry key="project.open.time.108" value="1" />
@@ -83,6 +83,7 @@
           <entry key="project.open.time.58" value="1" />
           <entry key="project.open.time.6" value="2" />
           <entry key="project.open.time.60" value="1" />
+          <entry key="project.open.time.64" value="1" />
           <entry key="project.open.time.65" value="1" />
           <entry key="project.open.time.66" value="1" />
           <entry key="project.open.time.68" value="1" />
@@ -97,7 +98,7 @@
           <entry key="project.open.time.88" value="1" />
           <entry key="project.open.time.95" value="1" />
           <entry key="project.open.time.97" value="1" />
-          <entry key="project.opened" value="186" />
+          <entry key="project.opened" value="187" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -106,16 +107,16 @@
           <entry key="MF" value="19" />
           <entry key="README" value="2" />
           <entry key="class" value="72" />
-          <entry key="form" value="112" />
+          <entry key="form" value="113" />
           <entry key="gitignore" value="21" />
           <entry key="iml" value="6" />
-          <entry key="java" value="4735" />
+          <entry key="java" value="4742" />
           <entry key="jpg" value="1" />
           <entry key="log" value="4" />
           <entry key="lst" value="2" />
           <entry key="md" value="4" />
           <entry key="png" value="5" />
-          <entry key="properties" value="52" />
+          <entry key="properties" value="54" />
           <entry key="snippet" value="2" />
           <entry key="txt" value="16" />
           <entry key="xml" value="131" />
@@ -125,13 +126,13 @@
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="CLASS" value="72" />
-          <entry key="GUI_DESIGNER_FORM" value="112" />
+          <entry key="GUI_DESIGNER_FORM" value="113" />
           <entry key="IDEA_MODULE" value="6" />
           <entry key="Image" value="6" />
-          <entry key="JAVA" value="4735" />
+          <entry key="JAVA" value="4742" />
           <entry key="Manifest" value="19" />
           <entry key="PLAIN_TEXT" value="49" />
-          <entry key="Properties" value="52" />
+          <entry key="Properties" value="54" />
           <entry key="SPI" value="1" />
           <entry key="Scratch" value="2" />
           <entry key="XML" value="132" />
@@ -144,8 +145,8 @@
           <entry key="README" value="130" />
           <entry key="dummy" value="17" />
           <entry key="gitignore" value="268" />
-          <entry key="java" value="306510" />
-          <entry key="properties" value="1088" />
+          <entry key="java" value="307258" />
+          <entry key="properties" value="1095" />
           <entry key="regexp" value="142" />
           <entry key="txt" value="3562" />
           <entry key="xml" value="2814" />
@@ -153,10 +154,10 @@
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="JAVA" value="306510" />
+          <entry key="JAVA" value="307258" />
           <entry key="Manifest" value="26" />
           <entry key="PLAIN_TEXT" value="3977" />
-          <entry key="Properties" value="1088" />
+          <entry key="Properties" value="1095" />
           <entry key="RegExp" value="142" />
           <entry key="SPI" value="20" />
           <entry key="XML" value="2814" />
@@ -185,11 +186,64 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Client/AbstractClient.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="461">
-              <caret line="339" column="64" selection-start-line="339" selection-start-column="64" selection-end-line="339" selection-end-column="64" />
+            <state relative-caret-position="395">
+              <caret line="134" column="27" lean-forward="true" selection-start-line="134" selection-start-column="27" selection-end-line="134" selection-end-column="27" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/Implementation/Client/Client.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="267">
+              <caret line="66" column="45" selection-start-line="66" selection-start-column="45" selection-end-line="66" selection-end-column="45" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="552">
+              <caret line="169" column="5" lean-forward="true" selection-start-line="169" selection-start-column="5" selection-end-line="169" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="jar://D:/Program Files/Java/jdk1.8.0_211/src.zip!/javax/swing/AbstractButton.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="299">
+              <caret line="1924" column="16" selection-start-line="1924" selection-start-column="16" selection-end-line="1924" selection-end-column="16" />
+              <folding>
+                <element signature="e#68197#68198#0" expanded="true" />
+                <element signature="e#68254#68255#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/BUTTONS.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="408">
+              <caret line="24" column="29" lean-forward="true" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Util/Resources/AbstractResources.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="714">
+              <caret line="49" selection-start-line="49" selection-end-line="49" />
+              <folding>
+                <element signature="e#258#259#0" expanded="true" />
+                <element signature="e#328#329#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -206,7 +260,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ClientWriter.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="688">
+            <state relative-caret-position="2057">
               <caret line="128" column="37" selection-start-line="128" selection-start-column="37" selection-end-line="128" selection-end-column="37" />
             </state>
           </provider>
@@ -215,8 +269,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/SimpleServer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="612">
-              <caret line="223" column="9" lean-forward="true" selection-start-line="223" selection-start-column="9" selection-end-line="223" selection-end-column="9" />
+            <state relative-caret-position="3264">
+              <caret line="223" column="9" selection-start-line="223" selection-start-column="9" selection-end-line="223" selection-end-column="9" />
             </state>
           </provider>
         </entry>
@@ -307,10 +361,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Model/UnEditableModel.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Model/ClientModelBase.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Model/ChangeableModel.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/MessagePane.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/UserSettings.java" />
         <option value="$PROJECT_DIR$/src/test/java/AlgorithmsTest.java" />
         <option value="$PROJECT_DIR$/src/test/java/EncryptionDecryptionTest.java" />
@@ -336,7 +386,6 @@
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Processors/ClientProcessor.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/PlainWriter.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Audio/Input/AbstractMicrophone.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/ACTIONS.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Implementation/Util/DesktopResources.java" />
         <option value="$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/Networking/Protocol/BaseDataPackage.java" />
         <option value="$PROJECT_DIR$/AbstractLogic/pom.xml" />
@@ -352,12 +401,17 @@
         <option value="$PROJECT_DIR$/.idea/compiler.xml" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/src/main/resources/properties/CustomProperties.properties" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Protocol/CODE.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ServerWriter.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Utility/Authenticator.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/SimpleServer.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Util/Resources/AbstractResources.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/BUTTONS.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Client/AbstractClient.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/properties/CustomProperties.properties" />
+        <option value="$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/ACTIONS.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/Implementation/Client/Client.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.java" />
       </list>
     </option>
   </component>
@@ -425,7 +479,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -478,6 +531,16 @@
               <item name="MySkypeBass" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="com" type="462c0819:PsiDirectoryNode" />
+              <item name="Implementation" type="462c0819:PsiDirectoryNode" />
+              <item name="GUI" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="MySkypeBass" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MySkypeBass" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="resources" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -490,23 +553,13 @@
             </path>
             <path>
               <item name="MySkypeBass" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MySkypeBass" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MySkypeBass" type="b2602c69:ProjectViewProjectNode" />
-              <item name="MySkypeBass" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
-              <item name="classes" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="MySkypeBass" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -867,7 +920,7 @@
       <window_info id="UI Designer" order="2" />
       <window_info id="Favorites" order="3" sideWeight="0.51137596" side_tool="true" weight="0.17910448" />
       <window_info id="Repositories" order="4" weight="0.32995737" />
-      <window_info content_ui="combo" id="Project" order="5" sideWeight="0.47589424" visible="true" weight="0.2803838" />
+      <window_info content_ui="combo" id="Project" order="5" sideWeight="0.47589424" visible="true" weight="0.2835821" />
       <window_info anchor="bottom" id="Inspection Results" order="0" weight="0.32936078" />
       <window_info anchor="bottom" id="Message" order="1" />
       <window_info anchor="bottom" id="Find" order="2" weight="0.32936078" />
@@ -998,13 +1051,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/AbstractApplicationFactory.java" />
-    <entry file="file://$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/Networking/BaseDataPackageRouter.java" />
-    <entry file="file://$PROJECT_DIR$/Desktop/src/main/java/com/Implementation/GUI/Forms/UserSettings.java" />
-    <entry file="file://$PROJECT_DIR$/Desktop/src/main/java/com/Implementation/GUI/Forms/CallDialog.java" />
-    <entry file="file://$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/Audio/Factory/AudioFactory.java" />
-    <entry file="file://$PROJECT_DIR$/Desktop/src/main/java/com/Implementation/DesktopApplicationFactory.java" />
-    <entry file="file://$PROJECT_DIR$/Desktop/src/main/java/com/Implementation/GUI/Frame.java" />
     <entry file="file://$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/Application.java" />
     <entry file="file://$PROJECT_DIR$/AbstractLogic/src/main/java/com/Abstraction/Networking/Protocol/BaseDataPackage.java" />
     <entry file="file://$PROJECT_DIR$/Desktop/src/main/java/com/Implementation/GUI/Forms/MessagePane.java" />
@@ -1026,13 +1072,6 @@
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/AbstractLogic/pom.xml" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Util/Resources/AbstractResources.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="12" selection-start-line="12" selection-end-line="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1309">
@@ -1155,13 +1194,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/properties/CustomProperties.properties">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="17" lean-forward="true" selection-start-line="8" selection-start-column="17" selection-end-line="8" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="59">
@@ -1173,20 +1205,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="558">
           <caret line="112" column="28" selection-start-line="112" selection-start-column="28" selection-end-line="112" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ClientWriter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="688">
-          <caret line="128" column="37" selection-start-line="128" selection-start-column="37" selection-end-line="128" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Protocol/CODE.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="714">
-          <caret line="45" column="59" selection-start-line="45" selection-start-column="59" selection-end-line="45" selection-end-column="59" />
         </state>
       </provider>
     </entry>
@@ -1204,17 +1222,98 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Util/Resources/AbstractResources.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="714">
+          <caret line="49" selection-start-line="49" selection-end-line="49" />
+          <folding>
+            <element signature="e#258#259#0" expanded="true" />
+            <element signature="e#328#329#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Protocol/CODE.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="714">
+          <caret line="45" column="59" selection-start-line="45" selection-start-column="59" selection-end-line="45" selection-end-column="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Writers/ClientWriter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2057">
+          <caret line="128" column="37" selection-start-line="128" selection-start-column="37" selection-end-line="128" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/SimpleServer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="612">
-          <caret line="223" column="9" lean-forward="true" selection-start-line="223" selection-start-column="9" selection-end-line="223" selection-end-column="9" />
+        <state relative-caret-position="3264">
+          <caret line="223" column="9" selection-start-line="223" selection-start-column="9" selection-end-line="223" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Networking/Servers/AbstractServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="969">
+          <caret line="71" column="35" lean-forward="true" selection-start-line="71" selection-start-column="35" selection-end-line="71" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/properties/CustomProperties.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="24" selection-start-line="2" selection-start-column="24" selection-end-line="2" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/BUTTONS.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="408">
+          <caret line="24" column="29" lean-forward="true" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Pipeline/ACTIONS.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="646">
+          <caret line="38" column="29" selection-start-line="38" selection-start-column="29" selection-end-line="38" selection-end-column="29" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/Abstraction/Client/AbstractClient.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="461">
-          <caret line="339" column="64" selection-start-line="339" selection-start-column="64" selection-end-line="339" selection-end-column="64" />
+        <state relative-caret-position="395">
+          <caret line="134" column="27" lean-forward="true" selection-start-line="134" selection-start-column="27" selection-end-line="134" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Implementation/Client/Client.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="267">
+          <caret line="66" column="45" selection-start-line="66" selection-start-column="45" selection-end-line="66" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.form">
+      <provider selected="true" editor-type-id="ui-designer" />
+    </entry>
+    <entry file="jar://D:/Program Files/Java/jdk1.8.0_211/src.zip!/javax/swing/AbstractButton.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="299">
+          <caret line="1924" column="16" selection-start-line="1924" selection-start-column="16" selection-end-line="1924" selection-end-column="16" />
+          <folding>
+            <element signature="e#68197#68198#0" expanded="true" />
+            <element signature="e#68254#68255#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/Implementation/GUI/Forms/EntrancePane.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="552">
+          <caret line="169" column="5" lean-forward="true" selection-start-line="169" selection-start-column="5" selection-end-line="169" selection-end-column="5" />
         </state>
       </provider>
     </entry>

@@ -4,14 +4,15 @@ import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
-import com.Implementation.GUI.Frame;
 import com.Abstraction.Util.Resources.Resources;
+import com.Implementation.GUI.Frame;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 
 /**
  * You will see it first
@@ -31,6 +32,7 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
     private JPanel mainPane;
 
     private final ButtonsHandler helpHandlerPredecessor;
+    private final Runnable showServerPane;
 
 
     public EntrancePane(ButtonsHandler helpHandlerPredecessor, Runnable showServerPane) {
@@ -44,29 +46,34 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
         nameField.setText(Resources.getInstance().getDefaultName());
         ipField.setText(Resources.getInstance().getDefaultIP());
         portField.setText(Resources.getInstance().getDefaultPort());
+
+        this.showServerPane = showServerPane;
     }
 
     @Override
     public void observe(ACTIONS action, Object[] data) {
-        if (action.equals(ACTIONS.CONNECT_FAILED) ||
-                action.equals(ACTIONS.PORT_OUT_OF_RANGE) ||
-                action.equals(ACTIONS.WRONG_PORT_FORMAT) ||
-                action.equals(ACTIONS.WRONG_HOST_NAME_FORMAT) ||
-                action.equals(ACTIONS.AUDIO_FORMAT_NOT_ACCEPTED)
-        ) {
-            releaseConnectButton();
-            mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-
-        } else if (action.equals(ACTIONS.CONNECT_SUCCEEDED)) {
-            mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-
-        } else if (action.equals(ACTIONS.SERVER_CREATED)) {
-            blockCreateServerButton();
-
-        } else if (action.equals(ACTIONS.CONNECTION_TO_SERVER_FAILED) ||
-                action.equals(ACTIONS.DISCONNECTED)
-        ) {
-            releaseConnectButton();
+        switch (action) {
+            case CONNECT_FAILED:
+            case PORT_OUT_OF_RANGE:
+            case WRONG_HOST_NAME_FORMAT:
+            case WRONG_PORT_FORMAT:
+            case AUDIO_FORMAT_NOT_ACCEPTED:
+                releaseConnectButton();
+                mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                break;
+            case CONNECT_SUCCEEDED:
+                mainPane.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                break;
+            case SERVER_CREATED:
+                changeCreateServerButtonToStopServer();
+                break;
+            case CONNECTION_TO_SERVER_FAILED:
+            case DISCONNECTED:
+                releaseConnectButton();
+                break;
+            case SERVER_CLOSED:
+                changeStopServerButtonToCreateServer();
+                break;
         }
     }
 
@@ -130,12 +137,16 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
         connectButton.setEnabled(true);
     }
 
-    private void blockCreateServerButton() {
-        createButton.setEnabled(false);
+    private void changeCreateServerButtonToStopServer() {
+        createButton.setText("Stop server");
+        clearServerButton();
+        createButton.addActionListener(e -> helpHandlerPredecessor.handleRequest(BUTTONS.STOP_SERVER, null));
     }
 
-    private void releaseCreateServerButton() {
-        createButton.setEnabled(true);
+    private void changeStopServerButtonToCreateServer() {
+        createButton.setText("Create");
+        clearServerButton();
+        createButton.addActionListener(e -> showServerPane.run());
     }
 
     private void onConnect() {
@@ -145,6 +156,12 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
         );
         blockConnectButton();
         mainPane.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+    }
+
+    private void clearServerButton() {
+        for (ActionListener listener : createButton.getActionListeners()) {
+            createButton.removeActionListener(listener);
+        }
     }
 
     private void createUIComponents() {

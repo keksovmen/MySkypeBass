@@ -27,6 +27,9 @@ public class Client extends AbstractClient {
             case CREATE_SERVER:
                 onServerCreate(data);
                 return;
+            case STOP_SERVER:
+                onStopServer();
+                return;
         }
     }
 
@@ -55,6 +58,14 @@ public class Client extends AbstractClient {
             plainNotify(ACTIONS.SERVER_CREATED_ALREADY);
         }
 
+    }
+
+    protected void onStopServer(){
+        if (server != null) {
+            server.close();
+            server = null;
+            plainNotify(ACTIONS.SERVER_CLOSED);
+        }
     }
 
 

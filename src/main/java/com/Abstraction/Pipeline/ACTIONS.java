@@ -36,5 +36,6 @@ public enum ACTIONS {
     CIPHER_FORMAT_IS_NOT_ACCEPTED, //data[0] is String contain message
     CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED, //data[0] is String contain message
     UDP_SOCKET_NOT_BINDED,  //data[0] is String contain message
+    SERVER_CLOSED,  //no data
 
 }
