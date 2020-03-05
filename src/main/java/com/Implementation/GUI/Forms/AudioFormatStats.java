@@ -33,6 +33,7 @@ public class AudioFormatStats implements ButtonsHandler {
     private JFormattedTextField customRate;
     private JFormattedTextField textFieldPort;
     private JCheckBox encryptionCheckBox;
+    private JCheckBox connectionTypeBox;
 
     private final ButtonsHandler helpHandlerPredecessor;
 
@@ -77,7 +78,7 @@ public class AudioFormatStats implements ButtonsHandler {
     private void onOK() {
         handleRequest(
                 BUTTONS.CREATE_SERVER,
-                new Object[]{getPort(), getSampleRate(), getSampleSize(), getEncryption()}
+                new Object[]{getPort(), getSampleRate(), getSampleSize(), getEncryption(), getIsFullTCP()}
         );
     }
 
@@ -99,6 +100,10 @@ public class AudioFormatStats implements ButtonsHandler {
 
     private Boolean getEncryption() {
         return encryptionCheckBox.isSelected();
+    }
+
+    private Boolean getIsFullTCP() {
+        return connectionTypeBox.isSelected();
     }
 
     private void createUIComponents() {
@@ -180,7 +185,7 @@ public class AudioFormatStats implements ButtonsHandler {
         a16RadioButton.setText("16");
         panel4.add(a16RadioButton, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JPanel panel5 = new JPanel();
-        panel5.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        panel5.setLayout(new GridLayoutManager(1, 5, new Insets(0, 0, 0, 0), -1, -1));
         mainPane.add(panel5, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         encryptionCheckBox = new JCheckBox();
         encryptionCheckBox.setSelected(true);
@@ -188,10 +193,16 @@ public class AudioFormatStats implements ButtonsHandler {
         panel5.add(encryptionCheckBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel5.add(spacer1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        connectionTypeBox = new JCheckBox();
+        connectionTypeBox.setSelected(true);
+        connectionTypeBox.setText("Full TCP");
+        panel5.add(connectionTypeBox, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
-        panel5.add(spacer2, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel5.add(spacer2, new GridConstraints(0, 4, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer3 = new Spacer();
-        mainPane.add(spacer3, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel5.add(spacer3, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final Spacer spacer4 = new Spacer();
+        mainPane.add(spacer4, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         ButtonGroup buttonGroup;
         buttonGroup = new ButtonGroup();
         buttonGroup.add(a8000RadioButton);

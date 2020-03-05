@@ -36,6 +36,8 @@ public abstract class AbstractServer implements Starting {
 
     protected final Authenticator authenticator;
 
+    protected final boolean isFullTCP;
+
     /**
      * Indicator of activity state
      */
@@ -43,12 +45,16 @@ public abstract class AbstractServer implements Starting {
     protected volatile boolean isWorking;
 
 
-    public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator) throws IOException {
+    public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator, boolean isFullTCP) throws IOException {
         serverSocket = new ServerSocket(port);
-        serverSocketUDP = new DatagramSocket(port);
+        if (!isFullTCP)
+            serverSocketUDP = new DatagramSocket(port);
+        else
+            serverSocketUDP = null;
+        executorService = createService();
         this.isCipherMode = isCipherMode;
         this.authenticator = authenticator;
-        executorService = createService();
+        this.isFullTCP = isFullTCP;
 
         isWorking = false;
     }
@@ -60,7 +66,8 @@ public abstract class AbstractServer implements Starting {
 
         isWorking = true;
         new Thread(this::workLoopTCP, name + " TCP").start();
-        new Thread(this::workLoopUDP, name + " UDP").start();
+        if (!isFullTCP)
+            new Thread(this::workLoopUDP, name + " UDP").start();
         return true;
     }
 
@@ -74,7 +81,7 @@ public abstract class AbstractServer implements Starting {
         Algorithms.closeSocketThatCouldBeClosed(serverSocketUDP);
     }
 
-    public void asyncTusk(Runnable task){
+    public void asyncTusk(Runnable task) {
         executorService.execute(task);
     }
 
@@ -113,6 +120,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * Instead of serialisation send as string
+     *
      * @param exclusiveID your id
      * @return all users on this server as toString(), except for you
      */
@@ -121,6 +129,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * same as above
+     *
      * @param exclusiveUser you
      * @return all users on this server as toString() except, for you
      */
@@ -130,7 +139,6 @@ public abstract class AbstractServer implements Starting {
     }
 
     /**
-     *
      * @param id of desired user
      * @return user on this server or null if not present
      */
@@ -139,6 +147,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * Factory method
+     *
      * @return executor service for dirty work
      */
 

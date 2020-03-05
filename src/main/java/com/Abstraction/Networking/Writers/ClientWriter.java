@@ -21,6 +21,11 @@ public class ClientWriter {
     private final Writer bridgeImplementor;
     private final int myID;
 
+    /**
+     * If null mean full TCP connection
+     * Needed for UDP connection
+     */
+
     private final InetSocketAddress address;
 
     /**
@@ -40,6 +45,7 @@ public class ClientWriter {
      *
      * @param bridgeImplementor contain vital methods for network writing
      * @param myID              received from server
+     * @param address           for UDP session
      */
 
     public ClientWriter(Writer bridgeImplementor, int myID, InetSocketAddress address) {
@@ -102,8 +108,11 @@ public class ClientWriter {
     }
 
     public void writeSound(byte[] data) throws IOException {
-        writeUDP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data), address.getAddress(), address.getPort());
-//        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+        if (address == null) {
+            write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+        } else {
+            writeUDP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data), address.getAddress(), address.getPort());
+        }
     }
 
     public void writeDisconnect() throws IOException {
@@ -115,7 +124,7 @@ public class ClientWriter {
     }
 
     public void writePublicKeyEncoded(byte[] encodedPubKey) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, myID, WHO.SERVER.getCode(),encodedPubKey));
+        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, myID, WHO.SERVER.getCode(), encodedPubKey));
     }
 
     public void writeCipherModeAccepted() throws IOException {

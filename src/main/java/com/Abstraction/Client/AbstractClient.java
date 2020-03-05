@@ -1,6 +1,5 @@
 package com.Abstraction.Client;
 
-import com.Abstraction.Audio.AudioSupplier;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
@@ -201,12 +200,18 @@ public abstract class AbstractClient implements Logic {
         Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0], datagramSocket.getLocalPort());
         if (!handleAuthenticationResults(storage)) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
             return;
+        }
+
+        if (storage.isFullTCP) {
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
+            datagramSocket = null;
         }
 
         finishSucceededConnection(createClientUser(storage,
                 outputStream, inputStream, datagramSocket,
-                new InetSocketAddress(socket.getInetAddress(),
+                storage.isFullTCP ? null : new InetSocketAddress(socket.getInetAddress(),
                         socket.getPort())),
                 createNetworkHelper(socket, datagramSocket)
         );
@@ -336,10 +341,23 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
+    /**
+     * @param storage        meta info
+     * @param outputStream   opened
+     * @param inputStream    opened
+     * @param datagramSocket could be null if so than full TCP connection
+     * @param address        where to send UDP, also could be null
+     * @return
+     */
+
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
         final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
-        final UDPReader readerUDP = new UDPReader(datagramSocket, storage.sizeUDP);
+        final UDPReader readerUDP;
+        if (datagramSocket == null)
+            readerUDP = null;
+        else
+            readerUDP = new UDPReader(datagramSocket, storage.sizeUDP);
         final User user;
         if (storage.isSecureConnection) {
             user = new CipherUser(

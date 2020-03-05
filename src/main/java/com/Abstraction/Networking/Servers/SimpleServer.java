@@ -69,9 +69,9 @@ public class SimpleServer extends AbstractServer {
      * @throws ProtocolValueException if mic capture size is grater than possible length of the protocol
      */
 
-    protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits)
+    protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits, boolean isFullTCP)
             throws IOException, ProtocolValueException {
-        super(port, isCipher, authenticator);
+        super(port, isCipher, authenticator, isFullTCP);
         final int micCapSize;
         try {
             micCapSize = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
@@ -94,14 +94,15 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator)
+    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 port,
                 isCipher,
                 authenticator,
                 sampleRate,
-                sampleSizeInBits
+                sampleSizeInBits,
+                isFullTCP
         );
     }
 
@@ -114,14 +115,15 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator)
+    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 Integer.valueOf(port),
                 isCipher,
                 authenticator,
                 Integer.valueOf(sampleRate),
-                Integer.parseInt(sampleSizeInBits)
+                Integer.parseInt(sampleSizeInBits),
+                isFullTCP
         );
     }
 
@@ -228,6 +230,7 @@ public class SimpleServer extends AbstractServer {
                 getAudioFormat(),
                 getIdAndIncrement(),
                 isCipherMode,
+                isFullTCP,
                 FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize())
         );
 
@@ -245,7 +248,7 @@ public class SimpleServer extends AbstractServer {
                 return;
             }
         }
-        ServerUser user = createUser(storage, inputStream, outputStream, socket.getInetAddress());
+        ServerUser user = createUser(storage, inputStream, outputStream, isFullTCP ? null : socket.getInetAddress());
         registerUser(user);
 
 

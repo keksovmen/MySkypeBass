@@ -44,7 +44,7 @@ public class Client extends AbstractClient {
             return;
         }
         try {
-            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2], (Boolean) data[3], authenticator);
+            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2], (Boolean) data[3], authenticator, (Boolean) data[4]);
         } catch (IOException e) {
             stringNotify(ACTIONS.PORT_ALREADY_BUSY, strings[0]);
             return;

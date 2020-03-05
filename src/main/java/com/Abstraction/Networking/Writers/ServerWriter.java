@@ -32,7 +32,10 @@ public class ServerWriter {
 
 
     protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
-        writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);
+        if (address == null)
+            writeWithoutReturnToPool(dataPackage);
+        else
+            writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
 
@@ -138,5 +141,13 @@ public class ServerWriter {
 
     public void writeSizeOfUDP(int sizeUDP) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PACKAGE_SIZE, WHO.SERVER.getCode(), WHO.NO_NAME.getCode(), String.valueOf(sizeUDP)));
+    }
+
+    public void writeIsFullTCPConnection(boolean isFullTCP) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(
+                isFullTCP ? CODE.SEND_FULL_TCP_CONNECTION : CODE.SEND_MIXED_CONNECTION,
+                WHO.SERVER.getCode(),
+                WHO.NO_NAME.getCode()
+        ));
     }
 }

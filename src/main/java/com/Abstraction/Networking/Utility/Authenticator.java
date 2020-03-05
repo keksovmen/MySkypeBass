@@ -29,11 +29,12 @@ public class Authenticator {
      * 1 - write my name
      * 2 - read audio format and my id
      * 3 - write response to audio format
-     * 4 - write my UDP port
-     * 5 - read UDP package size
-     * 6 - read cipher mode
-     * 7 - write response to cipher mode
-     * 8 - discuss cipher details
+     * 4 - read isFullTCP connection
+     * 5 - write my UDP port
+     * 6 - read UDP package size
+     * 7 - read cipher mode
+     * 8 - write response to cipher mode
+     * 9 - discuss cipher details
      *
      * @param inputStream  of connected socket
      * @param outputStream of connected socket
@@ -56,6 +57,7 @@ public class Authenticator {
                 writer.writeDeclineAudioFormat();
                 return createClientAudioNotAccepted(format);
             }
+            final boolean isFullTCP = reader.read().getHeader().getCode().equals(CODE.SEND_FULL_TCP_CONNECTION);
             writer.writeMyPortUDP(portUDP);
             final int sizeUDP = reader.read().getDataAsInt();
 
@@ -68,13 +70,13 @@ public class Authenticator {
                     writer.writePublicKeyEncoded(cryptoHelper.getPublicKeyEncoded());
                     cryptoHelper.finishExchange(reader.read().getData());
                     cryptoHelper.setAlgorithmParametersEncoded(reader.read().getData());
-                    return createClientAudioAcceptedCipherAccepted(myID, portUDP, format, cryptoHelper, desiredName, sizeUDP);
+                    return createClientAudioAcceptedCipherAccepted(myID, portUDP, format, cryptoHelper, desiredName, sizeUDP, isFullTCP);
                 } else {
                     writer.writeCipherModeDenied();
                     return createClientAudioAcceptedCipherNotAccepted(format);
                 }
             } else {
-                return createClientAudioAcceptedPlain(myID, portUDP, format, desiredName, sizeUDP);
+                return createClientAudioAcceptedPlain(myID, portUDP, format, desiredName, sizeUDP, isFullTCP);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,11 +88,12 @@ public class Authenticator {
      * 1 - read his name
      * 2 - write audio format
      * 3 - read response on audio format
-     * 4 - read UDP port
-     * 5 - write UDP package size
-     * 6 - write cipher mode
-     * 7 - read cipher response
-     * 8 - discuss cipher details
+     * 4 - write is connection full TCP
+     * 5 - read UDP port
+     * 6 - write UDP package size
+     * 7 - write cipher mode
+     * 8 - read cipher response
+     * 9 - discuss cipher details
      *
      * @param inputStream        of connected socket
      * @param outputStream       of connected socket
@@ -100,7 +103,7 @@ public class Authenticator {
      * @return structure with flags
      */
 
-    public CommonStorage serverAuthentication(InputStream inputStream, OutputStream outputStream, String audioFormat, int hisID, boolean isSecureConnection, int sizeUDP) {
+    public CommonStorage serverAuthentication(InputStream inputStream, OutputStream outputStream, String audioFormat, int hisID, boolean isSecureConnection, boolean isFullTCP, int sizeUDP) {
         BaseReader reader = createServerReader(inputStream);
         ServerWriter writer = createServerWriter(outputStream);
 
@@ -108,6 +111,7 @@ public class Authenticator {
             final String name = reader.read().getDataAsString();
             writer.writeAudioFormat(hisID, audioFormat);
             if (reader.read().getHeader().getCode().equals(CODE.SEND_AUDIO_FORMAT_ACCEPT)) {
+                writer.writeIsFullTCPConnection(isFullTCP);
                 final int portUDP = reader.read().getDataAsInt();
                 writer.writeSizeOfUDP(sizeUDP);
                 if (isSecureConnection) {
@@ -159,23 +163,23 @@ public class Authenticator {
     }
 
     private static ClientStorage createClientNetworkFailure() {
-        return new ClientStorage(false, true, false, false, -1, -1, null, null, null, -1);
+        return new ClientStorage(false, true, false, false, -1, -1, null, null, null, -1, false);
     }
 
     private static ClientStorage createClientAudioNotAccepted(AbstractAudioFormatWithMic format) {
-        return new ClientStorage(true, false, false, false, -1, -1, null, null, format, -1);
+        return new ClientStorage(true, false, false, false, -1, -1, null, null, format, -1, false);
     }
 
-    private static ClientStorage createClientAudioAcceptedPlain(int id, int portUDP, AbstractAudioFormatWithMic format, String name, int sizeUDP) {
-        return new ClientStorage(true, false, false, false, id, portUDP, name, null, format, sizeUDP);
+    private static ClientStorage createClientAudioAcceptedPlain(int id, int portUDP, AbstractAudioFormatWithMic format, String name, int sizeUDP, boolean isFullTCP) {
+        return new ClientStorage(true, false, false, false, id, portUDP, name, null, format, sizeUDP, isFullTCP);
     }
 
     private static ClientStorage createClientAudioAcceptedCipherNotAccepted(AbstractAudioFormatWithMic format) {
-        return new ClientStorage(true, false, true, false, -1, -1, null, null, format, -1);
+        return new ClientStorage(true, false, true, false, -1, -1, null, null, format, -1, false);
     }
 
-    private static ClientStorage createClientAudioAcceptedCipherAccepted(int id, int portUDP, AbstractAudioFormatWithMic format, CommonCryptoHelper helper, String name, int sizeUDP) {
-        return new ClientStorage(true, false, true, true, id, portUDP, name, helper, format, sizeUDP);
+    private static ClientStorage createClientAudioAcceptedCipherAccepted(int id, int portUDP, AbstractAudioFormatWithMic format, CommonCryptoHelper helper, String name, int sizeUDP, boolean isFullTCP) {
+        return new ClientStorage(true, false, true, true, id, portUDP, name, helper, format, sizeUDP, isFullTCP);
     }
 
 
@@ -221,7 +225,7 @@ public class Authenticator {
         public final CommonCryptoHelper cryptoHelper;
 
 
-        public CommonStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper) {
+        CommonStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper) {
             this.isAudioFormatAccepted = isAudioFormatAccepted;
             this.isNetworkFailure = isNetworkFailure;
             this.isSecureConnection = isSecureConnection;
@@ -238,11 +242,13 @@ public class Authenticator {
 
         public final AbstractAudioFormatWithMic audioFormat;
         public final int sizeUDP;
+        public final boolean isFullTCP;
 
-        public ClientStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper, AbstractAudioFormatWithMic audioFormat, int sizeUDP) {
+        ClientStorage(boolean isAudioFormatAccepted, boolean isNetworkFailure, boolean isSecureConnection, boolean isSecureConnectionAccepted, int myID, int portUDP, String name, CommonCryptoHelper cryptoHelper, AbstractAudioFormatWithMic audioFormat, int sizeUDP, boolean isFullTCP) {
             super(isAudioFormatAccepted, isNetworkFailure, isSecureConnection, isSecureConnectionAccepted, myID, portUDP, name, cryptoHelper);
             this.audioFormat = audioFormat;
             this.sizeUDP = sizeUDP;
+            this.isFullTCP = isFullTCP;
         }
     }
 
