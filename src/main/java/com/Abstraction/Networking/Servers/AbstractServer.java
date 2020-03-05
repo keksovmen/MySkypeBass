@@ -79,6 +79,7 @@ public abstract class AbstractServer implements Starting {
         executorService.shutdown();
         Algorithms.closeSocketThatCouldBeClosed(serverSocket);
         Algorithms.closeSocketThatCouldBeClosed(serverSocketUDP);
+        //need to kill already established connections
     }
 
     public void asyncTusk(Runnable task) {

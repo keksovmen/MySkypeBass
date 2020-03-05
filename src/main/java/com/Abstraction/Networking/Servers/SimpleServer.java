@@ -19,6 +19,7 @@ import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Interfaces.Starting;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +60,13 @@ public class SimpleServer extends AbstractServer {
      */
 
     private final AbstractAudioFormatWithMic audioFormat;
+
+    /**
+     * Needed for server close method
+     * Contains {@link ServerHandler}
+     */
+
+    private final ConcurrentHashMap<Integer, Starting> networkHelpers = new ConcurrentHashMap<>();
 
     /**
      * Creates server with give parameters
@@ -153,6 +162,7 @@ public class SimpleServer extends AbstractServer {
     @Override
     public void removeUser(int user_id) {
         users.remove(user_id);
+        networkHelpers.remove(user_id);
 //        if (work)
         sendRemoveDude(user_id);
         AbstractDataPackagePool.clearStorage();
@@ -253,6 +263,7 @@ public class SimpleServer extends AbstractServer {
 
 
         ServerHandler serverHandler = createServerHandler(socket, user);
+        networkHelpers.put(user.getId(), serverHandler);
         serverHandler.start("Server - " + user.toString());//already started if true returned
     }
 
@@ -311,6 +322,13 @@ public class SimpleServer extends AbstractServer {
             }
         }
 
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        networkHelpers.forEach((integer, starting) -> starting.close());
+        networkHelpers.clear();
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
