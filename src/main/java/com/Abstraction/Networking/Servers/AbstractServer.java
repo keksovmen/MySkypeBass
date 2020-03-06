@@ -2,6 +2,7 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Networking.Handlers.ServerHandler;
 import com.Abstraction.Networking.Utility.Authenticator;
+import com.Abstraction.Networking.Utility.ServerSocketProxy;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
@@ -46,7 +47,7 @@ public abstract class AbstractServer implements Starting {
 
 
     public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator, boolean isFullTCP) throws IOException {
-        serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocketProxy(port);
         if (!isFullTCP)
             serverSocketUDP = new DatagramSocket(port);
         else

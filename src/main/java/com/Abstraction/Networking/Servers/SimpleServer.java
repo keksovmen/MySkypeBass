@@ -62,13 +62,6 @@ public class SimpleServer extends AbstractServer {
     private final AbstractAudioFormatWithMic audioFormat;
 
     /**
-     * Needed for server close method
-     * Contains {@link ServerHandler}
-     */
-
-    private final ConcurrentHashMap<Integer, Starting> networkHelpers = new ConcurrentHashMap<>();
-
-    /**
      * Creates server with give parameters
      *
      * @param port             for the server
@@ -147,7 +140,6 @@ public class SimpleServer extends AbstractServer {
     @Override
     public void registerUser(ServerUser user) {
         users.put(user.getId(), user);
-//        if (work)
         sendAddDude(user);
     }
 
@@ -162,8 +154,6 @@ public class SimpleServer extends AbstractServer {
     @Override
     public void removeUser(int user_id) {
         users.remove(user_id);
-        networkHelpers.remove(user_id);
-//        if (work)
         sendRemoveDude(user_id);
         AbstractDataPackagePool.clearStorage();
     }
@@ -263,7 +253,6 @@ public class SimpleServer extends AbstractServer {
 
 
         ServerHandler serverHandler = createServerHandler(socket, user);
-        networkHelpers.put(user.getId(), serverHandler);
         serverHandler.start("Server - " + user.toString());//already started if true returned
     }
 
@@ -322,13 +311,6 @@ public class SimpleServer extends AbstractServer {
             }
         }
 
-    }
-
-    @Override
-    public void close() {
-        super.close();
-        networkHelpers.forEach((integer, starting) -> starting.close());
-        networkHelpers.clear();
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {

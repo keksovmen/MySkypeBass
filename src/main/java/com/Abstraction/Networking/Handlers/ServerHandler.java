@@ -6,6 +6,7 @@ import com.Abstraction.Networking.Processors.ServerProcessor;
 import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
@@ -42,12 +43,7 @@ public class ServerHandler implements Starting {
     public final void close() {
         isWorking = false;
         processor.close();
-        if (!socket.isClosed()) {
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-            }
-        }
+        Algorithms.closeSocketThatCouldBeClosed(socket);
     }
 
     protected Processable createProcessor(ServerUser serverUser) {
