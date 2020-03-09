@@ -2,13 +2,17 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Networking.Handlers.ServerHandler;
 import com.Abstraction.Networking.Utility.Authenticator;
+import com.Abstraction.Networking.Utility.ServerSocketProxy;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.Writer;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 public abstract class AbstractServer implements Starting {
 
     protected final ServerSocket serverSocket;
+    protected final DatagramSocket serverSocketUDP;
 
     /**
      * Does all dirty work, for server thread
@@ -32,18 +37,25 @@ public abstract class AbstractServer implements Starting {
 
     protected final Authenticator authenticator;
 
+    protected final boolean isFullTCP;
+
     /**
      * Indicator of activity state
      */
 
-    private volatile boolean isWorking;
+    protected volatile boolean isWorking;
 
 
-    public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator) throws IOException {
-        serverSocket = new ServerSocket(port);
+    public AbstractServer(int port, boolean isCipherMode, Authenticator authenticator, boolean isFullTCP) throws IOException {
+        serverSocket = new ServerSocketProxy(port);
+        if (!isFullTCP)
+            serverSocketUDP = new DatagramSocket(port);
+        else
+            serverSocketUDP = null;
+        executorService = createService();
         this.isCipherMode = isCipherMode;
         this.authenticator = authenticator;
-        executorService = createService();
+        this.isFullTCP = isFullTCP;
 
         isWorking = false;
     }
@@ -54,7 +66,9 @@ public abstract class AbstractServer implements Starting {
             return false;
 
         isWorking = true;
-        new Thread(this::workLoop, name).start();
+        new Thread(this::workLoopTCP, name + " TCP").start();
+        if (!isFullTCP)
+            new Thread(this::workLoopUDP, name + " UDP").start();
         return true;
     }
 
@@ -64,10 +78,13 @@ public abstract class AbstractServer implements Starting {
             return;
         isWorking = false;
         executorService.shutdown();
-        try {
-            serverSocket.close();
-        } catch (IOException ignored) {
-        }
+        Algorithms.closeSocketThatCouldBeClosed(serverSocket);
+        Algorithms.closeSocketThatCouldBeClosed(serverSocketUDP);
+        //need to kill already established connections
+    }
+
+    public void asyncTusk(Runnable task) {
+        executorService.execute(task);
     }
 
 
@@ -105,6 +122,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * Instead of serialisation send as string
+     *
      * @param exclusiveID your id
      * @return all users on this server as toString(), except for you
      */
@@ -113,6 +131,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * same as above
+     *
      * @param exclusiveUser you
      * @return all users on this server as toString() except, for you
      */
@@ -122,7 +141,6 @@ public abstract class AbstractServer implements Starting {
     }
 
     /**
-     *
      * @param id of desired user
      * @return user on this server or null if not present
      */
@@ -131,6 +149,7 @@ public abstract class AbstractServer implements Starting {
 
     /**
      * Factory method
+     *
      * @return executor service for dirty work
      */
 
@@ -150,13 +169,13 @@ public abstract class AbstractServer implements Starting {
 
     protected abstract Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream);
 
-    protected abstract ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream);
+    protected abstract ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address);
 
     /**
      * Server loop for it's main thread
      */
 
-    private void workLoop() {
+    private void workLoopTCP() {
         while (isWorking) {
             try {
                 Socket socket = serverSocket.accept();
@@ -166,4 +185,6 @@ public abstract class AbstractServer implements Starting {
             }
         }
     }
+
+    protected abstract void workLoopUDP();
 }

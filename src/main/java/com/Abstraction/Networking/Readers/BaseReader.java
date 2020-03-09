@@ -13,7 +13,7 @@ import java.io.InputStream;
  * Base reader for all the readers
  */
 
-public class BaseReader {
+public class BaseReader implements Reader{
 
     /**
      * DataInputStream because it can readFully()
@@ -36,6 +36,7 @@ public class BaseReader {
      * @throws IOException if networking fails
      */
 
+    @Override
     public AbstractDataPackage read() throws IOException {
         AbstractDataPackage aPackage = AbstractDataPackagePool.getPackage();
 

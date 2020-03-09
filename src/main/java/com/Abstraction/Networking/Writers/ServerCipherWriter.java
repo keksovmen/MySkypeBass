@@ -4,15 +4,14 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 
-import java.io.OutputStream;
 import java.security.AlgorithmParameters;
 import java.security.Key;
 
 public class ServerCipherWriter extends CipherWriter {
 
 
-    public ServerCipherWriter(OutputStream outputStream, int bufferSize, Key key, AlgorithmParameters parameters) {
-        super(outputStream, bufferSize, key, parameters);
+    public ServerCipherWriter(Writer writer, Key key, AlgorithmParameters parameters) {
+        super(writer, key, parameters);
     }
 
     @Override

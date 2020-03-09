@@ -53,7 +53,7 @@ public class DataPackageHeader extends AbstractHeader {
      * For cashed on server side purposes
      */
 
-    private byte[] raw;
+    private final byte[] raw;
 
     /**
      * Package private cause you don't need to create it
@@ -125,9 +125,7 @@ public class DataPackageHeader extends AbstractHeader {
      * Or when you change the length
      */
 
-    private void calculateRawHeader(){
-        if (raw == null)
-            raw = new byte[ProtocolBitMap.PACKET_SIZE];
+    private void calculateRawHeader() {
         raw[0] = (byte) ((code.getCode() >>> 8) & 0xFF);
         raw[1] = (byte) (code.getCode() & 0xFF);
         raw[2] = (byte) ((length >>> 8) & 0xFF);
@@ -176,11 +174,14 @@ public class DataPackageHeader extends AbstractHeader {
 
     @Override
     public void init(final byte[] data) {
+        if (data.length < ProtocolBitMap.PACKET_SIZE)
+            throw new IllegalArgumentException("Raw header has wrong size! Yours - " +
+                    data.length + ". Needed - " + ProtocolBitMap.PACKET_SIZE);
         code = CODE.parse(Algorithms.combineTwoBytes(data[0], data[1]));
         length = Algorithms.combineTwoBytes(data[2], data[3]);
         from = Algorithms.combineTwoBytes(data[4], data[5]);
         to = Algorithms.combineTwoBytes(data[6], data[7]);
-        raw = data;
+        calculateRawHeader();
     }
 
     /**
@@ -245,7 +246,7 @@ public class DataPackageHeader extends AbstractHeader {
                 ", length=" + length +
                 ", from=" + from +
                 ", to=" + to +
-                ", raw=" + (raw == null ? Arrays.toString(getRawHeader()) : Arrays.toString(raw)) +
+                ", raw=" + Arrays.toString(raw) +
                 '}';
     }
 

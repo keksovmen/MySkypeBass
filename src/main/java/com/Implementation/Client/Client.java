@@ -27,6 +27,9 @@ public class Client extends AbstractClient {
             case CREATE_SERVER:
                 onServerCreate(data);
                 return;
+            case STOP_SERVER:
+                onStopServer();
+                return;
         }
     }
 
@@ -41,7 +44,7 @@ public class Client extends AbstractClient {
             return;
         }
         try {
-            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2], (Boolean) data[3], authenticator);
+            server = SimpleServer.getFromStrings(strings[0], strings[1], strings[2], (Boolean) data[3], authenticator, (Boolean) data[4]);
         } catch (IOException e) {
             stringNotify(ACTIONS.PORT_ALREADY_BUSY, strings[0]);
             return;
@@ -55,6 +58,14 @@ public class Client extends AbstractClient {
             plainNotify(ACTIONS.SERVER_CREATED_ALREADY);
         }
 
+    }
+
+    protected void onStopServer(){
+        if (server != null) {
+            server.close();
+            server = null;
+            plainNotify(ACTIONS.SERVER_CLOSED);
+        }
     }
 
 

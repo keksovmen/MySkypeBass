@@ -2,21 +2,32 @@ package com.Abstraction.Networking.Servers;
 
 import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Networking.Handlers.ServerHandler;
+import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
+import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
+import com.Abstraction.Networking.Utility.Conversation;
 import com.Abstraction.Networking.Utility.ProtocolValueException;
-import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Networking.Utility.Users.*;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Networking.Writers.*;
+import com.Abstraction.Networking.Writers.PlainWriter;
+import com.Abstraction.Networking.Writers.ServerCipherWriter;
+import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
+import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Interfaces.Starting;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -32,12 +43,6 @@ import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
 
 public class SimpleServer extends AbstractServer {
 
-
-    //    /**
-//     * Must be less or equal ProtocolBitMap.MAX_VALUE
-//     */
-//
-//    private final int MIC_CAPTURE_SIZE;
 
     /**
      * Place where you get your unique id
@@ -69,9 +74,9 @@ public class SimpleServer extends AbstractServer {
      * @throws ProtocolValueException if mic capture size is grater than possible length of the protocol
      */
 
-    protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits)
+    protected SimpleServer(int port, boolean isCipher, Authenticator authenticator, int sampleRate, int sampleSizeInBits, boolean isFullTCP)
             throws IOException, ProtocolValueException {
-        super(port, isCipher, authenticator);
+        super(port, isCipher, authenticator, isFullTCP);
         final int micCapSize;
         try {
             micCapSize = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
@@ -94,14 +99,15 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator)
+    public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 port,
                 isCipher,
                 authenticator,
                 sampleRate,
-                sampleSizeInBits
+                sampleSizeInBits,
+                isFullTCP
         );
     }
 
@@ -114,14 +120,15 @@ public class SimpleServer extends AbstractServer {
      * @throws IOException if port already in use
      */
 
-    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator)
+    public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)
             throws IOException, ProtocolValueException {
         return new SimpleServer(
                 Integer.valueOf(port),
                 isCipher,
                 authenticator,
                 Integer.valueOf(sampleRate),
-                Integer.parseInt(sampleSizeInBits)
+                Integer.parseInt(sampleSizeInBits),
+                isFullTCP
         );
     }
 
@@ -138,7 +145,6 @@ public class SimpleServer extends AbstractServer {
         serverLogger.logp(Level.FINER, this.getClass().getName(), "registerUser",
                 "Controller is registered - " + user);
         users.put(user.getId(), user);
-//        if (work)
         sendAddDude(user);
     }
 
@@ -153,7 +159,6 @@ public class SimpleServer extends AbstractServer {
     @Override
     public void removeUser(int user_id) {
         users.remove(user_id);
-//        if (work)
         sendRemoveDude(user_id);
         AbstractDataPackagePool.clearStorage();
     }
@@ -208,7 +213,8 @@ public class SimpleServer extends AbstractServer {
                 8,
                 30,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>());
+                new LinkedBlockingQueue<>(),
+                r -> new Thread(r, "Server helper pool"));
     }
 
     @Override
@@ -223,23 +229,31 @@ public class SimpleServer extends AbstractServer {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        Authenticator.CommonStorage storage = authenticator.serverAuthentication(inputStream, outputStream, getAudioFormat(), getIdAndIncrement(), isCipherMode);
+        Authenticator.CommonStorage storage = authenticator.serverAuthentication(
+                inputStream,
+                outputStream,
+                getAudioFormat(),
+                getIdAndIncrement(),
+                isCipherMode,
+                isFullTCP,
+                FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize())
+        );
 
-        if (storage.isNetworkFailure){
+        if (storage.isNetworkFailure) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (!storage.isAudioFormatAccepted){
+        if (!storage.isAudioFormatAccepted) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (storage.isSecureConnection){
-            if (!storage.isSecureConnectionAccepted){
+        if (storage.isSecureConnection) {
+            if (!storage.isSecureConnectionAccepted) {
                 Algorithms.closeSocketThatCouldBeClosed(socket);
                 return;
             }
         }
-        ServerUser user = createUser(storage, inputStream, outputStream);
+        ServerUser user = createUser(storage, inputStream, outputStream, isFullTCP ? null : socket.getInetAddress());
         registerUser(user);
 
 
@@ -254,39 +268,61 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected Writer createWriterForUser(Authenticator.CommonStorage storage, OutputStream outputStream) {
-        final int bufferSize = Resources.getInstance().getBufferSize();
+        Writer writer = new PlainWriter(outputStream, Resources.getInstance().getBufferSize(), serverSocketUDP);
         if (storage.isSecureConnection) {
-            return new ServerCipherWriter(outputStream, bufferSize, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
+            return new ServerCipherWriter(writer, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
         } else {
-            return new PlainWriter(outputStream, bufferSize);
+            return writer;
         }
     }
 
     @Override
-    protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream) {
-        if (storage.isSecureConnection){
-            return new ServerUser(
+    protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
+        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream));
+        final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
+        final User user;
+        if (storage.isSecureConnection) {
+            user = new CipherUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
-                    storage.cryptoHelper.getParameters(),
-                    new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    storage.cryptoHelper.getParameters()
             );
-        }else {
-            return new ServerUser(
-                    storage.name,
-                    storage.myID,
-                    new ServerWriter(createWriterForUser(storage, outputStream)),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
-            );
+        } else {
+            user = new PlainUser(storage.name, storage.myID);
         }
+        return new ServerUser(new BaseUserWithLock(user), writer, reader, address, storage.portUDP);
+    }
+
+    @Override
+    protected void workLoopUDP() {
+        UDPReader udpReader = new UDPReader(serverSocketUDP, FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize()));
+        while (isWorking) {
+            try {
+                AbstractDataPackage dataPackage = udpReader.read();
+                final int from = dataPackage.getHeader().getFrom();
+                ServerUser user = getUser(from);
+                if (user != null) {
+                    Conversation conversation = user.getConversation();
+                    if (conversation != null) {
+                        conversation.sendSound(dataPackage, from);
+                    }
+                }
+                AbstractDataPackagePool.returnPackage(dataPackage);
+
+            } catch (IOException ignored) {
+                //TCP socket will handle closing
+                break;
+            }
+        }
+
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
         int i = (sampleRate / Resources.getInstance().getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
         i = i - i % (sampleSizeInBits / 8);
-        if (ProtocolBitMap.MAX_VALUE < i)
+        int udpPackage = FormatWorker.getPackageSizeUDP(isCipherMode, i);
+        if (ProtocolBitMap.MAX_VALUE < i || ProtocolBitMap.MAX_VALUE < udpPackage)
             throw new ProtocolValueException("Audio capture size is larger than length of the protocol! " +
                     i + " must be " + "<= " + ProtocolBitMap.MAX_VALUE);
         return i;

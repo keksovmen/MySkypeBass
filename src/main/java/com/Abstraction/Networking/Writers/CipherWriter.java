@@ -8,7 +8,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.ShortBufferException;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -21,11 +21,20 @@ import java.security.Key;
  * Basically only 1 thread can write at same time with others
  * So why not make permanent byte buffer for cipher data
  * Problem is in its size, need to be dynamically expendable
+ *
+ * Decorator pattern
  */
 
-public class CipherWriter extends PlainWriter {
+public class CipherWriter implements Writer {
 
     private static final int BUFFER_SIZE_MULTIPLIER = 2;
+
+    /**
+     * Underlying writer
+     * To which calls are delegated
+     */
+
+    private final Writer writer;
 
     /**
      * Work only in ENCRYPT_MODE
@@ -43,8 +52,8 @@ public class CipherWriter extends PlainWriter {
     private ByteBuffer cipherBuffer;
 
 
-    public CipherWriter(OutputStream outputStream, int bufferSize, Key key, AlgorithmParameters parameters) {
-        super(outputStream, bufferSize);
+    public CipherWriter(Writer writer, Key key, AlgorithmParameters parameters) {
+        this.writer = writer;
 
         encoder = Crypto.getCipherWithoutExceptions(Crypto.STANDARD_CIPHER_FORMAT);
         try {
@@ -56,10 +65,26 @@ public class CipherWriter extends PlainWriter {
         }
     }
 
+    @Override
+    public synchronized void write(AbstractDataPackage dataPackage) throws IOException {
+        writer.write(encryptGivenPackage(dataPackage));
+    }
 
     @Override
     public synchronized void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
-        super.writeWithoutReturnToPool(encryptGivenPackage(dataPackage));
+        writer.writeWithoutReturnToPool(encryptGivenPackage(dataPackage));
+    }
+
+
+    @Override
+    public void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writer.writeUDP(encryptGivenPackage(dataPackage), address, port);
+    }
+
+
+    @Override
+    public void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writer.writeWithoutReturnToPoolUDP(encryptGivenPackage(dataPackage), address, port);
     }
 
     protected AbstractDataPackage encryptGivenPackage(AbstractDataPackage dataPackage) {
@@ -72,7 +97,6 @@ public class CipherWriter extends PlainWriter {
         cipherBuffer.flip();
         cipherBuffer.get(data);
         dataPackage.setData(data);
-
         return dataPackage;
     }
 

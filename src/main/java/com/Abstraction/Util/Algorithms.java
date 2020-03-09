@@ -1,7 +1,7 @@
 package com.Abstraction.Util;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -170,8 +170,11 @@ public class Algorithms {
         return result;
     }
 
-    public static void closeSocketThatCouldBeClosed(Socket socket)
+    public static void closeSocketThatCouldBeClosed(Closeable socket)
     {
+        if (socket == null) {
+            return;
+        }
         try {
             socket.close();
         } catch (IOException ignored) {

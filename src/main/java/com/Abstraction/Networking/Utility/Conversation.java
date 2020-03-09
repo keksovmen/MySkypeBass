@@ -50,7 +50,7 @@ public class Conversation {
             if (user.getId() == from)
                 continue;
             try {
-                user.getWriter().transferAudio(dataPackage);
+                user.getWriter().transferAudio(dataPackage, user.getAddress(), user.getPort());
             } catch (IOException ignored) {
                 //His thread will fix it
             }
@@ -63,9 +63,9 @@ public class Conversation {
      * @param dataPackage contains message data
      */
 
-    public void sendMessage(AbstractDataPackage dataPackage, ServerUser me) {
+    public void sendMessage(AbstractDataPackage dataPackage, int me) {
         for (ServerUser user : users) {
-            if (user.equals(me))
+            if (user.getId() == me)
                 continue;
             try {
                 user.getWriter().transferPacket(dataPackage);
@@ -78,7 +78,7 @@ public class Conversation {
      * Add new user to this conference
      * and link this conversation to his field
      *
-     * @param dude who to add
+     * @param dude   who to add
      * @param except who must not receive message about adding dude
      */
 
@@ -118,7 +118,7 @@ public class Conversation {
                 //Ignore this dude's thread will handleDataPackageRouting the mess
             }
         });
-        if (users.size() == 1){
+        if (users.size() == 1) {
             ServerUser last = users.get(0);
             serverLogger.logp(Level.FINER, this.getClass().getName(), "removeDude",
                     "Last dude in conversation, trying to notify him about it - " + last);
@@ -148,4 +148,5 @@ public class Conversation {
         });
         return result.toString();
     }
+
 }

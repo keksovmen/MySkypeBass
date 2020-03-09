@@ -1,8 +1,5 @@
 package com.Abstraction.Networking.Protocol;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
-
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -73,7 +70,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage initRaw(final CODE code, final int from, final int to, @Nullable final byte[] data) {
+    public BaseDataPackage initRaw(final CODE code, final int from, final int to, final byte[] data) {
         header.init(code, data == null ? 0 : data.length, from, to);
         this.data = data;
         return this;
@@ -92,7 +89,7 @@ public class BaseDataPackage extends AbstractDataPackage {
      */
 
     @Override
-    public BaseDataPackage initString(final CODE code, final int from, final int to, @NotNull final String data) {
+    public BaseDataPackage initString(final CODE code, final int from, final int to, final String data) {
         return initRaw(code, from, to, data.getBytes(charset));
     }
 

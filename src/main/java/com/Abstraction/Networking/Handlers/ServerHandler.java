@@ -3,9 +3,10 @@ package com.Abstraction.Networking.Handlers;
 import com.Abstraction.Networking.BaseDataPackageRouter;
 import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Processors.ServerProcessor;
-import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Networking.Servers.AbstractServer;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ public class ServerHandler implements Starting {
     protected final Socket socket;
     protected final Processable processor;
     protected final BaseDataPackageRouter controller;
+    protected final Reader reader;
 
     protected volatile boolean isWorking;
 
@@ -24,7 +26,8 @@ public class ServerHandler implements Starting {
         this.server = server;
         this.socket = socket;
         processor = createProcessor(user);
-        controller = createController(user.getReader());
+        controller = createController();
+        reader = user.getReader();
     }
 
     @Override
@@ -40,26 +43,21 @@ public class ServerHandler implements Starting {
     public final void close() {
         isWorking = false;
         processor.close();
-        if (!socket.isClosed()) {
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-            }
-        }
+        Algorithms.closeSocketThatCouldBeClosed(socket);
     }
 
     protected Processable createProcessor(ServerUser serverUser) {
         return new ServerProcessor(serverUser, server);
     }
 
-    protected BaseDataPackageRouter createController(BaseReader reader) {
-        return new BaseDataPackageRouter(reader);
+    protected BaseDataPackageRouter createController() {
+        return new BaseDataPackageRouter();
     }
 
     private void handleLoop() {
         while (isWorking) {
             try {
-                if (!controller.handleDataPackageRouting(processor)) {
+                if (!controller.handleDataPackageRouting(reader, processor)) {
                     //if processor can't handleDataPackageRouting a request
                     close();
                 }

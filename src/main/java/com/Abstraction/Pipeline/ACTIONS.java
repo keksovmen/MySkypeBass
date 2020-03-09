@@ -7,7 +7,7 @@ package com.Abstraction.Pipeline;
 
 public enum ACTIONS {
     CONNECT_FAILED, // doesn't contain any data
-    CONNECT_SUCCEEDED, //data[0] is your BaseUser.toString();
+    CONNECT_SUCCEEDED, //data[0] is your User.toString();
     CONNECTION_TO_SERVER_FAILED, //doesn't contain any data, for exceptional cases when server died
     AUDIO_FORMAT_NOT_ACCEPTED, //data[0] is AudioFormat
     AUDIO_FORMAT_ACCEPTED, //data[0] is AudioFormat
@@ -35,6 +35,7 @@ public enum ACTIONS {
     ALREADY_CONNECTED_TO_SERVER, //data[0] is your BaseUser.toString() need in case of something
     CIPHER_FORMAT_IS_NOT_ACCEPTED, //data[0] is String contain message
     CIPHER_FORMAT_ON_SERVER_IS_NOT_ACCEPTED, //data[0] is String contain message
-
+    UDP_SOCKET_NOT_BINDED,  //data[0] is String contain message
+    SERVER_CLOSED,  //no data
 
 }

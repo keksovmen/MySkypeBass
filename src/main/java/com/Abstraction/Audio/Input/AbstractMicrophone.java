@@ -5,12 +5,7 @@ import com.Abstraction.Audio.Helper.AudioHelper;
 import com.Abstraction.Audio.Misc.AudioLineException;
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Pipeline.BUTTONS;
-import com.Abstraction.Util.Collection.ArrayBlockingQueueWithWait;
-import com.Abstraction.Util.Resources.Resources;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,11 +15,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput {
 
-//    /**
-//     * Indicate that an input device has't been initialised
-//     */
-//
-//    private static int NOT_INITIALISED_INPUT_ID = -1;
 
     /**
      * Chain of Responsibility
@@ -32,13 +22,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
      */
 
     protected final ButtonsHandler helpHandlerPredecessor;
-
-    /**
-     * For not stopping mic to do send action
-     * without it can cause some glitches in mic recording
-     */
-
-    protected final ExecutorService executorService;
 
     /**
      * For mute actions, and main loop synchronisations
@@ -73,9 +56,7 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
 
     public AbstractMicrophone(ButtonsHandler helpHandlerPredecessor) {
         this.helpHandlerPredecessor = helpHandlerPredecessor;
-        executorService = createExecutor();
         muteLock = new ReentrantLock();
-//        indexOfParticularInputDevice = NOT_INITIALISED_INPUT_ID;
     }
 
     /**
@@ -176,7 +157,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
                     try {
                         muteLock.wait();
                     } catch (InterruptedException ignored) { //should't happen
-                        ignored.printStackTrace();
                     }
                 }
             }
@@ -185,13 +165,7 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
             checkExistenceOfMic();
             byte[] bytes = bassBoost(readFromMic());
 
-//            synchronized (this) {
-//                if (!executorService.isShutdown()) {
-            executorService.execute(() -> helpHandlerPredecessor.handleRequest(
-                    BUTTONS.SEND_SOUND, new Object[]{bytes}
-            ));
-//                }
-//            }
+            helpHandlerPredecessor.handleRequest(BUTTONS.SEND_SOUND, new Object[]{bytes});
         }
     }
 
@@ -204,7 +178,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
             try {
                 wait();
             } catch (InterruptedException ignored) {
-                ignored.printStackTrace();
             }
         }
     }
@@ -231,22 +204,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
 
     protected abstract byte[] bassBoost(byte[] data);
 
-    /**
-     * Default implementation returns single threaded
-     * with waiting queue
-     *
-     * @return default executor
-     */
-
-    protected ExecutorService createExecutor() {
-        return new ThreadPoolExecutor(
-                0,
-                1,
-                30,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueueWithWait<>(Resources.getInstance().getMicQueueSize())
-        );
-    }
 
     /**
      * Putting flags in proper state and obtaining input line
@@ -259,10 +216,6 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
         isMuted = false;
         if (inputLine == null) {
             try {
-//            changeInput(getDeviceId());
-////            if (inputLine == null) {
-////                return false;
-////            }
                 inputLine = AudioSupplier.getInstance().getInput(indexOfParticularInputDevice);
             } catch (AudioLineException e) {
                 e.printStackTrace();
@@ -272,8 +225,4 @@ public abstract class AbstractMicrophone implements DefaultMic, ChangeableInput 
         return true;
     }
 
-//    private int getDeviceId() {
-//        return indexOfParticularInputDevice == NOT_INITIALISED_INPUT_ID ?
-//                AudioSupplier.getInstance().getDefaultForInput() : indexOfParticularInputDevice;
-//    }
 }

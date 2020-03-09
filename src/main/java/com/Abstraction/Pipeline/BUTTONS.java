@@ -22,4 +22,5 @@ public enum BUTTONS {
     CHANGE_OUTPUT, // data[0] is Integer id of particular output
     PREVIEW_SOUND, // data[0] is id formatted as in message as String, data[1] id of a track as Integer
     SEND_SOUND, // data[0] is sound to send as byte[]
+    STOP_SERVER,    //no data
 }

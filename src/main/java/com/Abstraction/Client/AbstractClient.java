@@ -5,9 +5,9 @@ import com.Abstraction.Networking.Handlers.ClientCipherNetworkHelper;
 import com.Abstraction.Networking.Handlers.ClientNetworkHelper;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.UDPReader;
 import com.Abstraction.Networking.Utility.Authenticator;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
-import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.*;
 import com.Abstraction.Networking.Writers.CipherWriter;
 import com.Abstraction.Networking.Writers.ClientWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
@@ -22,8 +22,10 @@ import com.Abstraction.Util.Resources.Resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -73,6 +75,7 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
+//        executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new ArrayBlockingQueueWithWait<>(12), r -> new Thread(r, "Buttons handler"));
         authenticator = createAuthenticator();
 
     }
@@ -171,10 +174,12 @@ public abstract class AbstractClient implements Logic {
         if (strings == null) return;
 
         Socket socket = new Socket();
+        DatagramSocket datagramSocket;
         InputStream inputStream;
         OutputStream outputStream;
+        InetSocketAddress socketAddress = new InetSocketAddress(strings[1], Integer.parseInt(strings[2]));
         try {
-            socket.connect(new InetSocketAddress(strings[1], Integer.parseInt(strings[2])), Resources.getInstance().getTimeOut() * 1000);
+            socket.connect(socketAddress, Resources.getInstance().getTimeOut() * 1000);
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
         } catch (IOException e) {
@@ -183,14 +188,33 @@ public abstract class AbstractClient implements Logic {
             return;
         }
 
-
-        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0]);
-        if (!handleAuthenticationResults(storage)) {
+        try {
+            datagramSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            plainNotify(ACTIONS.CONNECT_FAILED);
+            stringNotify(ACTIONS.UDP_SOCKET_NOT_BINDED, "Your UDP socket is already in use by other software!");
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
 
-        finishSucceededConnection(storage, inputStream, outputStream, socket);
+        Authenticator.ClientStorage storage = authenticator.clientAuthentication(inputStream, outputStream, strings[0], datagramSocket.getLocalPort());
+        if (!handleAuthenticationResults(storage)) {
+            Algorithms.closeSocketThatCouldBeClosed(socket);
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
+            return;
+        }
+
+        if (storage.isFullTCP) {
+            Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
+            datagramSocket = null;
+        }
+
+        finishSucceededConnection(createClientUser(storage,
+                outputStream, inputStream, datagramSocket,
+                storage.isFullTCP ? null : new InetSocketAddress(socket.getInetAddress(),
+                        socket.getPort())),
+                createNetworkHelper(socket, datagramSocket)
+        );
     }
 
     protected void onDisconnect() {
@@ -212,7 +236,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCall(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
         myself.lock();
         if (myself.isCalling() != ClientUser.NO_ONE) {
@@ -255,7 +279,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallAccepted(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
 
         ClientUser myself = model.getMyself();
         myself.drop();
@@ -269,7 +293,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallDenied(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
 
         myself.drop();
@@ -281,7 +305,7 @@ public abstract class AbstractClient implements Logic {
     }
 
     protected void onCallCanceled(Object[] data) {
-        BaseUser dude = (BaseUser) data[0];
+        User dude = (User) data[0];
         ClientUser myself = model.getMyself();
 
         myself.drop();
@@ -300,40 +324,52 @@ public abstract class AbstractClient implements Logic {
         }
     }
 
-    protected ClientNetworkHelper createNetworkHelper(Socket socket) {
+    protected ClientNetworkHelper createNetworkHelper(Socket socket, DatagramSocket datagramSocket) {
         if (isSecureConnection) {
-            return new ClientCipherNetworkHelper(this, socket);
+            return new ClientCipherNetworkHelper(this, socket, datagramSocket);
         } else {
-            return new ClientNetworkHelper(this, socket);
+            return new ClientNetworkHelper(this, socket, datagramSocket);
         }
     }
 
-    protected Writer createWriterForClient(OutputStream outputStream, Authenticator.ClientStorage storage) {
+    protected Writer createWriterForClient(OutputStream outputStream, Authenticator.ClientStorage storage, DatagramSocket datagramSocket) {
+        Writer writer = new PlainWriter(outputStream, Resources.getInstance().getBufferSize(), datagramSocket);
         if (storage.isSecureConnection) {
-            return new CipherWriter(outputStream, Resources.getInstance().getBufferSize(), storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
+            return new CipherWriter(writer, storage.cryptoHelper.getKey(), storage.cryptoHelper.getParameters());
         } else {
-            return new PlainWriter(outputStream, Resources.getInstance().getBufferSize());
+            return writer;
         }
     }
 
-    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream) {
+    /**
+     * @param storage        meta info
+     * @param outputStream   opened
+     * @param inputStream    opened
+     * @param datagramSocket could be null if so than full TCP connection
+     * @param address        where to send UDP, also could be null
+     * @return
+     */
+
+    protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
+        final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
+        final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
+        final UDPReader readerUDP;
+        if (datagramSocket == null)
+            readerUDP = null;
+        else
+            readerUDP = new UDPReader(datagramSocket, storage.sizeUDP);
+        final User user;
         if (storage.isSecureConnection) {
-            return new ClientUser(
+            user = new CipherUser(
                     storage.name,
                     storage.myID,
                     storage.cryptoHelper.getKey(),
-                    storage.cryptoHelper.getParameters(),
-                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
+                    storage.cryptoHelper.getParameters()
             );
         } else {
-            return new ClientUser(
-                    storage.name,
-                    storage.myID,
-                    new ClientWriter(createWriterForClient(outputStream, storage), storage.myID),
-                    new BaseReader(inputStream, Resources.getInstance().getBufferSize())
-            );
+            user = new PlainUser(storage.name, storage.myID);
         }
+        return new ClientUser(new BaseUserWithLock(user), writer, readerTCP, readerUDP);
     }
 
 
@@ -412,21 +448,15 @@ public abstract class AbstractClient implements Logic {
 
     /**
      * Handle succeeded connection, send some notifies and changes model state
-     *
-     * @param storage      contain data about authentication
-     * @param inputStream  opened
-     * @param outputStream opened
-     * @param socket       connected
      */
 
-    protected void finishSucceededConnection(Authenticator.ClientStorage storage, InputStream inputStream, OutputStream outputStream, Socket socket) {
-        ClientUser me = createClientUser(storage, outputStream, inputStream);
-        model.setMyself(me);
-        networkHelper = createNetworkHelper(socket);
+    protected void finishSucceededConnection(ClientUser user, ClientNetworkHelper networkHelper) {
+        model.setMyself(user);
+        this.networkHelper = networkHelper;
         networkHelper.start("Client network helper / reader");
-        stringNotify(ACTIONS.CONNECT_SUCCEEDED, me.toString());
+        stringNotify(ACTIONS.CONNECT_SUCCEEDED, user.toString());
         try {
-            me.getWriter().writeUsersRequest();
+            user.getWriter().writeUsersRequest();
         } catch (IOException ignored) {
             //networkHelper exception handler will handle it
         }
@@ -444,7 +474,7 @@ public abstract class AbstractClient implements Logic {
     }
 
 
-    public static void callAcceptRoutine(Logic logic, ChangeableModel model, BaseUser user) {
+    public static void callAcceptRoutine(Logic logic, ChangeableModel model, User user) {
         logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);
         model.addToConversation(user);
     }

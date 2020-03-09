@@ -1,6 +1,6 @@
 package com.Abstraction.Model;
 
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Networking.Utility.Users.User;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -12,11 +12,11 @@ import java.util.TreeMap;
  * and in a conversation
  */
 
-public abstract class BaseUnEditableModel implements UnEditableModel{
+public abstract class BaseUnEditableModel implements UnEditableModel {
 
-    protected final Map<Integer, BaseUser> userMap;
+    protected final Map<Integer, User> userMap;
 
-    protected final Set<BaseUser> conversation;
+    protected final Set<User> conversation;
 
     /**
      * TreeMap just for easy to find on GUI
@@ -33,23 +33,29 @@ public abstract class BaseUnEditableModel implements UnEditableModel{
      */
 
     @Override
-    public Map<Integer, BaseUser> getUserMap() {
+    public Map<Integer, User> getUserMap() {
         return new TreeMap<>(userMap);
     }
 
     /**
-     *
      * @return Copy of this set, as instant snapshot
      */
 
     @Override
-    public Set<BaseUser> getConversation(){
+    public Set<User> getConversation() {
         return new HashSet<>(conversation);
     }
 
     @Override
-    public synchronized boolean inConversationWith(BaseUser dude){
+    public synchronized boolean inConversationWith(User dude) {
         return conversation.contains(dude);
     }
 
+    @Override
+    public String toString() {
+        return "BaseUnEditableModel{" +
+                "userMap=" + userMap +
+                ", conversation=" + conversation +
+                '}';
+    }
 }

@@ -2,15 +2,17 @@ package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Client.LogicObserver;
-import com.Abstraction.Model.UnEditableModel;
 import com.Abstraction.Model.ModelObserver;
-import com.Abstraction.Networking.Utility.Users.BaseUser;
+import com.Abstraction.Model.UnEditableModel;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Collection.Track;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Util.DesktopResources;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,7 +46,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * Has pop up menu
      */
 
-    private JList<BaseUser> usersList;
+    private JList<User> usersList;
     private JButton callButton;
     private JButton disconnectButton;
     private JTabbedPane callTable;
@@ -54,14 +56,14 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * Contain baseUser[] that on server
      */
 
-    private DefaultListModel<BaseUser> model;
+    private DefaultListModel<User> model;
 
     /**
      * Need for messaging isCashed.
      * Entries baseUser - pane
      */
 
-    private final Map<BaseUser, MessagePane> tabs;
+    private final Map<User, MessagePane> tabs;
 
     private final ConferencePane conferencePane;
 
@@ -79,6 +81,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
 
     public MultiplePurposePane(ButtonsHandler helpHandlerPredecessor) {
         tabs = new HashMap<>();
+        $$$setupUI$$$();
         conferencePane = new ConferencePane(this, this::closeTab);
 
         this.helpHandlerPredecessor = helpHandlerPredecessor;
@@ -114,7 +117,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case INCOMING_MESSAGE: {
-                showMessage((BaseUser) data[0], (String) data[1], (int) data[2] == 1);
+                showMessage((User) data[0], (String) data[1], (int) data[2] == 1);
                 break;
             }
             case DISCONNECTED: {
@@ -122,7 +125,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case CALLED_BUT_BUSY: {
-                onCalledButBusy((BaseUser) data[0]);
+                onCalledButBusy((User) data[0]);
                 break;
             }
             case CALL_ACCEPTED: {
@@ -130,7 +133,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
                 break;
             }
             case BOTH_IN_CONVERSATION: {
-                onBothInConv((BaseUser) data[0]);
+                onBothInConv((User) data[0]);
                 break;
             }
             case EXITED_CONVERSATION: {
@@ -182,11 +185,11 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         showConversationPane();
     }
 
-    private void onCalledButBusy(BaseUser who) {
+    private void onCalledButBusy(User who) {
         showMessage(who, "I called, but you had been calling already, call me back", false);
     }
 
-    private void onBothInConv(BaseUser from) {
+    private void onBothInConv(User from) {
         showMessage(from, "I called, but You and I are in different conversations, call me later", false);
     }
 
@@ -255,7 +258,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     private void onSendMessage() {
         if (!selected())
             return;
-        BaseUser selected = getSelected();
+        User selected = getSelected();
         if (isShownAlready(selected))
             return;
         if (isCashed(selected)) {
@@ -290,7 +293,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         return usersList.getSelectedIndex() != -1;
     }
 
-    private BaseUser getSelected() {
+    private User getSelected() {
         return model.get(usersList.getSelectedIndex());
     }
 
@@ -298,11 +301,11 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         return callTable.indexOfTab(data) != -1;
     }
 
-    private boolean isShownAlready(BaseUser user) {
+    private boolean isShownAlready(User user) {
         return isShownAlready(user.toString());
     }
 
-    private boolean isCashed(BaseUser user) {
+    private boolean isCashed(User user) {
         return tabs.containsKey(user);
     }
 
@@ -321,7 +324,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * @return ready to use MessagePane
      */
 
-    private MessagePane createPane(BaseUser user) {
+    private MessagePane createPane(User user) {
         MessagePane messagePane = new MessagePane(user, () -> closeTab(user.toString()), this);
         tabs.put(user, messagePane);
         return messagePane;
@@ -337,7 +340,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      * @param message plain text
      */
 
-    private void showMessage(final BaseUser from, final String message, boolean toConv) {
+    private void showMessage(final User from, final String message, boolean toConv) {
         clientLogger.entering(this.getClass().getName(), "showMessage", from);
         if (from == null) { // do nothing when dude is not present in model
             clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
@@ -422,10 +425,10 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         // TODO: place custom component creation code here
         model = new DefaultListModel<>();
         usersList = new JList<>(model);
-        usersList.setCellRenderer(new DefaultListCellRenderer(){
+        usersList.setCellRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                return super.getListCellRendererComponent(list, ((BaseUser)value).toString(), index, isSelected, cellHasFocus);
+                return super.getListCellRendererComponent(list, value.toString(), index, isSelected, cellHasFocus);
             }
 
         });
@@ -457,5 +460,71 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
             popupMenu.add(menuItem);
         }
         component.setComponentPopupMenu(popupMenu);
+    }
+
+    /**
+     * Method generated by IntelliJ IDEA GUI Designer
+     * >>> IMPORTANT!! <<<
+     * DO NOT edit this method OR call it in your code!
+     *
+     * @noinspection ALL
+     */
+    private void $$$setupUI$$$() {
+        createUIComponents();
+        mainPane = new JPanel();
+        mainPane.setLayout(new GridLayoutManager(1, 2, new Insets(3, 3, 3, 3), -1, -1));
+        mainPane.setVisible(true);
+        final JPanel panel1 = new JPanel();
+        panel1.setLayout(new GridLayoutManager(4, 2, new Insets(3, 3, 3, 3), -1, -1));
+        mainPane.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(250, -1), null, 0, false));
+        panel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(new Color(-11842741)), null));
+        final JScrollPane scrollPane1 = new JScrollPane();
+        panel1.add(scrollPane1, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        usersList.setSelectionMode(0);
+        scrollPane1.setViewportView(usersList);
+        final JLabel label1 = new JLabel();
+        label1.setIcon(new ImageIcon(getClass().getResource("/Images/online.png")));
+        label1.setText("Online users:");
+        panel1.add(label1, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JScrollPane scrollPane2 = new JScrollPane();
+        scrollPane2.setHorizontalScrollBarPolicy(32);
+        scrollPane2.setOpaque(false);
+        scrollPane2.setVerticalScrollBarPolicy(20);
+        scrollPane2.setVisible(true);
+        panel1.add(scrollPane2, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        labelMe = new JTextArea();
+        labelMe.setEditable(false);
+        labelMe.setEnabled(true);
+        labelMe.setLineWrap(false);
+        labelMe.setOpaque(false);
+        labelMe.setText("Your name and unique id");
+        labelMe.setWrapStyleWord(false);
+        scrollPane2.setViewportView(labelMe);
+        final JLabel label2 = new JLabel();
+        label2.setText("Name - Id:");
+        label2.setVisible(true);
+        panel1.add(label2, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
+        panel1.add(panel2, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        callButton = new JButton();
+        callButton.setText("Call");
+        panel2.add(callButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        disconnectButton = new JButton();
+        disconnectButton.setText("Disconnect");
+        panel2.add(disconnectButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), null, null, 0, false));
+        final JPanel panel3 = new JPanel();
+        panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        panel3.setVisible(true);
+        mainPane.add(panel3, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(150, -1), null, 0, false));
+        callTable = new JTabbedPane();
+        panel3.add(callTable, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(200, 200), null, 0, false));
+    }
+
+    /**
+     * @noinspection ALL
+     */
+    public JComponent $$$getRootComponent$$$() {
+        return mainPane;
     }
 }

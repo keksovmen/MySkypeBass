@@ -3,7 +3,7 @@ package com.Abstraction.Networking;
 import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
-import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -26,8 +26,7 @@ public class ClientDataPackageRouter extends BaseDataPackageRouter {
     private final ExecutorService executorService;
 
 
-    public ClientDataPackageRouter(BaseReader reader) {
-        super(reader);
+    public ClientDataPackageRouter() {
         executorService = Executors.newSingleThreadExecutor(r -> new Thread(r, "Client processor"));
     }
 
@@ -41,7 +40,7 @@ public class ClientDataPackageRouter extends BaseDataPackageRouter {
      */
 
     @Override
-    public boolean handleDataPackageRouting(Processable processor) throws IOException {
+    public boolean handleDataPackageRouting(Reader reader, Processable processor) throws IOException {
         if (executorService.isShutdown())
             return false;
         try {

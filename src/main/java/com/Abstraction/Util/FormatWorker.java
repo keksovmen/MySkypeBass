@@ -1,7 +1,9 @@
 package com.Abstraction.Util;
 
 import com.Abstraction.Audio.Misc.AbstractAudioFormat;
+import com.Abstraction.Networking.Protocol.ProtocolBitMap;
 import com.Abstraction.Util.Collection.Pair;
+import com.Abstraction.Util.Cryptographics.Crypto;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -136,6 +138,10 @@ public class FormatWorker {
     public static String getTime() {
         Calendar calendar = Calendar.getInstance();
         return dateFormat.format(calendar.getTime());
+    }
+
+    public static int getPackageSizeUDP(boolean isCipher, int audioSize) {
+        return ProtocolBitMap.PACKET_SIZE + audioSize + (isCipher ? Crypto.STANDARD_PADDING : 0);
     }
 
 }

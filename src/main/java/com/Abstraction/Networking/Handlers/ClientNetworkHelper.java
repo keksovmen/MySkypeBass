@@ -5,11 +5,13 @@ import com.Abstraction.Networking.BaseDataPackageRouter;
 import com.Abstraction.Networking.ClientDataPackageRouter;
 import com.Abstraction.Networking.Processors.ClientProcessor;
 import com.Abstraction.Networking.Processors.Processable;
-import com.Abstraction.Networking.Readers.BaseReader;
+import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Pipeline.ACTIONS;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.Socket;
 
 public class ClientNetworkHelper implements Starting {
@@ -19,41 +21,24 @@ public class ClientNetworkHelper implements Starting {
     protected final Socket socket;
     protected final Processable processor;
     protected final BaseDataPackageRouter packageRouter;
+    protected final DatagramSocket datagramSocket;
 
     protected volatile boolean isWorking;
 
-    public ClientNetworkHelper(AbstractClient client, Socket socket) {
+    /**
+     * @param client         to delegate some operations
+     * @param socket         must be not null and connected
+     * @param datagramSocket if null mean full TCP connection
+     */
+
+    public ClientNetworkHelper(AbstractClient client, Socket socket, DatagramSocket datagramSocket) {
         this.client = client;
         this.socket = socket;
         processor = createProcessor();
-//        packageRouter = createPackageRouter(createReader());
-        packageRouter = createPackageRouter(client.getModel().getMyself().getReader());
+        packageRouter = createPackageRouter();
+        this.datagramSocket = datagramSocket;
     }
 
-//    /**
-//     * @param name your desired name on server
-//     * @param socket with connection
-//     * @return true if connected to server, false if already connected
-//     * @throws IOException if network connection failed
-//     */
-//
-//    public boolean start(String name, Socket socket) throws IOException {
-//        if (isWorking)
-//            return false;
-//        this.socket = socket;
-//        BaseReader reader = createReader();
-//        ClientWriter writer = createWriter();
-//        ClientUser user = client.authenticate(reader, writer, name);
-//        if (user == null)
-//            throw new IOException();
-//        processor = createProcessor(user);
-//        packageRouter = createPackageRouter(reader);
-//
-//        isWorking = true;
-//        new Thread(this::handleLoop, name + " Reader").start();
-//
-//        return true;
-//    }
 
 
     @Override
@@ -61,7 +46,9 @@ public class ClientNetworkHelper implements Starting {
         if (isWorking) return false;
 
         isWorking = true;
-        new Thread(this::handleLoop, name).start();
+        new Thread(this::handleLoopTCP, name + " TCP").start();
+        if (datagramSocket != null)
+            new Thread(this::handleLoopUDP, name + " UDP").start();
         return true;
     }
 
@@ -72,42 +59,28 @@ public class ClientNetworkHelper implements Starting {
         isWorking = false;
         processor.close();
         if (socket.isConnected()) {
-            try {
-                socket.close();
-            } catch (IOException ignored) {
-                //already closed
-            }
+            Algorithms.closeSocketThatCouldBeClosed(socket);
         }
+        Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
     }
 
     public boolean isWorking() {
         return isWorking;
     }
 
-//    protected BaseReader createReader() throws IOException {
-//        return new BaseReader(socket.getInputStream(), Resources.getInstance().getBufferSize());
-//    }
-
-//    protected ClientWriter createWriter() throws IOException {
-//        return new ClientWriter(socket.getOutputStream(), Resources.getInstance().getBufferSize());
-//    }
-
-//    protected Processable createProcessor(ClientUser clientUser) {
-//        return new ClientProcessor(client.getModel(), clientUser, client);
-//    }
-
     protected Processable createProcessor() {
         return new ClientProcessor(client.getModel(), client);
     }
 
-    protected BaseDataPackageRouter createPackageRouter(BaseReader reader) {
-        return new ClientDataPackageRouter(reader);
+    protected BaseDataPackageRouter createPackageRouter() {
+        return new ClientDataPackageRouter();
     }
 
-    private void handleLoop() {
+    private void handleLoopTCP() {
+        Reader readerTCP = client.getModel().getMyself().getReaderTCP();
         while (isWorking) {
             try {
-                if (!packageRouter.handleDataPackageRouting(processor)) {
+                if (!packageRouter.handleDataPackageRouting(readerTCP, processor)) {
                     //if router did route but processor didn't handle it
                     close();
                 }
@@ -117,6 +90,21 @@ public class ClientNetworkHelper implements Starting {
                     client.notifyObservers(ACTIONS.CONNECTION_TO_SERVER_FAILED, null);
                     close();
                 }
+            }
+        }
+    }
+
+    private void handleLoopUDP() {
+        Reader readerUDP = client.getModel().getMyself().getReaderUDP();
+        while (isWorking) {
+            try {
+                if (!packageRouter.handleDataPackageRouting(readerUDP, processor)) {
+                    //if router did route but processor didn't handle it
+                    close();
+                }
+            } catch (IOException e) {
+                //if router didn't route due to network failure
+                //tcp will handle all errors
             }
         }
     }

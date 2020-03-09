@@ -4,12 +4,9 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.net.InetAddress;
 import java.util.logging.Level;
 
 import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
@@ -18,42 +15,32 @@ import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
  * Contain not all possible server write actions
  */
 
-public class ServerWriter implements Writer {
+public class ServerWriter {
 
     private final Writer writer;
 
-    /**
-     * Need for conference writing
-     */
-
-    private final Lock lock;
-
-    /**
-     * If internet of one of the users is garbage
-     * it will skip him through this time
-     * <p>
-     * in millis, not calculated
-     */
-
-    private final int LOCK_TIME; //default 300
-
 
     public ServerWriter(Writer writer) {
-//        super(outputStream, bufferSize);
         this.writer = writer;
-        lock = new ReentrantLock();
-        LOCK_TIME = Resources.getInstance().getLockTime();
     }
 
-    @Override
-    public void write(AbstractDataPackage dataPackage) throws IOException {
+
+    protected void write(AbstractDataPackage dataPackage) throws IOException {
         writer.write(dataPackage);
     }
 
-    @Override
-    public void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
+    protected void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
         writer.writeWithoutReturnToPool(dataPackage);
     }
+
+
+    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        if (address == null)
+            writeWithoutReturnToPool(dataPackage);
+        else
+            writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);
+    }
+
 
     public void writeAudioFormat(int id, String format) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(
@@ -79,18 +66,8 @@ public class ServerWriter implements Writer {
      * @throws IOException if networking fails
      */
 
-    public void transferAudio(AbstractDataPackage dataPackage) throws IOException {
-        try {
-            if (lock.tryLock(LOCK_TIME, TimeUnit.MILLISECONDS)) {
-                try {
-                    writeWithoutReturnToPool(dataPackage);
-                } finally {
-                    lock.unlock();
-                }
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {
@@ -173,5 +150,17 @@ public class ServerWriter implements Writer {
 
     public void writeAddWholeConversation(int to, String dudes) throws IOException {
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_ADD_WHOLE_CONVERSATION, WHO.SERVER.getCode(), to, dudes));
+    }
+
+    public void writeSizeOfUDP(int sizeUDP) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PACKAGE_SIZE, WHO.SERVER.getCode(), WHO.NO_NAME.getCode(), String.valueOf(sizeUDP)));
+    }
+
+    public void writeIsFullTCPConnection(boolean isFullTCP) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(
+                isFullTCP ? CODE.SEND_FULL_TCP_CONNECTION : CODE.SEND_MIXED_CONNECTION,
+                WHO.SERVER.getCode(),
+                WHO.NO_NAME.getCode()
+        ));
     }
 }

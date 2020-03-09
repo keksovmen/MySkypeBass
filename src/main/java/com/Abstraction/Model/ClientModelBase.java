@@ -1,7 +1,7 @@
 package com.Abstraction.Model;
 
-import com.Abstraction.Networking.Utility.Users.BaseUser;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
+import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Util.Interfaces.Registration;
 
 import java.util.Arrays;
@@ -54,11 +54,11 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
      */
 
     @Override
-    public synchronized void addToModel(BaseUser users[]) {
+    public synchronized void addToModel(User users[]) {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "addToModel",
                 "Adding to model many dudes - " + Arrays.toString(users));
         userMap.clear();
-        for (BaseUser user : users) {
+        for (User user : users) {
             userMap.put(user.getId(), user);
         }
         notifyListeners();
@@ -72,7 +72,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
      */
 
     @Override
-    public synchronized void addToModel(BaseUser user) {
+    public synchronized void addToModel(User user) {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "addToModel",
                 "Adding to model this dude - " + user);
         userMap.put(user.getId(), user);
@@ -90,7 +90,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     public synchronized void removeFromModel(int user) {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "removeFromModel",
                 "Removing this dude by unique id - " + user);
-        BaseUser remove = userMap.remove(user);
+        User remove = userMap.remove(user);
         if (remove != null) {
             clientLogger.logp(Level.FINER, this.getClass().getName(), "removeFromModel",
                     "Removing this dude from conversation - " + user);
@@ -100,7 +100,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void clear(){
+    public synchronized void clear() {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "clear",
                 "Clear all dudes from both conversation and storage");
         conversation.clear();
@@ -112,7 +112,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void addToConversation(BaseUser dude){
+    public synchronized void addToConversation(User dude) {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "addToConversation",
                 "Adding this dude to conversation - " + dude);
         if (conversation.add(dude)) {
@@ -121,7 +121,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void removeFromConversation(BaseUser dude){
+    public synchronized void removeFromConversation(User dude) {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "removeFromConversation",
                 "Removing this dude from conversation - " + dude);
         if (conversation.remove(dude)) {
@@ -130,7 +130,7 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
     }
 
     @Override
-    public synchronized void clearConversation(){
+    public synchronized void clearConversation() {
         clientLogger.logp(Level.FINER, this.getClass().getName(), "clearConversation",
                 "Clearing conversation");
         if (conversation.isEmpty())
