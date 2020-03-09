@@ -85,7 +85,7 @@ public class ClientDecoderProcessor extends ClientProcessor {
         if (idOfDude == WHO.SERVER.getCode()) {
             return model.getMyself();
         } else {
-            return model.getUserMap().get(idOfDude);
+            return model.getUser(idOfDude);
         }
     }
 

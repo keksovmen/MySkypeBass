@@ -31,4 +31,6 @@ public interface ChangeableModel extends UnEditableModel {
 
     void setMyself(ClientUser me);
 
+    User getUser(int id);
+
 }

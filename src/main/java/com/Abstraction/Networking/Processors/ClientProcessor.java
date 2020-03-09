@@ -126,7 +126,7 @@ public class ClientProcessor implements Processable {
 
     protected boolean onIncomingMessage(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onIncomingMessage", "");
-        User sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User sender = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.INCOMING_MESSAGE, new Object[]{
                 sender,
                 dataPackage.getDataAsString(),
@@ -145,7 +145,7 @@ public class ClientProcessor implements Processable {
 
     protected boolean onIncomingCall(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onIncomingCall", "");
-        User sender = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User sender = model.getUser(dataPackage.getHeader().getFrom());
         ClientUser myself = model.getMyself();
 
         myself.lock();
@@ -174,7 +174,7 @@ public class ClientProcessor implements Processable {
     protected boolean onSendSound(AbstractDataPackage dataPackage) {
         int from = dataPackage.getHeader().getFrom();
         logic.notifyObservers(ACTIONS.INCOMING_SOUND, new Object[]{
-                model.getUserMap().get(from),
+                model.getUser(from),
                 dataPackage.getData(),
                 from
         });
@@ -183,14 +183,14 @@ public class ClientProcessor implements Processable {
 
     protected boolean onAddToConversation(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onAddToConversation", "");
-        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         model.addToConversation(baseUser);
         return true;
     }
 
     protected boolean onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onRemoveDudeFromConversation", "");
-        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         model.removeFromConversation(baseUser);
         return true;
     }
@@ -220,7 +220,7 @@ public class ClientProcessor implements Processable {
     protected boolean onCallAccept(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onCallAccept", "");
         model.getMyself().drop();
-        User dude = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User dude = model.getUser(dataPackage.getHeader().getFrom());
         AbstractClient.callAcceptRoutine(logic, model, dude);
         return true;
     }
@@ -228,7 +228,7 @@ public class ClientProcessor implements Processable {
     protected boolean onCallDeny(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onCallDeny", "");
         model.getMyself().drop();
-        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
@@ -236,7 +236,7 @@ public class ClientProcessor implements Processable {
     protected boolean onCallCanceled(AbstractDataPackage dataPackage) {
         clientLogger.logp(Level.FINER, getClass().getName(), "onCallCanceled", "");
         model.getMyself().drop();
-        User baseUser = model.getUserMap().get(dataPackage.getHeader().getFrom());
+        User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
         return true;
     }
@@ -248,7 +248,7 @@ public class ClientProcessor implements Processable {
         if (myself.isCalling() == dataPackage.getHeader().getFrom())
             myself.drop();
         logic.notifyObservers(ACTIONS.BOTH_IN_CONVERSATION, new Object[]{
-                model.getUserMap().get(dataPackage.getHeader().getFrom())
+                model.getUser(dataPackage.getHeader().getFrom())
         });
         return true;
     }
