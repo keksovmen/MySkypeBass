@@ -129,6 +129,19 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
         myself = me;
     }
 
+    /**
+     * Instead of {@link UnEditableModel#getUserMap()}
+     * For cache purposes
+     *
+     * @param id of a user to get
+     * @return dude or null
+     */
+
+    @Override
+    public synchronized User getUser(int id) {
+        return userMap.get(id);
+    }
+
     private void notifyListeners() {
         listeners.forEach(updater -> updater.modelObservation(this));
     }
