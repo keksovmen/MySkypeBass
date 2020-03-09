@@ -93,11 +93,11 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
 
     @Override
     public void modelObservation(UnEditableModel model) {
-        clientLogger.entering(this.getClass().getName(), "update");
+        clientLogger.entering(this.getClass().getName(), "modelObservation");
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "modelObservation",
                 "Removed all users from local map and added new ones - " + Arrays.toString(model.getUserMap().values().toArray()));
         //Go through tabs and set online or offline icons, except CONFERENCE
         changeIconsOfTabs();
@@ -106,7 +106,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
 
         mainPane.revalidate();
         mainPane.repaint();
-        clientLogger.exiting(this.getClass().getName(), "update");
+        clientLogger.exiting(this.getClass().getName(), "modelObservation");
     }
 
     @Override

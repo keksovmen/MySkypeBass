@@ -143,7 +143,7 @@ public class SimpleServer extends AbstractServer {
     @Override
     public void registerUser(ServerUser user) {
         serverLogger.logp(Level.FINER, this.getClass().getName(), "registerUser",
-                "Controller is registered - " + user);
+                "User is registered - " + user);
         users.put(user.getId(), user);
         sendAddDude(user);
     }

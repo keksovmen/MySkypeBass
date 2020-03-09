@@ -105,6 +105,8 @@ public class ClientWriter {
     }
 
     public void writeDeclineAudioFormat() throws IOException {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "writeDeclineAudioFormat",
+                "Writing decline audio format");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_DENY, myID, WHO.SERVER.getCode()));
     }
 
@@ -151,10 +153,14 @@ public class ClientWriter {
     }
 
     public void writeCipherModeAccepted() throws IOException {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "writeCipherModeAccepted",
+                "Writing approve cipher mode");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_ACCEPTED, myID, WHO.SERVER.getCode()));
     }
 
     public void writeCipherModeDenied() throws IOException {
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "writeCipherModeDenied",
+                "Writing deny cipher mode");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_DENIED, myID, WHO.SERVER.getCode()));
     }
 

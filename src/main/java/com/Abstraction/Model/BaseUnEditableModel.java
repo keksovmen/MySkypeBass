@@ -1,6 +1,7 @@
 package com.Abstraction.Model;
 
 import com.Abstraction.Networking.Utility.Users.User;
+import com.Abstraction.Util.Logging.TreeMapProxy;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -34,7 +35,7 @@ public abstract class BaseUnEditableModel implements UnEditableModel {
 
     @Override
     public Map<Integer, User> getUserMap() {
-        return new TreeMap<>(userMap);
+        return new TreeMapProxy<>(userMap);
     }
 
     /**

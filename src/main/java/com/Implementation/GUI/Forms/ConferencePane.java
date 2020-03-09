@@ -124,11 +124,11 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
 
     @Override
     public void modelObservation(UnEditableModel model) {
-        clientLogger.entering(this.getClass().getName(), "update");
+        clientLogger.entering(this.getClass().getName(), "modelObservation");
         Set<User> conversation = model.getConversation();
 
         Map<User, UserSettings> tmp = new HashMap<>();
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "modelObservation",
                 "Changing amount of users in conversation from - " +
                         Arrays.toString(conferenceMembers.keySet().toArray())
                 + ", to - " + Arrays.toString(conversation.toArray())
@@ -146,7 +146,7 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
                 addUser(user);
         });
 
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "update",
+        clientLogger.logp(Level.FINER, this.getClass().getName(), "modelObservation",
                 "Changed dudes result is - " + Arrays.toString(conferenceMembers.keySet().toArray()));
         repaint();
     }
