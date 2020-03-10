@@ -9,12 +9,14 @@ import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Pipeline.SimpleComponent;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.AbstractResources;
 import com.Implementation.Audio.Factory.AudioDesktopFactory;
 import com.Implementation.Audio.Helpers.SimpleHelper;
 import com.Implementation.Client.Client;
 import com.Implementation.GUI.Frame;
 import com.Implementation.Util.DesktopResources;
+import com.Implementation.Util.Logging.DesktopLogManager;
 
 public class DesktopApplicationFactory extends AbstractApplicationFactory {
 
@@ -46,5 +48,10 @@ public class DesktopApplicationFactory extends AbstractApplicationFactory {
     @Override
     public AudioFactory createAudioFactory() {
         return new AudioDesktopFactory();
+    }
+
+    @Override
+    public LogManagerHelper createLogManager() {
+        return new DesktopLogManager();
     }
 }

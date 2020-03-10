@@ -10,6 +10,7 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Pipeline.SimpleComponent;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.AbstractResources;
 
 /**
@@ -76,5 +77,11 @@ public abstract class AbstractApplicationFactory {
      */
 
     public abstract AudioFactory createAudioFactory();
+
+    /**
+     * @return logp manager helper
+     */
+
+    public abstract LogManagerHelper createLogManager();
 
 }

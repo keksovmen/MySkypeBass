@@ -3,13 +3,12 @@ package com.Abstraction.Networking.Utility;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
-
-import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
 
 /**
  * Handles all conversation actions
@@ -17,6 +16,8 @@ import static com.Abstraction.Util.Logging.LoggerUtils.serverLogger;
  */
 
 public class Conversation {
+
+    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
 
     /**
      * Must be concurrent
@@ -93,7 +94,7 @@ public class Conversation {
             }
         });
         users.add(dude);
-        serverLogger.logp(Level.FINER, this.getClass().getName(), "addDude",
+        serverLogger.logp(this.getClass().getName(), "addDude",
                 "Added this dude to conversation - " + dude);
         dude.setConversation(this);
     }
@@ -108,7 +109,7 @@ public class Conversation {
 
     public synchronized void removeDude(ServerUser user) {
         users.remove(user);
-        serverLogger.logp(Level.FINER, this.getClass().getName(), "removeDude",
+        serverLogger.logp(this.getClass().getName(), "removeDude",
                 "Removed this dude from conversation - " + user);
         user.setConversation(null);
         users.forEach(serverController -> {
@@ -120,7 +121,7 @@ public class Conversation {
         });
         if (users.size() == 1) {
             ServerUser last = users.get(0);
-            serverLogger.logp(Level.FINER, this.getClass().getName(), "removeDude",
+            serverLogger.logp(this.getClass().getName(), "removeDude",
                     "Last dude in conversation, trying to notify him about it - " + last);
             try {
                 last.getWriter().writeStopConv(last.getId());

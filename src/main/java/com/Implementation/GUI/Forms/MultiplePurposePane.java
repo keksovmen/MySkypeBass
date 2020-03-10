@@ -9,6 +9,8 @@ import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Collection.Track;
 import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.Resources;
 import com.Implementation.Util.DesktopResources;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -22,9 +24,7 @@ import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 
-import static com.Abstraction.Util.Logging.LoggerUtils.clientLogger;
 /**
  * Handles messaging, call pane
  * Can call and disconnect from here
@@ -39,6 +39,9 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
      */
 
     protected static final String CONVERSATION_TAB_NAME = "Conversation";
+
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
+
 
     private JTextArea labelMe;
 
@@ -97,7 +100,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
         this.model.clear();
         model.getUserMap().values().forEach(
                 baseUser -> this.model.addElement(baseUser));
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "modelObservation",
+        clientLogger.logp(this.getClass().getName(), "modelObservation",
                 "Removed all users from local map and added new ones - " + Arrays.toString(model.getUserMap().values().toArray()));
         //Go through tabs and set online or offline icons, except CONFERENCE
         changeIconsOfTabs();
@@ -198,7 +201,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     }
 
     private void onDisconnect() {
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "onDisconnect",
+        clientLogger.logp(this.getClass().getName(), "onDisconnect",
                 "Removed all tabs and their cache");
         removeAllTabs();
         tabs.clear();
@@ -209,7 +212,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     private void call() {
         if (!selected())
             return;
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "call",
+        clientLogger.logp(this.getClass().getName(), "call",
                 "Pressed call button with - " + getSelected());
         handleRequest(
                 BUTTONS.CALL,
@@ -218,7 +221,7 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     }
 
     private void disconnect() {
-        clientLogger.logp(Level.FINER, this.getClass().getName(), "disconnect",
+        clientLogger.logp(this.getClass().getName(), "disconnect",
                 "Pressed disconnect");
         handleRequest(
                 BUTTONS.DISCONNECT,
@@ -343,18 +346,18 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
     private void showMessage(final User from, final String message, boolean toConv) {
         clientLogger.entering(this.getClass().getName(), "showMessage", from);
         if (from == null) { // do nothing when dude is not present in model
-            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+            clientLogger.logp(this.getClass().getName(), "showMessage",
                     "Dude who sent message is not present in model");
             clientLogger.exiting(this.getClass().getName(), "showMessage", from);
             return;
         }
         String tabName;
         if (toConv) {
-            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+            clientLogger.logp(this.getClass().getName(), "showMessage",
                     "Message for conversation");
             tabName = CONVERSATION_TAB_NAME;
         } else {
-            clientLogger.logp(Level.FINER, this.getClass().getName(), "showMessage",
+            clientLogger.logp(this.getClass().getName(), "showMessage",
                     "Message for you");
             if (isShownAlready(from)) {
                 tabs.get(from).showMessage(message, false);

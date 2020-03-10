@@ -4,6 +4,7 @@ import com.Abstraction.Application;
 
 import javax.swing.*;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 
 public class Main {
 
@@ -12,7 +13,17 @@ public class Main {
     public static void main(String[] args) {
         try {
             SwingUtilities.invokeAndWait(() -> {
-                Application application = new Application(new DesktopApplicationFactory());
+                boolean logE = true;
+                if (args.length > 0){
+                    for (String arg : args) {
+                        if (arg.equals("-logD")) {
+                            logE = false;
+                            break;
+                        }
+                    }
+                }
+                Application application = new Application(logE ?
+                        new DesktopApplicationFactoryLog() : new DesktopApplicationFactory());
                 application.start();
             });
         } catch (InterruptedException | InvocationTargetException e) {

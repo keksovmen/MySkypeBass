@@ -8,18 +8,13 @@ import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Pipeline.SimpleComponent;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.Resources;
-import com.Abstraction.Util.Logging.LoggerUtils;
 
 
 /**
  * Represent basic application initialisation
  */
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.logging.LogManager;
 
 public class Application {
 
@@ -45,21 +40,6 @@ public class Application {
     protected void uniqueChecks() {
         CODE.uniqueIdCheck();
         WHO.uniqueIdCheck();
-        logInitialisation();
-    }
-
-    protected void logInitialisation(){
-        try {
-            Path parent = LoggerUtils.clientFilePath.getParent();
-            if (!Files.isDirectory(parent)) {
-                Files.createDirectory(parent);
-            }
-            LogManager.getLogManager().readConfiguration(Application.class.getResourceAsStream("/properties/logging.properties"));
-            LoggerUtils.initLoggers();
-        }catch (IOException e){
-            e.printStackTrace();
-            System.err.println("Logging initialisation failure");
-        }
     }
 
     /**
@@ -70,6 +50,7 @@ public class Application {
         AbstractDataPackagePool.init(factory.createPool());
         AudioSupplier.setHelper(factory.createAudioHelper());
         Resources.setInstance(factory.createResources());
+        LogManagerHelper.setInstance(factory.createLogManager());
     }
 
     /**
