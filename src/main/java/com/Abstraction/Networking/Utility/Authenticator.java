@@ -39,6 +39,7 @@ public class Authenticator {
      * @param inputStream  of connected socket
      * @param outputStream of connected socket
      * @param desiredName  on server
+     * @param portUDP      port number
      * @return structure with flags
      */
 
@@ -100,6 +101,8 @@ public class Authenticator {
      * @param audioFormat        that server proposes
      * @param hisID              unique for server identification
      * @param isSecureConnection server option
+     * @param isFullTCP          server setting
+     * @param sizeUDP            packet udp size
      * @return structure with flags
      */
 

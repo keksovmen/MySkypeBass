@@ -28,6 +28,7 @@ public class BaseDataPackageRouter {
      * Action that will happen each time in a loop
      * until process() return false
      *
+     * @param reader    with which to read
      * @param processor consumes packages
      * @return false if processor can't handle given package
      * @throws IOException if network fails

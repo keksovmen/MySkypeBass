@@ -29,8 +29,8 @@ public class PlainWriter implements Writer {
     /**
      * For only TCP protocol
      *
-     * @param outputStream
-     * @param bufferSize
+     * @param outputStream opened from socket
+     * @param bufferSize stream buffer size
      */
 
     public PlainWriter(OutputStream outputStream, int bufferSize) {

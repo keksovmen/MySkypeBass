@@ -10,8 +10,8 @@ import com.Abstraction.Networking.Utility.Users.PlainUser;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 
 import java.io.IOException;
 
@@ -99,7 +99,7 @@ public class ClientProcessor implements Processable {
     }
 
     /**
-     * Called by Owner -> Handler, when network connection dies
+     * Called by Owner {@code ->} Handler, when network connection dies
      */
 
     @Override

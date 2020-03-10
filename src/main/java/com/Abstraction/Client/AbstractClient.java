@@ -347,7 +347,7 @@ public abstract class AbstractClient implements Logic {
      * @param inputStream    opened
      * @param datagramSocket could be null if so than full TCP connection
      * @param address        where to send UDP, also could be null
-     * @return
+     * @return appropriate client user for given situation
      */
 
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
@@ -448,6 +448,8 @@ public abstract class AbstractClient implements Logic {
 
     /**
      * Handle succeeded connection, send some notifies and changes model state
+     * @param user me
+     * @param networkHelper to start
      */
 
     protected void finishSucceededConnection(ClientUser user, ClientNetworkHelper networkHelper) {

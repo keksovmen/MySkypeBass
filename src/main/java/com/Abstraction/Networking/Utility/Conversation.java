@@ -62,6 +62,7 @@ public class Conversation {
      * Default method for sending a message to every one in this conf
      *
      * @param dataPackage contains message data
+     * @param me id to exclude
      */
 
     public void sendMessage(AbstractDataPackage dataPackage, int me) {

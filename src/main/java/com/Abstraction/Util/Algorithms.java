@@ -128,7 +128,7 @@ public class Algorithms {
     }
 
     /**
-     * Convert each byte into unsigned int -> to string -> append in line with spaces between
+     * Convert each byte into unsigned int {@code ->} to string {@code ->} append in line with spaces between
      *
      * @param data to convert
      * @return string such as "(\\d )*"
@@ -162,7 +162,7 @@ public class Algorithms {
         return listOfBytesToPrimitiveByte(byteList);
     }
 
-    private static byte[] listOfBytesToPrimitiveByte(List<Byte> list){
+    private static byte[] listOfBytesToPrimitiveByte(List<Byte> list) {
         byte[] result = new byte[list.size()];
         for (int i = 0; i < list.size(); i++) {
             result[i] = list.get(i);
@@ -170,8 +170,7 @@ public class Algorithms {
         return result;
     }
 
-    public static void closeSocketThatCouldBeClosed(Closeable socket)
-    {
+    public static void closeSocketThatCouldBeClosed(Closeable socket) {
         if (socket == null) {
             return;
         }

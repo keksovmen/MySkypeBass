@@ -65,6 +65,8 @@ public class ServerWriter {
      * Don't return package back to the pool
      *
      * @param dataPackage to be sanded
+     * @param address could be null if full TCP
+     * @param port to send to
      * @throws IOException if networking fails
      */
 

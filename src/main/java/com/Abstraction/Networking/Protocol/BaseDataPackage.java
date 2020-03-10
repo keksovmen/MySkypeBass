@@ -109,7 +109,7 @@ public class BaseDataPackage extends AbstractDataPackage {
     /**
      * Check if data is null
      *
-     * @return string >= 0 length
+     * @return string {@code >=} 0 length
      */
 
     @Override

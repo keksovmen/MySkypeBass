@@ -86,6 +86,8 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
     /**
      * Lazy initialisation
      * and display server creation dialog
+     *
+     * @return root pane
      */
 
     public JPanel getPane() {
@@ -212,7 +214,8 @@ public class EntrancePane implements LogicObserver, ButtonsHandler {
     }
 
     /**
-     * @noinspection ALL
+     * @return rootPane
+     * noinspection ALL
      */
     public JComponent $$$getRootComponent$$$() {
         return mainPane;

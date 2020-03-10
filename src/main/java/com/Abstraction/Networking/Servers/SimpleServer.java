@@ -19,8 +19,8 @@ import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -68,6 +68,9 @@ public class SimpleServer extends AbstractServer {
      * @param port             for the server
      * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
+     * @param isFullTCP        mode
+     * @param isCipher         mode
+     * @param authenticator    to establish connection
      * @throws IOException            if port already in use
      * @throws ProtocolValueException if mic capture size is grater than possible length of the protocol
      */
@@ -94,7 +97,12 @@ public class SimpleServer extends AbstractServer {
      * @param port             for the server
      * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
-     * @throws IOException if port already in use
+     * @param isFullTCP        mode
+     * @param authenticator    to connect
+     * @param isCipher         mode
+     * @return new instance
+     * @throws IOException            if port already in use
+     * @throws ProtocolValueException if miscalculated some params
      */
 
     public static SimpleServer getFromIntegers(final int port, final int sampleRate, final int sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)
@@ -115,7 +123,12 @@ public class SimpleServer extends AbstractServer {
      * @param port             for the server
      * @param sampleRate       any acceptable one
      * @param sampleSizeInBits must be dividable by 8
-     * @throws IOException if port already in use
+     * @param isFullTCP        mode
+     * @param authenticator    to connect
+     * @param isCipher         mode
+     * @return new instance
+     * @throws IOException            if port already in use
+     * @throws ProtocolValueException if miscalculated some params
      */
 
     public static SimpleServer getFromStrings(final String port, final String sampleRate, final String sampleSizeInBits, boolean isCipher, Authenticator authenticator, boolean isFullTCP)

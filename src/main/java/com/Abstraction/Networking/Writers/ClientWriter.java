@@ -4,8 +4,8 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -85,6 +85,7 @@ public class ClientWriter {
      *
      * @param to      who gonna receive it
      * @param message what you typed
+     * @throws IOException if network fails
      */
 
     public void writeMessage(int to, String message) throws IOException {

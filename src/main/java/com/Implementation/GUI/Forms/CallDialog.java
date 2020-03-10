@@ -5,8 +5,8 @@ import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -42,6 +42,9 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      * Init and modelObservation actions
      * register listeners
      * And don't show the dialog for this purpose here is a method
+     *
+     * @param helpHandlerPredecessor who will handle button clicks
+     * @param relativeTo             will set dialog in middle of this
      */
 
     public CallDialog(ButtonsHandler helpHandlerPredecessor, JComponent relativeTo) {
@@ -268,7 +271,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
     }
 
     /**
-     * @noinspection ALL
+     * @return root pane
+     * noinspection ALL
      */
     public JComponent $$$getRootComponent$$$() {
         return contentPane;

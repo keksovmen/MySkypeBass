@@ -3,7 +3,7 @@ package com.Abstraction.Audio.Output;
 import com.Abstraction.Audio.Misc.AbstractLine;
 
 /**
- * Represents output line -> speaker headset etc.
+ * Represents output line {@code ->} speaker headset etc.
  */
 
 public interface AudioOutputLine extends AbstractLine {

@@ -107,7 +107,7 @@ public class FormatWorker {
     /**
      * Give List with numbers from a string
      * To retrieve numbers they should be packed as
-     * <$DIGITS>
+     * {@code <$DIGITS>}
      *
      * @param message that contain digits or not
      * @return zero or not length list

@@ -44,9 +44,9 @@ public class XMLWorker {
 
     /**
      * Method to get names
-     * Document should look like <root><file><name>here goes file name.format</name></file></root>
+     * Document should look like {@code <root><file><name>here goes file name.format</name></file></root>}
      * But you can put it in more deeper state cause
-     * method tries to find <name> attribute and gets its text info
+     * method tries to find {@code <name>} attribute and gets its text info
      * <p>
      *
      * @param stream opened stream with xml file

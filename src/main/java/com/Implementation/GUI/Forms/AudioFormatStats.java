@@ -2,8 +2,8 @@ package com.Implementation.GUI.Forms;
 
 import com.Abstraction.Client.ButtonsHandler;
 import com.Abstraction.Pipeline.BUTTONS;
-import com.Implementation.GUI.Frame;
 import com.Abstraction.Util.Resources.Resources;
+import com.Implementation.GUI.Frame;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -40,6 +40,9 @@ public class AudioFormatStats implements ButtonsHandler {
     /**
      * Firstly load properties set ip sample rate fields
      * register listeners for buttons
+     *
+     * @param helpHandlerPredecessor who will handle button clicks
+     * @param cancelServerCreation   callback to close this pane
      */
 
     public AudioFormatStats(ButtonsHandler helpHandlerPredecessor, Runnable cancelServerCreation) {
@@ -216,7 +219,8 @@ public class AudioFormatStats implements ButtonsHandler {
     }
 
     /**
-     * @noinspection ALL
+     * @return pane that hold everything
+     * noinspection ALL
      */
     public JComponent $$$getRootComponent$$$() {
         return mainPane;
