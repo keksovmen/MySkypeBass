@@ -4,6 +4,8 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,6 +19,8 @@ import java.net.InetSocketAddress;
  */
 
 public class ClientWriter {
+
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
 
     private final Writer bridgeImplementor;
     private final int myID;
@@ -65,10 +69,14 @@ public class ClientWriter {
 
 
     public void writeName(String name) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeName",
+                "Writing my name - " + name);
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_NAME, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), name));
     }
 
     public void writeUsersRequest() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeUserRequest",
+                "Writing user request");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_USERS, myID, WHO.SERVER.getCode()));
     }
 
@@ -80,30 +88,44 @@ public class ClientWriter {
      */
 
     public void writeMessage(int to, String message) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeMessage",
+                "Writing message to - " + to);
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_MESSAGE, myID, to, message));
     }
 
     public void writeCall(int to) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeCall",
+                "Writing call to - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CALL, myID, to));
     }
 
     public void writeApproveAudioFormat() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeApproveAudioFormat",
+                "Writing approve audio format");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_ACCEPT, myID, WHO.SERVER.getCode()));
     }
 
     public void writeDeclineAudioFormat() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeDeclineAudioFormat",
+                "Writing decline audio format");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_DENY, myID, WHO.SERVER.getCode()));
     }
 
     public void writeAccept(int to) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeAcceptCall",
+                "Writing accept call to - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ACCEPT_CALL, myID, to));
     }
 
     public void writeDeny(int to) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeDenyCall",
+                "Writing deny call - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DENY_CALL, myID, to));
     }
 
     public void writeCancel(int to) throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeCancelCall",
+                "Writing cancel call - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CANCEL_CALL, myID, to));
     }
 
@@ -116,10 +138,14 @@ public class ClientWriter {
     }
 
     public void writeDisconnect() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeDisconnect",
+                "Writing disconnect call");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT, myID, WHO.SERVER.getCode()));
     }
 
     public void writeDisconnectFromConv() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeDisconnectFromConversation",
+                "Writing disconnect from conversation");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT_FROM_CONVERSATION, myID, WHO.CONFERENCE.getCode()));
     }
 
@@ -128,10 +154,14 @@ public class ClientWriter {
     }
 
     public void writeCipherModeAccepted() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeCipherModeAccepted",
+                "Writing approve cipher mode");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_ACCEPTED, myID, WHO.SERVER.getCode()));
     }
 
     public void writeCipherModeDenied() throws IOException {
+        clientLogger.logp(this.getClass().getName(), "writeCipherModeDenied",
+                "Writing deny cipher mode");
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_DENIED, myID, WHO.SERVER.getCode()));
     }
 

@@ -5,6 +5,8 @@ import com.Abstraction.Client.LogicObserver;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Pipeline.BUTTONS;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -19,6 +21,7 @@ import java.awt.*;
 
 public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler {
 
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
 
     private JPanel contentPane;
     private JButton buttonOK;
@@ -103,6 +106,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
     }
 
     private void onOk() {
+        clientLogger.logp(this.getClass().getName(), "onOk",
+                "Pressed accept call button with - " + user + ", dudes - " + dudes);
         handleRequest(
                 BUTTONS.CALL_ACCEPTED,
                 new Object[]{
@@ -114,6 +119,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
     }
 
     private void onDeny() {
+        clientLogger.logp(this.getClass().getName(), "onDeny",
+                "Pressed deny call button with - " + user + ", dudes - " + dudes);
         handleRequest(
                 BUTTONS.CALL_DENIED,
                 new Object[]{
@@ -125,6 +132,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
     }
 
     private void onCancel() {
+        clientLogger.logp(this.getClass().getName(), "onCancel",
+                "Pressed cancel call button with - " + user + ", dudes - " + dudes);
         handleRequest(
                 BUTTONS.CALL_CANCELLED,
                 new Object[]{
@@ -144,6 +153,8 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      */
 
     private void showOutcoming(User who) {
+        clientLogger.logp(this.getClass().getName(), "showOutgoingCall",
+                "Show call dialog box for out call to - " + who);
         user = who;
         dudes = "";
 
@@ -173,6 +184,9 @@ public class CallDialog extends JDialog implements LogicObserver, ButtonsHandler
      */
 
     private void showIncoming(User fromWho, String conversationInfo) {
+        clientLogger.logp(this.getClass().getName(), "showIncomingCall",
+                "Show call dialog box for input call from - " + fromWho +
+                        ", conversation - " + conversationInfo);
         if (isShowing())
             setVisible(false);
         user = fromWho;

@@ -3,6 +3,8 @@ package com.Abstraction.Networking.Utility;
 
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Utility.Users.ServerUser;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 
 public class Conversation {
+
+    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
 
     /**
      * Must be concurrent
@@ -90,6 +94,8 @@ public class Conversation {
             }
         });
         users.add(dude);
+        serverLogger.logp(this.getClass().getName(), "addDude",
+                "Added this dude to conversation - " + dude);
         dude.setConversation(this);
     }
 
@@ -103,6 +109,8 @@ public class Conversation {
 
     public synchronized void removeDude(ServerUser user) {
         users.remove(user);
+        serverLogger.logp(this.getClass().getName(), "removeDude",
+                "Removed this dude from conversation - " + user);
         user.setConversation(null);
         users.forEach(serverController -> {
             try {
@@ -113,6 +121,8 @@ public class Conversation {
         });
         if (users.size() == 1) {
             ServerUser last = users.get(0);
+            serverLogger.logp(this.getClass().getName(), "removeDude",
+                    "Last dude in conversation, trying to notify him about it - " + last);
             try {
                 last.getWriter().writeStopConv(last.getId());
                 last.setConversation(null);

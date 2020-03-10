@@ -8,7 +8,9 @@ import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.CompositeComponent;
 import com.Abstraction.Pipeline.SimpleComponent;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.Resources;
+
 
 /**
  * Represent basic application initialisation
@@ -48,6 +50,7 @@ public class Application {
         AbstractDataPackagePool.init(factory.createPool());
         AudioSupplier.setHelper(factory.createAudioHelper());
         Resources.setInstance(factory.createResources());
+        LogManagerHelper.setInstance(factory.createLogManager());
     }
 
     /**

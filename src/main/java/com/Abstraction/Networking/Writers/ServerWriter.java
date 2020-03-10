@@ -4,6 +4,8 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -13,6 +15,9 @@ import java.net.InetAddress;
  */
 
 public class ServerWriter {
+
+    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
+
 
     private final Writer writer;
 
@@ -48,6 +53,8 @@ public class ServerWriter {
     }
 
     public void writeUsers(int id, String users) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "writeUsers",
+                "Write all users to  - " + id + ", users - " + users);
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
@@ -66,10 +73,12 @@ public class ServerWriter {
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "writeAddToConv", "Trying to add this - " + whoToAdd + ", message is for - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ADD_TO_CONVERSATION, whoToAdd, to));
     }
 
     public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "writeRemoveFromConv", "Try to remove this dude from conversation - " + whoToRemove + ", message is for - " + to);
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_REMOVE_FROM_CONVERSATION, whoToRemove, to));
     }
 
@@ -99,6 +108,8 @@ public class ServerWriter {
     }
 
     public void writeRemoveFromUserList(int to, int dudeToRemove) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "writeRemoveFromUserList",
+                "Sending message to remove this dude - " + dudeToRemove + ", to - " + to);
         write(AbstractDataPackagePool.getPackage().initString(
                 CODE.SEND_REMOVE_FROM_USER_LIST,
                 WHO.SERVER.getCode(),
@@ -108,10 +119,14 @@ public class ServerWriter {
     }
 
     public void transferPacket(AbstractDataPackage dataPackage) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "transferPacket",
+                "Transferring a package - " + dataPackage.getHeader().toString());
         writeWithoutReturnToPool(dataPackage);
     }
 
     public void writeBothInConversations(int me, int from) throws IOException {
+        serverLogger.logp(this.getClass().getName(), "writeBothInConversations",
+                "Write both in conversation to  - " + me + ", from - " + from);
         write(AbstractDataPackagePool.getPackage().initZeroLength(
                 CODE.SEND_BOTH_IN_CONVERSATIONS,
                 from,

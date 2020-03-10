@@ -10,13 +10,15 @@ import com.Abstraction.Networking.Utility.Users.PlainUser;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 
 /**
  * Represent client side networkHelper for incoming messages from server
  * But doesn't handle reading these messages from Input stream, only handle their meaning
- *
+ * <p>
  * Literally thrush because, when you need new a handler
  * you must add new case in switch statement that is garbage
  * Solution is make functional interface which method is to handle {@link AbstractDataPackage}
@@ -28,10 +30,11 @@ import java.io.IOException;
  * So O(2n) instead of hash function in switch statement O(1)
  * But switch statement is shitty practice in this case, because if you need new case branch you have to modify
  * existing code and not to expand through inheritance
- *
  */
 
 public class ClientProcessor implements Processable {
+
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
 
     /**
      * Where made user changes
@@ -115,6 +118,7 @@ public class ClientProcessor implements Processable {
      */
 
     protected boolean onUsersRequest(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onUsersRequest");
         String users = dataPackage.getDataAsString();
         model.addToModel(User.parseUsers(users));
         return true;
@@ -122,6 +126,7 @@ public class ClientProcessor implements Processable {
 
 
     protected boolean onIncomingMessage(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onIncomingMessage");
         User sender = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.INCOMING_MESSAGE, new Object[]{
                 sender,
@@ -140,6 +145,7 @@ public class ClientProcessor implements Processable {
      */
 
     protected boolean onIncomingCall(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onIncomingCall");
         User sender = model.getUser(dataPackage.getHeader().getFrom());
         ClientUser myself = model.getMyself();
 
@@ -177,18 +183,21 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onAddToConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onAddToConversation");
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         model.addToConversation(baseUser);
         return true;
     }
 
     protected boolean onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onRemoveDudeFromConversation");
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         model.removeFromConversation(baseUser);
         return true;
     }
 
     protected boolean onExitConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onExitConversation");
         logic.notifyObservers(ACTIONS.EXITED_CONVERSATION, null);
         model.clearConversation();
         AbstractDataPackagePool.clearStorage();
@@ -196,18 +205,21 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onAddToUserList(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onAddToUserList");
         String user = dataPackage.getDataAsString();
         model.addToModel(User.parse(user));
         return true;
     }
 
     protected boolean onRemoveFromUserList(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onRemoveFromUserList");
         int user = dataPackage.getDataAsInt();
         model.removeFromModel(user);
         return true;
     }
 
     protected boolean onCallAccept(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onCallAccept");
         model.getMyself().drop();
         User dude = model.getUser(dataPackage.getHeader().getFrom());
         AbstractClient.callAcceptRoutine(logic, model, dude);
@@ -215,6 +227,7 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onCallDeny(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onCallDeny");
         model.getMyself().drop();
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
@@ -222,6 +235,7 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onCallCanceled(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onCallCanceled");
         model.getMyself().drop();
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
         logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
@@ -229,6 +243,7 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onBothInConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onBothInConversation");
         ClientUser myself = model.getMyself();
 
         if (myself.isCalling() == dataPackage.getHeader().getFrom())
@@ -240,6 +255,7 @@ public class ClientProcessor implements Processable {
     }
 
     protected boolean onAddWholeConversation(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onAddWholeConversation");
         User[] baseUsers = User.parseUsers(dataPackage.getDataAsString());
         for (User user : baseUsers) {
             model.addToConversation(user);

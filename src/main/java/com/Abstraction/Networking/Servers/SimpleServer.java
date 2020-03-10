@@ -19,7 +19,8 @@ import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Interfaces.Starting;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -27,7 +28,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.LinkedList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimpleServer extends AbstractServer {
 
+    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
 
     /**
      * Place where you get your unique id
@@ -139,6 +140,8 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     public void registerUser(ServerUser user) {
+        serverLogger.logp(this.getClass().getName(), "registerUser",
+                "User is registered - " + user);
         users.put(user.getId(), user);
         sendAddDude(user);
     }
@@ -153,6 +156,8 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     public void removeUser(int user_id) {
+        serverLogger.logp(this.getClass().getName(), "removeUser",
+                "User is removed - " + user_id);
         users.remove(user_id);
         sendRemoveDude(user_id);
         AbstractDataPackagePool.clearStorage();
@@ -343,6 +348,8 @@ public class SimpleServer extends AbstractServer {
      */
 
     protected void sendAddDude(ServerUser userToAdd) {
+        serverLogger.logp(this.getClass().getName(), "sendAddDude",
+                "All others dudes are notified about this user - " + userToAdd);
         users.forEach((integer, user) ->
                 {
                     if (integer == userToAdd.getId())

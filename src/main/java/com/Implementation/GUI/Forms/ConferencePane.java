@@ -11,12 +11,15 @@ import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.History.History;
 import com.Abstraction.Util.History.HistoryFactory;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,6 +33,10 @@ import java.util.function.Consumer;
  */
 
 class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
+
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
+
+
     private JSpinner bassChanger;
     private JButton muteButton;
     private JPanel settingsPane;
@@ -120,10 +127,15 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
 
     @Override
     public void modelObservation(UnEditableModel model) {
+        clientLogger.entering(this.getClass().getName(), "modelObservation");
         Set<User> conversation = model.getConversation();
 
         Map<User, UserSettings> tmp = new HashMap<>();
-
+        clientLogger.logp(this.getClass().getName(), "modelObservation",
+                "Changing amount of users in conversation from - " +
+                        Arrays.toString(conferenceMembers.keySet().toArray())
+                        + ", to - " + Arrays.toString(conversation.toArray())
+        );
         conferenceMembers.forEach((user, userSettings) -> {
             if (!conversation.contains(user))
                 tmp.put(user, userSettings);
@@ -137,6 +149,8 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
                 addUser(user);
         });
 
+        clientLogger.logp(this.getClass().getName(), "modelObservation",
+                "Changed dudes result is - " + Arrays.toString(conferenceMembers.keySet().toArray()));
         repaint();
     }
 
@@ -151,6 +165,8 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
     }
 
     private void onMessage(User from, String message) {
+        clientLogger.logp(this.getClass().getName(), "onMessage",
+                "Incoming message in to conversation, from - " + from);
         showMessage(from, message);
     }
 
@@ -168,6 +184,8 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
     }
 
     private void disconnectAction(Consumer<String> closeTabAction) {
+        clientLogger.logp(this.getClass().getName(), "disconnectAction",
+                "Pressed disconnect from conversation button");
         handleRequest(
                 BUTTONS.EXIT_CONFERENCE,
                 null
@@ -275,6 +293,8 @@ class ConferencePane implements ModelObserver, LogicObserver, ButtonsHandler {
      */
 
     private void clear() {
+        clientLogger.logp(this.getClass().getName(), "clear",
+                "Cleared all settings panes, set fields to default");
         settingsPane.removeAll();
         conferenceMembers.clear();
         muteButton.setText("Mute");

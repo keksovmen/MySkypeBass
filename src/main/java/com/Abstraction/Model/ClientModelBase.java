@@ -3,7 +3,10 @@ package com.Abstraction.Model;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Util.Interfaces.Registration;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -13,6 +16,8 @@ import java.util.Set;
  */
 
 public class ClientModelBase extends BaseUnEditableModel implements Registration<ModelObserver>, ChangeableModel {
+
+    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
 
     private final Set<ModelObserver> listeners;
 
@@ -51,6 +56,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void addToModel(User users[]) {
+        clientLogger.logp(this.getClass().getName(), "addToModel",
+                "Adding to model many dudes - " + Arrays.toString(users));
         userMap.clear();
         for (User user : users) {
             userMap.put(user.getId(), user);
@@ -67,6 +74,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void addToModel(User user) {
+        clientLogger.logp(this.getClass().getName(), "addToModel",
+                "Adding to model this dude - " + user);
         userMap.put(user.getId(), user);
         notifyListeners();
     }
@@ -80,8 +89,12 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void removeFromModel(int user) {
+        clientLogger.logp(this.getClass().getName(), "removeFromModel",
+                "Removing this dude by unique id - " + user);
         User remove = userMap.remove(user);
         if (remove != null) {
+            clientLogger.logp(this.getClass().getName(), "removeFromModel",
+                    "Removing this dude from conversation - " + user);
             conversation.remove(remove);
             notifyListeners();
         }
@@ -89,6 +102,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void clear() {
+        clientLogger.logp(this.getClass().getName(), "clear",
+                "Clear all dudes from both conversation and storage");
         conversation.clear();
         if (!userMap.isEmpty()) {
             userMap.clear();
@@ -99,6 +114,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void addToConversation(User dude) {
+        clientLogger.logp(this.getClass().getName(), "addToConversation",
+                "Adding this dude to conversation - " + dude);
         if (conversation.add(dude)) {
             notifyListeners();
         }
@@ -106,6 +123,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void removeFromConversation(User dude) {
+        clientLogger.logp(this.getClass().getName(), "removeFromConversation",
+                "Removing this dude from conversation - " + dude);
         if (conversation.remove(dude)) {
             notifyListeners();
         }
@@ -113,6 +132,8 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized void clearConversation() {
+        clientLogger.logp(this.getClass().getName(), "clearConversation",
+                "Clearing conversation");
         if (conversation.isEmpty())
             return;
         conversation.clear();
@@ -139,10 +160,15 @@ public class ClientModelBase extends BaseUnEditableModel implements Registration
 
     @Override
     public synchronized User getUser(int id) {
-        return userMap.get(id);
+        User user = userMap.get(id);
+        if (user == null)
+            clientLogger.logp(getClass().getName(), "getUser", "Trying to get a dude with id - " + id + " but he is null");
+        return user;
     }
 
     private void notifyListeners() {
+        clientLogger.entering(this.getClass().getName(), "notifyListeners");
         listeners.forEach(updater -> updater.modelObservation(this));
+        clientLogger.exiting(this.getClass().getName(), "notifyListeners");
     }
 }
