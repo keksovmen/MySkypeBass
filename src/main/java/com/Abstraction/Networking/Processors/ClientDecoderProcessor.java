@@ -57,12 +57,15 @@ public class ClientDecoderProcessor extends ClientProcessor {
         User user = getCorrespondUser(idOfDude, instruction);
         if (user == null) {
             //handle not existing in underlying map
+            clientLogger.logp(getClass().getName(), "initCipher",
+                    "Given user is null - " + idOfDude + " CODE - " + instruction);
             return false;
         }
         try {
             decoder.init(Cipher.DECRYPT_MODE, user.getSharedKey(), user.getAlgorithmParameters());
         } catch (InvalidKeyException | InvalidAlgorithmParameterException e) {
             e.printStackTrace();
+            clientLogger.loge(getClass().getName(), "initCipher", "For - " + user, e);
             return false;
         }
         return true;
@@ -97,10 +100,9 @@ public class ClientDecoderProcessor extends ClientProcessor {
     protected byte[] decodeData(byte[] input) {
         try {
             return decoder.doFinal(input);
-        } catch (IllegalBlockSizeException e) {
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
             e.printStackTrace();
-        } catch (BadPaddingException e) {
-            e.printStackTrace();
+            clientLogger.loge(getClass().getName(), "decodeData", "Data length is - " + input.length, e);
         }
         return null;
     }

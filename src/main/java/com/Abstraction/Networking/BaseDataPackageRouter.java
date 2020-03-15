@@ -13,17 +13,6 @@ import java.io.IOException;
 
 public class BaseDataPackageRouter {
 
-//    /**
-//     * From which will fetch Data Packages
-//     */
-//
-//    protected final Reader reader;
-//
-//
-//    public BaseDataPackageRouter(Reader reader) {
-//        this.reader = reader;
-//    }
-
     /**
      * Action that will happen each time in a loop
      * until process() return false

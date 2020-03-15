@@ -4,6 +4,7 @@ import com.Abstraction.Networking.Processors.Processable;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.DataPackagePool;
 import com.Abstraction.Networking.Readers.Reader;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +48,7 @@ public class ClientDataPackageRouter extends BaseDataPackageRouter {
             AbstractDataPackage read = reader.read();
             executorService.execute(() -> {
                 if (!processor.process(read)) {
+                    LogManagerHelper.getInstance().getClientLogger().logp(getClass().getName(), "handleDataPackageRouting", "Processor returned false");
                     executorService.shutdown();
                 }
                 DataPackagePool.returnPackage(read);

@@ -34,7 +34,7 @@ import java.io.IOException;
 
 public class ClientProcessor implements Processable {
 
-    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
+    protected final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
 
     /**
      * Where made user changes
