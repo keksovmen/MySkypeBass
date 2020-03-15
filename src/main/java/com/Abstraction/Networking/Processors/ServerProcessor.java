@@ -62,9 +62,11 @@ public class ServerProcessor implements Processable {
             case SEND_SOUND: {
                 return onSendSound(dataPackage);
             }
+            case SEND_PONG:
+                return true;
             //And so on
         }
-        System.err.println("There is no such networkHelper for given CODE - " + dataPackage.getHeader().getCode());
+        System.err.println("There is no such method for given CODE - " + dataPackage.getHeader().getCode());
         return false;
     }
 

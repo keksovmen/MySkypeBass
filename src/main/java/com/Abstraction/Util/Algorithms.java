@@ -180,4 +180,8 @@ public class Algorithms {
             //already closed
         }
     }
+
+    public static long minToMillis(int minutes){
+        return minutes * 60 * 1000;
+    }
 }

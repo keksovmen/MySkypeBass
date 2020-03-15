@@ -19,8 +19,6 @@ import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Logging.LogManagerHelper;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -39,8 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 public class SimpleServer extends AbstractServer {
-
-    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
 
     /**
      * Place where you get your unique id
@@ -328,7 +324,17 @@ public class SimpleServer extends AbstractServer {
                 break;
             }
         }
+    }
 
+    @Override
+    protected void pingAction() {
+        executorService.execute(() -> users.forEach((integer, user) -> {
+            try {
+                user.getWriter().writePing(integer);
+            } catch (IOException e) {
+                //never mind his thread will shut down carefully
+            }
+        }));
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {

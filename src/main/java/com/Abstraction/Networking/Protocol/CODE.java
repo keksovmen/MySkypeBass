@@ -45,8 +45,9 @@ public enum CODE {
     SEND_UDP_PORT(30),  //contain string with port number
     SEND_UDP_PACKAGE_SIZE(31),  //contain integer as string
     SEND_FULL_TCP_CONNECTION(32),   //no data
-    SEND_MIXED_CONNECTION(33);  //no data
-
+    SEND_MIXED_CONNECTION(33),  //no data
+    SEND_PING(34),  //no data, server will send this
+    SEND_PONG(35);  //no data, you will answer with this
 
 
     private static boolean checked = false;

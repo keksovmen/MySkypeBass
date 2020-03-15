@@ -7,6 +7,9 @@ import com.Abstraction.Networking.Utility.Users.ServerUser;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
+import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +18,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -40,6 +45,15 @@ public abstract class AbstractServer implements Starting {
     protected final boolean isFullTCP;
 
     /**
+     * For ping and pong actions
+     */
+
+    protected final Timer timer;
+
+    protected final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
+
+
+    /**
      * Indicator of activity state
      */
 
@@ -57,6 +71,8 @@ public abstract class AbstractServer implements Starting {
         this.authenticator = authenticator;
         this.isFullTCP = isFullTCP;
 
+        timer = new Timer("Ping Timer");
+
         isWorking = false;
     }
 
@@ -69,6 +85,14 @@ public abstract class AbstractServer implements Starting {
         new Thread(this::workLoopTCP, name + " TCP").start();
         if (!isFullTCP)
             new Thread(this::workLoopUDP, name + " UDP").start();
+        final long period = Algorithms.minToMillis(Resources.getInstance().getPingPeriod());
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                serverLogger.logp(getClass().getName(), "run", "Sending pings");
+                pingAction();
+            }
+        }, period, period);
         return true;
     }
 
@@ -80,6 +104,7 @@ public abstract class AbstractServer implements Starting {
         executorService.shutdown();
         Algorithms.closeSocketThatCouldBeClosed(serverSocket);
         Algorithms.closeSocketThatCouldBeClosed(serverSocketUDP);
+        timer.cancel();
         //need to kill already established connections
     }
 
@@ -187,4 +212,10 @@ public abstract class AbstractServer implements Starting {
     }
 
     protected abstract void workLoopUDP();
+
+    /**
+     * Must send {@link com.Abstraction.Networking.Protocol.CODE#SEND_PING} to everyone on server each time period
+     */
+
+    protected abstract void pingAction();
 }

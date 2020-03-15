@@ -94,6 +94,8 @@ public class ClientProcessor implements Processable {
                 return onBothInConversation(dataPackage);
             case SEND_ADD_WHOLE_CONVERSATION:
                 return onAddWholeConversation(dataPackage);
+            case SEND_PING:
+                return onSendPing(dataPackage);
         }
         return false;
     }
@@ -259,6 +261,16 @@ public class ClientProcessor implements Processable {
         User[] baseUsers = User.parseUsers(dataPackage.getDataAsString());
         for (User user : baseUsers) {
             model.addToConversation(user);
+        }
+        return true;
+    }
+
+    protected boolean onSendPing(AbstractDataPackage dataPackage) {
+        clientLogger.logp(getClass().getName(), "onSendPing");
+        try {
+            model.getMyself().getWriter().writePong();
+        } catch (IOException e) {
+            //Handler and its reader thread will close connection on failure
         }
         return true;
     }

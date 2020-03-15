@@ -167,4 +167,8 @@ public class ServerWriter {
                 WHO.NO_NAME.getCode()
         ));
     }
+
+    public void writePing(int to) throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PING, WHO.SERVER.getCode(), to));
+    }
 }

@@ -30,6 +30,8 @@ public abstract class AbstractResources {
 
         properties.setProperty("DefaultRate", "24000");//server logic -> gui
 
+        properties.setProperty("PingPeriod", "10");//server logic, in minutes
+
         return properties;
     }
 
@@ -78,6 +80,10 @@ public abstract class AbstractResources {
     public String getDefaultRate() {
         return properties.getProperty("DefaultRate");
 
+    }
+
+    public int getPingPeriod(){
+        return Integer.parseInt(properties.getProperty("PingPeriod"));
     }
 
 }

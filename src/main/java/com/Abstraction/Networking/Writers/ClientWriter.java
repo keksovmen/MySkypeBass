@@ -170,4 +170,8 @@ public class ClientWriter {
         write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PORT, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), String.valueOf(port)));
     }
 
+    public void writePong() throws IOException {
+        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PONG, myID, WHO.SERVER.getCode()));
+    }
+
 }
