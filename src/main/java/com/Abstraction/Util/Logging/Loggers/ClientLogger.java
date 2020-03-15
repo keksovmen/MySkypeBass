@@ -44,6 +44,18 @@ public class ClientLogger implements LoggerWithInitialisation {
     }
 
     @Override
+    public void loge(String sourceClass, String sourceMethod, Throwable exception) {
+        if (logger != null)
+            logger.logp(Level.FINER, sourceClass, sourceMethod, "", exception);
+    }
+
+    @Override
+    public void loge(String sourceClass, String sourceMethod, String message, Throwable exception) {
+        if (logger != null)
+            logger.logp(Level.FINER, sourceClass, sourceMethod, message, exception);
+    }
+
+    @Override
     public void init() {
         logger = Logger.getLogger("com.ClientLogger");
     }
