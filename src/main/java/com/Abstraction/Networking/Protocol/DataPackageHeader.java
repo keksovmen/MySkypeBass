@@ -126,14 +126,14 @@ public class DataPackageHeader extends AbstractHeader {
      */
 
     private void calculateRawHeader() {
-        raw[0] = (byte) ((code.getCode() >>> 8) & 0xFF);
-        raw[1] = (byte) (code.getCode() & 0xFF);
-        raw[2] = (byte) ((length >>> 8) & 0xFF);
-        raw[3] = (byte) (length & 0xFF);
-        raw[4] = (byte) ((from >>> 8) & 0xFF);
-        raw[5] = (byte) (from & 0xFF);
-        raw[6] = (byte) ((to >>> 8) & 0xFF);
-        raw[7] = (byte) (to & 0xFF);
+        raw[0] = (byte) (code.getCode() >>> 8);
+        raw[1] = (byte) code.getCode();
+        raw[2] = (byte) (length >>> 8);
+        raw[3] = (byte) length;
+        raw[4] = (byte) (from >>> 8);
+        raw[5] = (byte) from;
+        raw[6] = (byte) (to >>> 8);
+        raw[7] = (byte) to;
     }
 
     /**

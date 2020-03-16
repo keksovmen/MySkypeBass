@@ -105,7 +105,6 @@ public class Algorithms {
     public static int combineTwoBytes(byte highByte, byte lowerByte) {
         int result = (highByte & 0xff) << 8;
         result |= lowerByte & 0xff;
-        result &= 0xffff;
         return result;
     }
 
