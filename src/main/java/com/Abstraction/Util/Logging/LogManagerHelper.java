@@ -7,6 +7,7 @@ import com.Abstraction.Util.Logging.Loggers.LoggerWithInitialisation;
 import com.Abstraction.Util.Logging.Loggers.ServerLogger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.LogManager;
 
 public abstract class LogManagerHelper implements Initialising {
@@ -28,7 +29,7 @@ public abstract class LogManagerHelper implements Initialising {
             return;
         }
         try {
-            LogManager.getLogManager().readConfiguration(LogManagerHelper.class.getResourceAsStream("/properties/logging.properties"));
+            LogManager.getLogManager().readConfiguration(getPropertiesStream());
             clientLogger.init();
             serverLogger.init();
         } catch (IOException e) {
@@ -54,6 +55,8 @@ public abstract class LogManagerHelper implements Initialising {
      */
 
     protected abstract boolean prepareFiles();
+
+    protected abstract InputStream getPropertiesStream() throws IOException;
 
     public static LogManagerHelper getInstance() {
         if (instance == null)

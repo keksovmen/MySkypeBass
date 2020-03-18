@@ -3,6 +3,7 @@ package com.Implementation.Util.Logging;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,5 +26,10 @@ public class DesktopLogManager extends LogManagerHelper {
             }
         }
         return true;
+    }
+
+    @Override
+    protected InputStream getPropertiesStream() throws IOException {
+        return DesktopLogManager.class.getResourceAsStream("/properties/logging.properties");
     }
 }
