@@ -9,6 +9,7 @@ import com.Abstraction.Networking.Readers.Reader;
 import com.Abstraction.Pipeline.ACTIONS;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Interfaces.Starting;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
@@ -40,7 +41,6 @@ public class ClientNetworkHelper implements Starting {
     }
 
 
-
     @Override
     public boolean start(String name) {
         if (isWorking) return false;
@@ -58,10 +58,12 @@ public class ClientNetworkHelper implements Starting {
             return;
         isWorking = false;
         processor.close();
-        if (socket.isConnected()) {
-            Algorithms.closeSocketThatCouldBeClosed(socket);
-        }
+
+        Algorithms.closeSocketThatCouldBeClosed(socket);
         Algorithms.closeSocketThatCouldBeClosed(datagramSocket);
+
+        LogManagerHelper.getInstance().getClientLogger().logp(
+                this.getClass().getName(), "close", "Connection closed");
     }
 
     public boolean isWorking() {
@@ -87,6 +89,9 @@ public class ClientNetworkHelper implements Starting {
             } catch (IOException e) {
                 //if router didn't route due to network failure
                 if (isWorking) {
+                    LogManagerHelper.getInstance().getClientLogger().logp(
+                            this.getClass().getName(),
+                            "handleLoopTCP", "Connection died dut to network failure");
                     client.notifyObservers(ACTIONS.CONNECTION_TO_SERVER_FAILED, null);
                     close();
                 }

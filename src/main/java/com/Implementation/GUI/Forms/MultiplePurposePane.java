@@ -347,12 +347,6 @@ public class MultiplePurposePane implements ModelObserver, LogicObserver, Button
 
     private void showMessage(final User from, final String message, boolean toConv) {
         clientLogger.entering(this.getClass().getName(), "showMessage", from);
-        if (from == null) { // do nothing when dude is not present in model
-            clientLogger.logp(this.getClass().getName(), "showMessage",
-                    "Dude who sent message is not present in model");
-            clientLogger.exiting(this.getClass().getName(), "showMessage", from);
-            return;
-        }
         String tabName;
         if (toConv) {
             clientLogger.logp(this.getClass().getName(), "showMessage",
