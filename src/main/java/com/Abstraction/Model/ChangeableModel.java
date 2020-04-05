@@ -23,7 +23,15 @@ public interface ChangeableModel extends UnEditableModel {
 
     void removeFromConversation(User user);
 
+    /**
+     * Clear both conversation list and users list
+     */
+
     void clear();
+
+    /**
+     * Clears only conversation list
+     */
 
     void clearConversation();
 

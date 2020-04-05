@@ -6,7 +6,6 @@ import com.Abstraction.Model.ChangeableModel;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Utility.Users.ClientUser;
-import com.Abstraction.Networking.Utility.Users.PlainUser;
 import com.Abstraction.Networking.Utility.Users.User;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Pipeline.ACTIONS;
@@ -108,7 +107,6 @@ public class ClientProcessor implements Processable {
     public void close() {
         model.getMyself().drop();
         model.clear();
-        model.clearConversation();
         logic.notifyObservers(ACTIONS.DISCONNECTED, null);
     }
 
@@ -130,6 +128,8 @@ public class ClientProcessor implements Processable {
     protected boolean onIncomingMessage(AbstractDataPackage dataPackage) {
         clientLogger.logp(getClass().getName(), "onIncomingMessage");
         User sender = model.getUser(dataPackage.getHeader().getFrom());
+        if (sender == null)
+            return true;
         logic.notifyObservers(ACTIONS.INCOMING_MESSAGE, new Object[]{
                 sender,
                 dataPackage.getDataAsString(),
@@ -149,6 +149,8 @@ public class ClientProcessor implements Processable {
     protected boolean onIncomingCall(AbstractDataPackage dataPackage) {
         clientLogger.logp(getClass().getName(), "onIncomingCall");
         User sender = model.getUser(dataPackage.getHeader().getFrom());
+        if (sender == null)
+            return true;
         ClientUser myself = model.getMyself();
 
         myself.lock();
@@ -176,8 +178,10 @@ public class ClientProcessor implements Processable {
 
     protected boolean onSendSound(AbstractDataPackage dataPackage) {
         int from = dataPackage.getHeader().getFrom();
+        User sender = model.getUser(from);
+        if (sender == null) return true;
         logic.notifyObservers(ACTIONS.INCOMING_SOUND, new Object[]{
-                model.getUser(from),
+                sender,
                 dataPackage.getData(),
                 from
         });
@@ -187,6 +191,8 @@ public class ClientProcessor implements Processable {
     protected boolean onAddToConversation(AbstractDataPackage dataPackage) {
         clientLogger.logp(getClass().getName(), "onAddToConversation");
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
+        if (baseUser == null)
+            return true;
         model.addToConversation(baseUser);
         return true;
     }
@@ -194,6 +200,8 @@ public class ClientProcessor implements Processable {
     protected boolean onRemoveDudeFromConversation(AbstractDataPackage dataPackage) {
         clientLogger.logp(getClass().getName(), "onRemoveDudeFromConversation");
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
+        if (baseUser == null)
+            return true;
         model.removeFromConversation(baseUser);
         return true;
     }
@@ -224,6 +232,8 @@ public class ClientProcessor implements Processable {
         clientLogger.logp(getClass().getName(), "onCallAccept");
         model.getMyself().drop();
         User dude = model.getUser(dataPackage.getHeader().getFrom());
+        if (dude == null)
+            return true;
         AbstractClient.callAcceptRoutine(logic, model, dude);
         return true;
     }
@@ -232,7 +242,9 @@ public class ClientProcessor implements Processable {
         clientLogger.logp(getClass().getName(), "onCallDeny");
         model.getMyself().drop();
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
+        if (baseUser == null)
+            return true;
+        logic.notifyObservers(ACTIONS.CALL_DENIED, new Object[]{baseUser});
         return true;
     }
 
@@ -240,7 +252,9 @@ public class ClientProcessor implements Processable {
         clientLogger.logp(getClass().getName(), "onCallCanceled");
         model.getMyself().drop();
         User baseUser = model.getUser(dataPackage.getHeader().getFrom());
-        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{new PlainUser(baseUser.getName(), baseUser.getId())});
+        if (baseUser == null)
+            return true;
+        logic.notifyObservers(ACTIONS.CALL_CANCELLED, new Object[]{baseUser});
         return true;
     }
 
@@ -250,8 +264,11 @@ public class ClientProcessor implements Processable {
 
         if (myself.isCalling() == dataPackage.getHeader().getFrom())
             myself.drop();
+        User whoYouTriedToCall = model.getUser(dataPackage.getHeader().getFrom());
+        if (whoYouTriedToCall == null)
+            return true;
         logic.notifyObservers(ACTIONS.BOTH_IN_CONVERSATION, new Object[]{
-                model.getUser(dataPackage.getHeader().getFrom())
+                whoYouTriedToCall
         });
         return true;
     }
