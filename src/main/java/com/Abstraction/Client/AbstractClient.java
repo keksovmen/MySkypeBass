@@ -17,6 +17,7 @@ import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -318,7 +319,11 @@ public abstract class AbstractClient implements Logic {
 
     protected void onSendSound(Object[] data) {
         try {
+            long beforeNano = System.nanoTime();
             getWriter().writeSound((byte[]) data[0]);
+            long timeMicro = (System.nanoTime() - beforeNano) / 1000;
+//            LogManagerHelper.getInstance().getClientLogger().logp(this.getClass().getName(), "onSendSound",
+//                    "Time - " + timeMicro);
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }

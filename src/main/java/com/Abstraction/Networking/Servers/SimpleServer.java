@@ -19,6 +19,7 @@ import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.FormatWorker;
+import com.Abstraction.Util.Monitors.SpeedMonitor;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -287,7 +288,8 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
-        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream));
+        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream),
+                new SpeedMonitor(calculateTimeBoundary()), this::asyncTusk);
         final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final User user;
         if (storage.isSecureConnection) {
@@ -408,5 +410,15 @@ public class SimpleServer extends AbstractServer {
                     }
                 })
         );
+    }
+
+    /**
+     *
+     * @return duration of part of audio frame in MICRO seconds
+     */
+    private int calculateTimeBoundary(){
+        //time duration of 1 audio frame
+        double durationInMillis = 1000d / Resources.getInstance().getMiCaptureSizeDivider();
+        return (int) ((durationInMillis * 1000) / Resources.getInstance().getUnitFrameDivider());
     }
 }

@@ -51,7 +51,10 @@ public class Conversation {
             if (user.getId() == from)
                 continue;
             try {
+                long beforeNano = System.nanoTime();
                 user.getWriter().transferAudio(dataPackage, user.getAddress(), user.getPort());
+                long timeMicro = (System.nanoTime() - beforeNano) / 1000;
+                serverLogger.logp(this.getClass().getName(), "sendSound", "To - " + user.getName() + " Time - " + timeMicro);
             } catch (IOException ignored) {
                 //His thread will fix it
             }

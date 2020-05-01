@@ -4,11 +4,16 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Monitors.SpeedMonitor;
+import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * Contain not all possible server write actions
@@ -18,12 +23,30 @@ public class ServerWriter {
 
     private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
 
-
     private final Writer writer;
 
+    private final SpeedMonitor speedMonitor;
+
+    private final Consumer<Runnable> pushAsyncTask;
+
+    private AtomicBoolean isAudioSendAllowed = new AtomicBoolean(true);
+
+    /**
+     * For {@link com.Abstraction.Networking.Utility.Authenticator#createServerWriter(OutputStream)}
+     *
+     * @param writer plaint ot cipher, will delegate to him
+     */
 
     public ServerWriter(Writer writer) {
         this.writer = writer;
+        speedMonitor = null;
+        pushAsyncTask = null;
+    }
+
+    public ServerWriter(Writer writer, SpeedMonitor speedMonitor, Consumer<Runnable> pushAsyncTask) {
+        this.writer = writer;
+        this.speedMonitor = speedMonitor;
+        this.pushAsyncTask = pushAsyncTask;
     }
 
 
@@ -60,18 +83,39 @@ public class ServerWriter {
 
     /**
      * Method for writing data in conversation mode
-     * It tries to get lock if can't just pass this dude
+     * If user is lagging it will detect it and suppress for some time period
      * <p>
      * Don't return package back to the pool
      *
      * @param dataPackage to be sanded
-     * @param address could be null if full TCP
-     * @param port to send to
+     * @param address     could be null if full TCP
+     * @param port        to send to
      * @throws IOException if networking fails
      */
 
-    public void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+    public synchronized void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        if (!isAudioSendAllowed.get())
+            return;
+
+        long beforeNano = System.nanoTime();
         writeWithoutReturnToPoolUDP(dataPackage, address, port);
+        int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
+        if (speedMonitor.checkValue(deltaMicro)) {
+            //mean you lagging
+            isAudioSendAllowed.set(false);
+            pushAsyncTask.accept(() -> {
+                try {
+                    Thread.sleep((long) (Resources.getInstance().getThreadSleepDuration() * 1000));
+                } catch (InterruptedException e) {
+                    //shouldn't happen, not using interactions
+                    e.printStackTrace();
+                    serverLogger.loge(this.getClass().getName(), "transferAudio", e);
+                } finally {
+                    isAudioSendAllowed.set(true);
+                }
+            });
+            speedMonitor.resetAccumulator();
+        }
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {
