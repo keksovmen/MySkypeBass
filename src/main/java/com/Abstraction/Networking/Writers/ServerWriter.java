@@ -29,8 +29,6 @@ public class ServerWriter {
 
     private final Consumer<Runnable> pushAsyncTask;
 
-    private AtomicBoolean isAudioSendAllowed = new AtomicBoolean(true);
-
     /**
      * For {@link com.Abstraction.Networking.Utility.Authenticator#createServerWriter(OutputStream)}
      *
@@ -94,7 +92,7 @@ public class ServerWriter {
      */
 
     public synchronized void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
-        if (!isAudioSendAllowed.get())
+        if (!speedMonitor.isAllowed())
             return;
 
         long beforeNano = System.nanoTime();
@@ -102,7 +100,6 @@ public class ServerWriter {
         int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
         if (speedMonitor.checkValue(deltaMicro)) {
             //mean you lagging
-            isAudioSendAllowed.set(false);
             pushAsyncTask.accept(() -> {
                 try {
                     Thread.sleep((long) (Resources.getInstance().getThreadSleepDuration() * 1000));
@@ -111,10 +108,11 @@ public class ServerWriter {
                     e.printStackTrace();
                     serverLogger.loge(this.getClass().getName(), "transferAudio", e);
                 } finally {
-                    isAudioSendAllowed.set(true);
+                    synchronized (this) {
+                        speedMonitor.setAllowed();
+                    }
                 }
             });
-            speedMonitor.resetAccumulator();
         }
     }
 
