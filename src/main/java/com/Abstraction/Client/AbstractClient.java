@@ -18,6 +18,7 @@ import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Logging.LogManagerHelper;
+import com.Abstraction.Util.Monitors.SpeedMonitor;
 import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
@@ -51,6 +52,12 @@ public abstract class AbstractClient implements Logic {
     protected final Executor executor;
 
     /**
+     * For back end threads
+     */
+
+    protected final Executor asyncTasksExecutor;
+
+    /**
      * For handling connection on client and server sides
      */
 
@@ -76,6 +83,7 @@ public abstract class AbstractClient implements Logic {
         this.model = model;
         observerList = new ArrayList<>();
         executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "Buttons handler"));
+        asyncTasksExecutor = Executors.newFixedThreadPool(3, r -> new Thread(r, "Client Async Helper"));
 //        executor = new ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, new ArrayBlockingQueueWithWait<>(12), r -> new Thread(r, "Buttons handler"));
         authenticator = createAuthenticator();
 
@@ -140,6 +148,10 @@ public abstract class AbstractClient implements Logic {
 
     public ChangeableModel getModel() {
         return model;
+    }
+
+    public void asyncTask(Runnable runnable){
+        asyncTasksExecutor.execute(runnable);
     }
 
     /**
@@ -319,9 +331,9 @@ public abstract class AbstractClient implements Logic {
 
     protected void onSendSound(Object[] data) {
         try {
-            long beforeNano = System.nanoTime();
+//            long beforeNano = System.nanoTime();
             getWriter().writeSound((byte[]) data[0]);
-            long timeMicro = (System.nanoTime() - beforeNano) / 1000;
+//            long timeMicro = (System.nanoTime() - beforeNano) / 1000;
 //            LogManagerHelper.getInstance().getClientLogger().logp(this.getClass().getName(), "onSendSound",
 //                    "Time - " + timeMicro);
         } catch (IOException ignored) {
@@ -357,6 +369,7 @@ public abstract class AbstractClient implements Logic {
 
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
         final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
+        writer.setSpeedMonitor(new SpeedMonitor(Algorithms.calculateAudioUnitDuration(), this::asyncTask));
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final UDPReader readerUDP;
         if (datagramSocket == null)
@@ -479,7 +492,6 @@ public abstract class AbstractClient implements Logic {
     protected final ClientWriter getWriter() {
         return model.getMyself().getWriter();
     }
-
 
     public static void callAcceptRoutine(Logic logic, ChangeableModel model, User user) {
         logic.notifyObservers(ACTIONS.CALL_ACCEPTED, null);

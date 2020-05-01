@@ -6,10 +6,12 @@ import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Logging.Loggers.BaseLogger;
+import com.Abstraction.Util.Monitors.SpeedMonitor;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.function.Consumer;
 
 /**
  * Contain all possible write actions for a client
@@ -33,6 +35,12 @@ public class ClientWriter {
     private final InetSocketAddress address;
 
     /**
+     * For stopping captured audio being send in to overloaded network connection
+     */
+
+    private SpeedMonitor speedMonitor;
+
+    /**
      * Base client writer with {@link #myID} = {@link WHO#NO_NAME}
      *
      * @param bridgeImplementor contain vital methods for network writing
@@ -43,6 +51,7 @@ public class ClientWriter {
         myID = WHO.NO_NAME.getCode();
         address = null;
     }
+
 
     /**
      * Base client writer with server id
@@ -132,6 +141,14 @@ public class ClientWriter {
 
     public void writeSound(byte[] data) throws IOException {
         if (address == null) {
+            if (speedMonitor != null) {
+                if (!speedMonitor.isAllowed())
+                    return;
+                long beforeNano = System.nanoTime();
+                write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+                int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
+                speedMonitor.feedValue(deltaMicro);
+            }
             write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
         } else {
             writeUDP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data), address.getAddress(), address.getPort());
@@ -174,4 +191,7 @@ public class ClientWriter {
         write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PONG, myID, WHO.SERVER.getCode()));
     }
 
+    public void setSpeedMonitor(SpeedMonitor speedMonitor) {
+        this.speedMonitor = speedMonitor;
+    }
 }

@@ -289,7 +289,7 @@ public class SimpleServer extends AbstractServer {
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
         final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream),
-                new SpeedMonitor(calculateTimeBoundary(), this::asyncTusk));
+                new SpeedMonitor(Algorithms.calculateAudioUnitDuration(), this::asyncTusk));
         final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final User user;
         if (storage.isSecureConnection) {
@@ -412,13 +412,4 @@ public class SimpleServer extends AbstractServer {
         );
     }
 
-    /**
-     *
-     * @return duration of part of audio frame in MICRO seconds
-     */
-    private int calculateTimeBoundary(){
-        //time duration of 1 audio frame
-        double durationInMillis = 1000d / Resources.getInstance().getMiCaptureSizeDivider();
-        return (int) ((durationInMillis * 1000) / Resources.getInstance().getUnitFrameDivider());
-    }
 }

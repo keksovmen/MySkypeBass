@@ -1,5 +1,7 @@
 package com.Abstraction.Util;
 
+import com.Abstraction.Util.Resources.Resources;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -182,5 +184,15 @@ public class Algorithms {
 
     public static long minToMillis(int minutes){
         return minutes * 60 * 1000;
+    }
+
+    /**
+     *
+     * @return duration of audio unit in MICRO seconds
+     */
+
+    public static int calculateAudioUnitDuration(){
+        double durationInMillis = 1000d / Resources.getInstance().getMiCaptureSizeDivider();
+        return (int) ((durationInMillis * 1000) / Resources.getInstance().getUnitFrameDivider());
     }
 }
