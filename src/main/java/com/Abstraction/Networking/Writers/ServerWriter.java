@@ -7,13 +7,13 @@ import com.Abstraction.Networking.Utility.WHO;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 import com.Abstraction.Util.Monitors.SpeedMonitor;
-import com.Abstraction.Util.Resources.Resources;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Contain not all possible server write actions
@@ -27,7 +27,7 @@ public class ServerWriter {
 
     private final SpeedMonitor speedMonitor;
 
-    private final Consumer<Runnable> pushAsyncTask;
+    private final Lock optimiserLock = new ReentrantLock();
 
     /**
      * For {@link com.Abstraction.Networking.Utility.Authenticator#createServerWriter(OutputStream)}
@@ -38,13 +38,11 @@ public class ServerWriter {
     public ServerWriter(Writer writer) {
         this.writer = writer;
         speedMonitor = null;
-        pushAsyncTask = null;
     }
 
-    public ServerWriter(Writer writer, SpeedMonitor speedMonitor, Consumer<Runnable> pushAsyncTask) {
+    public ServerWriter(Writer writer, SpeedMonitor speedMonitor) {
         this.writer = writer;
         this.speedMonitor = speedMonitor;
-        this.pushAsyncTask = pushAsyncTask;
     }
 
 
@@ -91,29 +89,29 @@ public class ServerWriter {
      * @throws IOException if networking fails
      */
 
-    public synchronized void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+    public void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         if (!speedMonitor.isAllowed())
             return;
-
-        long beforeNano = System.nanoTime();
-        writeWithoutReturnToPoolUDP(dataPackage, address, port);
-        int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
-        if (speedMonitor.checkValue(deltaMicro)) {
-            //mean you lagging
-            pushAsyncTask.accept(() -> {
+        try {
+            if (optimiserLock.tryLock(speedMonitor.getMinBoundary(), TimeUnit.MICROSECONDS)) {
                 try {
-                    Thread.sleep((long) (Resources.getInstance().getThreadSleepDuration() * 1000));
-                } catch (InterruptedException e) {
-                    //shouldn't happen, not using interactions
-                    e.printStackTrace();
-                    serverLogger.loge(this.getClass().getName(), "transferAudio", e);
-                } finally {
-                    synchronized (this) {
-                        speedMonitor.setAllowed();
-                    }
+                    if (!speedMonitor.isAllowed())
+                        return;
+                    long beforeNano = System.nanoTime();
+                    writeWithoutReturnToPoolUDP(dataPackage, address, port);
+                    int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
+                    speedMonitor.feedValue(deltaMicro);
+                }finally {
+                    optimiserLock.unlock();
                 }
-            });
+            }
+        } catch (InterruptedException e) {
+            //shouldn't happen because not using interruptions
+            e.printStackTrace();
+            serverLogger.loge(this.getClass().getName(), "transferAudio", e);
         }
+
+
     }
 
     public void writeAddToConv(int whoToAdd, int to) throws IOException {

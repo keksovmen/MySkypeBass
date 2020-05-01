@@ -289,7 +289,7 @@ public class SimpleServer extends AbstractServer {
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
         final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream),
-                new SpeedMonitor(calculateTimeBoundary()), this::asyncTusk);
+                new SpeedMonitor(calculateTimeBoundary(), this::asyncTusk));
         final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final User user;
         if (storage.isSecureConnection) {
