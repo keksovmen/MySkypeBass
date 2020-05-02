@@ -4,82 +4,69 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
+import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Logging.Loggers.BaseLogger;
-import com.Abstraction.Util.Monitors.SpeedMonitor;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Contain not all possible server write actions
+ * High level object for network write methods
+ * Contains all possible server write actions
  */
 
-public class ServerWriter {
-
-    private final BaseLogger serverLogger = LogManagerHelper.getInstance().getServerLogger();
-
-    private final Writer writer;
-
-    private final SpeedMonitor speedMonitor;
-
-    private final Lock optimiserLock = new ReentrantLock();
+public class ServerWriter extends AbstractWriter {
 
     /**
-     * For {@link com.Abstraction.Networking.Utility.Authenticator#createServerWriter(OutputStream)}
-     *
-     * @param writer plaint ot cipher, will delegate to him
+     * for optimising internet connection on write sound
      */
 
-    public ServerWriter(Writer writer) {
-        this.writer = writer;
-        speedMonitor = null;
+    protected final Lock optimiserLock;
+
+    protected final int lockDuration;
+
+    /**
+     * @param bridgeImplementation plaint ot cipher, will delegate to him
+     */
+
+
+    public ServerWriter(Writer bridgeImplementation) {
+        super(bridgeImplementation);
+        optimiserLock = new ReentrantLock();
+        lockDuration = Algorithms.calculatePartOfAudioUnitDuration();
     }
 
-    public ServerWriter(Writer writer, SpeedMonitor speedMonitor) {
-        this.writer = writer;
-        this.speedMonitor = speedMonitor;
-    }
-
-
-    protected void write(AbstractDataPackage dataPackage) throws IOException {
-        writer.write(dataPackage);
+    @Override
+    protected BaseLogger createLogger() {
+        return LogManagerHelper.getInstance().getServerLogger();
     }
 
     protected void writeWithoutReturnToPool(AbstractDataPackage dataPackage) throws IOException {
-        writer.writeWithoutReturnToPool(dataPackage);
+        bridgeImplementation.writeWithoutReturnToPool(dataPackage);
     }
 
 
-    protected void writeWithoutReturnToPoolUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+    protected void writeWithoutReturnToPoolUDPorTCP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         if (address == null)
             writeWithoutReturnToPool(dataPackage);
         else
-            writer.writeWithoutReturnToPoolUDP(dataPackage, address, port);
+            bridgeImplementation.writeWithoutReturnToPoolUDP(dataPackage, address, port);
     }
 
-
-    public void writeAudioFormat(int id, String format) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(
-                CODE.SEND_AUDIO_FORMAT,
-                WHO.SERVER.getCode(),
-                id,
-                format));
-    }
 
     public void writeUsers(int id, String users) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "writeUsers",
+        logger.logp(this.getClass().getName(), "writeUsers",
                 "Write all users to  - " + id + ", users - " + users);
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
+        writeTCP(AbstractDataPackagePool.getPackage().initString(CODE.SEND_USERS, WHO.SERVER.getCode(), id, users));
     }
 
     /**
      * Method for writing data in conversation mode
-     * If user is lagging it will detect it and suppress for some time period
+     * If user is lagging it will detect it handle some how
      * <p>
      * Don't return package back to the pool
      *
@@ -90,6 +77,131 @@ public class ServerWriter {
      */
 
     public void transferAudio(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        if (speedMonitor == null) {
+            writeSoundTryNoMonitor(dataPackage, address, port);
+        } else {
+            writeSoundTryWithMonitor(dataPackage, address, port);
+        }
+
+
+    }
+
+    public void writeAddToConv(int whoToAdd, int to) throws IOException {
+        logger.logp(this.getClass().getName(), "writeAddToConv", "Trying to add this - " + whoToAdd + ", message is for - " + to);
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_ADD_TO_CONVERSATION,
+                whoToAdd,
+                to)
+        );
+    }
+
+    public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
+        logger.logp(this.getClass().getName(), "writeRemoveFromConv", "Try to remove this dude from conversation - " + whoToRemove + ", message is for - " + to);
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_REMOVE_FROM_CONVERSATION,
+                whoToRemove,
+                to)
+        );
+    }
+
+    public void writeStopConv(int to) throws IOException {
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_DISCONNECT_FROM_CONVERSATION,
+                WHO.CONFERENCE.getCode(),
+                to
+        ));
+    }
+
+    public void writeAddToUserList(int to, String dudeToAdd) throws IOException {
+        writeTCP(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_ADD_TO_USER_LIST,
+                WHO.SERVER.getCode(),
+                to, dudeToAdd
+        ));
+    }
+
+    public void writeRemoveFromUserList(int to, int dudeToRemove) throws IOException {
+        logger.logp(this.getClass().getName(), "writeRemoveFromUserList",
+                "Sending message to remove this dude - " + dudeToRemove + ", to - " + to);
+        writeTCP(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_REMOVE_FROM_USER_LIST,
+                WHO.SERVER.getCode(),
+                to, String.valueOf(dudeToRemove)
+        ));
+    }
+
+    public void transferPacket(AbstractDataPackage dataPackage) throws IOException {
+        logger.logp(this.getClass().getName(), "transferPacket",
+                "Transferring a package - " + dataPackage.getHeader().toString());
+        writeWithoutReturnToPool(dataPackage);
+    }
+
+    public void writeBothInConversations(int me, int from) throws IOException {
+        logger.logp(this.getClass().getName(), "writeBothInConversations",
+                "Write both in conversation to  - " + me + ", from - " + from);
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_BOTH_IN_CONVERSATIONS,
+                from,
+                me
+        ));
+    }
+
+
+    public void writeAddWholeConversation(int to, String dudes) throws IOException {
+        writeTCP(AbstractDataPackagePool.getPackage().initString(
+                CODE.SEND_ADD_WHOLE_CONVERSATION,
+                WHO.SERVER.getCode(),
+                to, dudes)
+        );
+    }
+
+
+    public void writePing(int to) throws IOException {
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(
+                CODE.SEND_PING,
+                WHO.SERVER.getCode(),
+                to));
+    }
+
+    /**
+     * Will prevent new entered thread from waiting too much time
+     * on lagging connection
+     *
+     * @param dataPackage not null
+     * @param address     could be null for TCP connection
+     * @param port        could be -1 for TCP connection
+     * @throws IOException if network fails
+     */
+
+    protected void writeSoundTryNoMonitor(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
+        try {
+            if (optimiserLock.tryLock(lockDuration, TimeUnit.MICROSECONDS)) {
+                try {
+                    writeWithoutReturnToPoolUDPorTCP(dataPackage, address, port);
+                } finally {
+                    optimiserLock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
+            //shouldn't happen because not using interruptions
+            e.printStackTrace();
+            logger.loge(this.getClass().getName(), "writeSoundTryNoMonitor", e);
+            optimiserLock.unlock();
+        }
+    }
+
+    /**
+     * Will work as {@link #writeSoundTryNoMonitor(AbstractDataPackage, InetAddress, int)}
+     * And will not send audio to this dude if his network is lagging
+     * for some time period
+     *
+     * @param dataPackage not null
+     * @param address     could be null for TCP connection
+     * @param port        could be -1 for TCP connection
+     * @throws IOException if network fails
+     */
+
+    protected void writeSoundTryWithMonitor(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
         if (!speedMonitor.isAllowed())
             return;
         try {
@@ -98,118 +210,18 @@ public class ServerWriter {
                     if (!speedMonitor.isAllowed())
                         return;//   finally unlocks
                     long beforeNano = System.nanoTime();
-                    writeWithoutReturnToPoolUDP(dataPackage, address, port);
+                    writeWithoutReturnToPoolUDPorTCP(dataPackage, address, port);
                     int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
                     speedMonitor.feedValue(deltaMicro);
-                }finally {
+                } finally {
                     optimiserLock.unlock();
                 }
             }
         } catch (InterruptedException e) {
             //shouldn't happen because not using interruptions
             e.printStackTrace();
-            serverLogger.loge(this.getClass().getName(), "transferAudio", e);
+            logger.loge(this.getClass().getName(), "writeSoundTryWithMonitor", e);
             optimiserLock.unlock();
         }
-
-
-    }
-
-    public void writeAddToConv(int whoToAdd, int to) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "writeAddToConv", "Trying to add this - " + whoToAdd + ", message is for - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ADD_TO_CONVERSATION, whoToAdd, to));
-    }
-
-    public void writeRemoveFromConv(int whoToRemove, int to) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "writeRemoveFromConv", "Try to remove this dude from conversation - " + whoToRemove + ", message is for - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_REMOVE_FROM_CONVERSATION, whoToRemove, to));
-    }
-
-    public void writeStopConv(int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(
-                CODE.SEND_DISCONNECT_FROM_CONVERSATION,
-                WHO.CONFERENCE.getCode(),
-                to
-        ));
-    }
-
-    public void writeId(int id) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(
-                CODE.SEND_ID,
-                WHO.SERVER.getCode(),
-                id
-        ));
-    }
-
-    public void writeAddToUserList(int to, String dudeToAdd) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(
-                CODE.SEND_ADD_TO_USER_LIST,
-                WHO.SERVER.getCode(),
-                to,
-                dudeToAdd
-        ));
-    }
-
-    public void writeRemoveFromUserList(int to, int dudeToRemove) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "writeRemoveFromUserList",
-                "Sending message to remove this dude - " + dudeToRemove + ", to - " + to);
-        write(AbstractDataPackagePool.getPackage().initString(
-                CODE.SEND_REMOVE_FROM_USER_LIST,
-                WHO.SERVER.getCode(),
-                to,
-                String.valueOf(dudeToRemove)
-        ));
-    }
-
-    public void transferPacket(AbstractDataPackage dataPackage) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "transferPacket",
-                "Transferring a package - " + dataPackage.getHeader().toString());
-        writeWithoutReturnToPool(dataPackage);
-    }
-
-    public void writeBothInConversations(int me, int from) throws IOException {
-        serverLogger.logp(this.getClass().getName(), "writeBothInConversations",
-                "Write both in conversation to  - " + me + ", from - " + from);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(
-                CODE.SEND_BOTH_IN_CONVERSATIONS,
-                from,
-                me
-        ));
-    }
-
-    public void writeCipherMode(int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_CIPHER_MODE, WHO.SERVER.getCode(), to));
-    }
-
-    public void writePlainMode(int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_SERVER_PLAIN_MODE, WHO.SERVER.getCode(), to));
-    }
-
-    public void writePublicKeyEncoded(int to, byte[] key) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, WHO.SERVER.getCode(), to, key));
-    }
-
-    public void writeAlgorithmParams(int to, byte[] params) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_ALGORITHM_PARAMETERS_ENCODED, WHO.SERVER.getCode(), to, params));
-    }
-
-    public void writeAddWholeConversation(int to, String dudes) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_ADD_WHOLE_CONVERSATION, WHO.SERVER.getCode(), to, dudes));
-    }
-
-    public void writeSizeOfUDP(int sizeUDP) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PACKAGE_SIZE, WHO.SERVER.getCode(), WHO.NO_NAME.getCode(), String.valueOf(sizeUDP)));
-    }
-
-    public void writeIsFullTCPConnection(boolean isFullTCP) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(
-                isFullTCP ? CODE.SEND_FULL_TCP_CONNECTION : CODE.SEND_MIXED_CONNECTION,
-                WHO.SERVER.getCode(),
-                WHO.NO_NAME.getCode()
-        ));
-    }
-
-    public void writePing(int to) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PING, WHO.SERVER.getCode(), to));
     }
 }

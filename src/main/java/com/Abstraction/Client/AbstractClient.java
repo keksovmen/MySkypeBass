@@ -17,7 +17,6 @@ import com.Abstraction.Pipeline.BUTTONS;
 import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
-import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Monitors.SpeedMonitor;
 import com.Abstraction.Util.Resources.Resources;
 
@@ -369,7 +368,7 @@ public abstract class AbstractClient implements Logic {
 
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
         final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
-        writer.setSpeedMonitor(new SpeedMonitor(Algorithms.calculateAudioUnitDuration(), this::asyncTask));
+        writer.setSpeedMonitor(new SpeedMonitor(Algorithms.calculatePartOfAudioUnitDuration(), this::asyncTask));
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final UDPReader readerUDP;
         if (datagramSocket == null)

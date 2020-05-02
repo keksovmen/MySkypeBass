@@ -11,20 +11,18 @@ import com.Abstraction.Util.Monitors.SpeedMonitor;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.function.Consumer;
 
 /**
  * Contain all possible write actions for a client
  * Each method basically ask pool for carcase and init it
- * <p>
- * Part of Bridge pattern it's abstraction
  */
 
-public class ClientWriter {
+public class ClientWriter extends AbstractWriter {
 
-    private final BaseLogger clientLogger = LogManagerHelper.getInstance().getClientLogger();
+    /**
+     * Received from server, or {@link WHO#NO_NAME} as default
+     */
 
-    private final Writer bridgeImplementor;
     private final int myID;
 
     /**
@@ -35,58 +33,35 @@ public class ClientWriter {
     private final InetSocketAddress address;
 
     /**
-     * For stopping captured audio being send in to overloaded network connection
-     */
-
-    private SpeedMonitor speedMonitor;
-
-    /**
-     * Base client writer with {@link #myID} = {@link WHO#NO_NAME}
+     * Base client writer with id
      *
-     * @param bridgeImplementor contain vital methods for network writing
+     * @param bridgeImplementation contain vital methods for network writing
+     * @param myID              received from server, unique id
+     * @param address           for UDP session, might be null
      */
 
-    public ClientWriter(Writer bridgeImplementor) {
-        this.bridgeImplementor = bridgeImplementor;
-        myID = WHO.NO_NAME.getCode();
-        address = null;
-    }
-
-
-    /**
-     * Base client writer with server id
-     *
-     * @param bridgeImplementor contain vital methods for network writing
-     * @param myID              received from server
-     * @param address           for UDP session
-     */
-
-    public ClientWriter(Writer bridgeImplementor, int myID, InetSocketAddress address) {
-        this.bridgeImplementor = bridgeImplementor;
+    public ClientWriter(Writer bridgeImplementation, int myID, InetSocketAddress address) {
+        super(bridgeImplementation);
         this.myID = myID;
         this.address = address;
     }
 
 
-    protected void write(AbstractDataPackage dataPackage) throws IOException {
-        bridgeImplementor.write(dataPackage);
+
+    @Override
+    protected BaseLogger createLogger() {
+        return LogManagerHelper.getInstance().getClientLogger();
     }
 
     protected void writeUDP(AbstractDataPackage dataPackage, InetAddress address, int port) throws IOException {
-        bridgeImplementor.writeUDP(dataPackage, address, port);
+        bridgeImplementation.writeUDP(dataPackage, address, port);
     }
 
-
-    public void writeName(String name) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeName",
-                "Writing my name - " + name);
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_NAME, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), name));
-    }
 
     public void writeUsersRequest() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeUserRequest",
+        logger.logp(this.getClass().getName(), "writeUserRequest",
                 "Writing user request");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_USERS, myID, WHO.SERVER.getCode()));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_USERS, myID, WHO.SERVER.getCode()));
     }
 
     /**
@@ -98,100 +73,70 @@ public class ClientWriter {
      */
 
     public void writeMessage(int to, String message) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeMessage",
+        logger.logp(this.getClass().getName(), "writeMessage",
                 "Writing message to - " + to);
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_MESSAGE, myID, to, message));
+        writeTCP(AbstractDataPackagePool.getPackage().initString(CODE.SEND_MESSAGE, myID, to, message));
     }
 
     public void writeCall(int to) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeCall",
+        logger.logp(this.getClass().getName(), "writeCall",
                 "Writing call to - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CALL, myID, to));
-    }
-
-    public void writeApproveAudioFormat() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeApproveAudioFormat",
-                "Writing approve audio format");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_ACCEPT, myID, WHO.SERVER.getCode()));
-    }
-
-    public void writeDeclineAudioFormat() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeDeclineAudioFormat",
-                "Writing decline audio format");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_AUDIO_FORMAT_DENY, myID, WHO.SERVER.getCode()));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CALL, myID, to));
     }
 
     public void writeAccept(int to) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeAcceptCall",
+        logger.logp(this.getClass().getName(), "writeAcceptCall",
                 "Writing accept call to - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ACCEPT_CALL, myID, to));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_ACCEPT_CALL, myID, to));
     }
 
     public void writeDeny(int to) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeDenyCall",
+        logger.logp(this.getClass().getName(), "writeDenyCall",
                 "Writing deny call - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DENY_CALL, myID, to));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DENY_CALL, myID, to));
     }
 
     public void writeCancel(int to) throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeCancelCall",
+        logger.logp(this.getClass().getName(), "writeCancelCall",
                 "Writing cancel call - " + to);
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CANCEL_CALL, myID, to));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CANCEL_CALL, myID, to));
     }
 
     public void writeSound(byte[] data) throws IOException {
         if (address == null) {
-            if (speedMonitor != null) {
-                if (!speedMonitor.isAllowed())
-                    return;
-                long beforeNano = System.nanoTime();
-                write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
-                int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
-                speedMonitor.feedValue(deltaMicro);
+            if (speedMonitor == null) {
+                writeTCP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+            }else {
+                writeSoundWithMonitor(data);
             }
-            write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
         } else {
+            //UDP won't lag as TCP on very bed internet connection so no need for monitor
             writeUDP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data), address.getAddress(), address.getPort());
         }
     }
 
+    public void writeSoundWithMonitor(byte[] data) throws IOException {
+        if (!speedMonitor.isAllowed())
+            return;
+        long beforeNano = System.nanoTime();
+        writeTCP(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_SOUND, myID, WHO.CONFERENCE.getCode(), data));
+        int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
+        speedMonitor.feedValue(deltaMicro);
+    }
+
     public void writeDisconnect() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeDisconnect",
+        logger.logp(this.getClass().getName(), "writeDisconnect",
                 "Writing disconnect call");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT, myID, WHO.SERVER.getCode()));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT, myID, WHO.SERVER.getCode()));
     }
 
     public void writeDisconnectFromConv() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeDisconnectFromConversation",
+        logger.logp(this.getClass().getName(), "writeDisconnectFromConversation",
                 "Writing disconnect from conversation");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT_FROM_CONVERSATION, myID, WHO.CONFERENCE.getCode()));
-    }
-
-    public void writePublicKeyEncoded(byte[] encodedPubKey) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initRaw(CODE.SEND_PUBLIC_ENCODED_KEY, myID, WHO.SERVER.getCode(), encodedPubKey));
-    }
-
-    public void writeCipherModeAccepted() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeCipherModeAccepted",
-                "Writing approve cipher mode");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_ACCEPTED, myID, WHO.SERVER.getCode()));
-    }
-
-    public void writeCipherModeDenied() throws IOException {
-        clientLogger.logp(this.getClass().getName(), "writeCipherModeDenied",
-                "Writing deny cipher mode");
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_CIPHER_MODE_DENIED, myID, WHO.SERVER.getCode()));
-    }
-
-    public void writeMyPortUDP(int port) throws IOException {
-        write(AbstractDataPackagePool.getPackage().initString(CODE.SEND_UDP_PORT, WHO.NO_NAME.getCode(), WHO.SERVER.getCode(), String.valueOf(port)));
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_DISCONNECT_FROM_CONVERSATION, myID, WHO.CONFERENCE.getCode()));
     }
 
     public void writePong() throws IOException {
-        write(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PONG, myID, WHO.SERVER.getCode()));
-    }
-
-    public void setSpeedMonitor(SpeedMonitor speedMonitor) {
-        this.speedMonitor = speedMonitor;
+        writeTCP(AbstractDataPackagePool.getPackage().initZeroLength(CODE.SEND_PONG, myID, WHO.SERVER.getCode()));
     }
 }

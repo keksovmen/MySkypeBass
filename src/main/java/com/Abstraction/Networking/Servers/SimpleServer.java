@@ -288,8 +288,11 @@ public class SimpleServer extends AbstractServer {
 
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
-        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream),
-                new SpeedMonitor(Algorithms.calculateAudioUnitDuration(), this::asyncTusk));
+        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream));
+        writer.setSpeedMonitor(new SpeedMonitor(
+                Algorithms.calculatePartOfAudioUnitDuration(),
+                this::asyncTusk)
+        );
         final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final User user;
         if (storage.isSecureConnection) {

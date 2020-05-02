@@ -5,9 +5,9 @@ import com.Abstraction.Audio.Misc.AbstractAudioFormatWithMic;
 import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Readers.BaseReader;
-import com.Abstraction.Networking.Writers.ClientWriter;
+import com.Abstraction.Networking.Writers.ClientAuthenticateWriter;
 import com.Abstraction.Networking.Writers.PlainWriter;
-import com.Abstraction.Networking.Writers.ServerWriter;
+import com.Abstraction.Networking.Writers.ServerAuthenticatorWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Cryptographics.BaseClientCryptoHelper;
 import com.Abstraction.Util.Cryptographics.BaseServerCryptoHelper;
@@ -45,7 +45,7 @@ public class Authenticator {
 
     public ClientStorage clientAuthentication(InputStream inputStream, OutputStream outputStream, String desiredName, int portUDP) {
         BaseReader reader = createClientReader(inputStream);
-        ClientWriter writer = createClientWriter(outputStream);
+        ClientAuthenticateWriter writer = createClientWriter(outputStream);
 
         try {
             writer.writeName(desiredName);
@@ -108,7 +108,7 @@ public class Authenticator {
 
     public CommonStorage serverAuthentication(InputStream inputStream, OutputStream outputStream, String audioFormat, int hisID, boolean isSecureConnection, boolean isFullTCP, int sizeUDP) {
         BaseReader reader = createServerReader(inputStream);
-        ServerWriter writer = createServerWriter(outputStream);
+        ServerAuthenticatorWriter writer = createServerWriter(outputStream);
 
         try {
             final String name = reader.read().getDataAsString();
@@ -152,12 +152,12 @@ public class Authenticator {
         return new BaseReader(inputStream, Resources.getInstance().getBufferSize());
     }
 
-    protected ClientWriter createClientWriter(OutputStream outputStream) {
-        return new ClientWriter(createPlainWriter(outputStream));
+    protected ClientAuthenticateWriter createClientWriter(OutputStream outputStream) {
+        return new ClientAuthenticateWriter(createPlainWriter(outputStream));
     }
 
-    protected ServerWriter createServerWriter(OutputStream outputStream) {
-        return new ServerWriter(createPlainWriter(outputStream));
+    protected ServerAuthenticatorWriter createServerWriter(OutputStream outputStream) {
+        return new ServerAuthenticatorWriter(createPlainWriter(outputStream));
     }
 
 
