@@ -96,7 +96,7 @@ public class ServerWriter {
             if (optimiserLock.tryLock(speedMonitor.getMinBoundary(), TimeUnit.MICROSECONDS)) {
                 try {
                     if (!speedMonitor.isAllowed())
-                        return;
+                        return;//   finally unlocks
                     long beforeNano = System.nanoTime();
                     writeWithoutReturnToPoolUDP(dataPackage, address, port);
                     int deltaMicro = (int) (System.nanoTime() - beforeNano) / 1000;
@@ -109,6 +109,7 @@ public class ServerWriter {
             //shouldn't happen because not using interruptions
             e.printStackTrace();
             serverLogger.loge(this.getClass().getName(), "transferAudio", e);
+            optimiserLock.unlock();
         }
 
 

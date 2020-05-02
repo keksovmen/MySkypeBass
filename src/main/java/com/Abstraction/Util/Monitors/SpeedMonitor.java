@@ -29,7 +29,7 @@ public class SpeedMonitor {
      * Indicates can you check value or not
      */
 
-    private boolean isAllowed = true;
+    private volatile boolean isAllowed = true;
 
 
     public SpeedMonitor(int minBoundary, Consumer<Runnable> pushAsyncTask) {
@@ -58,7 +58,7 @@ public class SpeedMonitor {
         }
     }
 
-    public synchronized boolean isAllowed(){
+    public boolean isAllowed(){
         return isAllowed;
     }
 
