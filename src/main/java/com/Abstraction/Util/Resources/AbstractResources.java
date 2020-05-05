@@ -35,7 +35,7 @@ public abstract class AbstractResources {
         properties.setProperty("SpeedMultiplier", "0.35");//server, client network optimiser
         properties.setProperty("UnitFrameDividerServer", "2");//server, network optimiser
         properties.setProperty("UnitFrameDividerClient", "4");//client network optimiser
-        properties.setProperty("ThreadSleepDuration", "1.5");//server, client network optimiser in seconds
+        properties.setProperty("ThreadSleepDuration", "1");//server, client network optimiser in seconds
 
         return properties;
     }
@@ -124,7 +124,7 @@ public abstract class AbstractResources {
      */
 
     public double getThreadSleepDuration(){
-        return checkIfZeroReturnDefaultDouble("ThreadSleepDuration", 1.5d);
+        return checkIfZeroReturnDefaultDouble("ThreadSleepDuration", 1d);
     }
 
     protected int checkIfZeroReturnDefaultInt(String property, int standard){

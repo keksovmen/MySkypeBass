@@ -34,8 +34,8 @@ public class ServerWriter extends AbstractWriter {
 
     /**
      * @param bridgeImplementation plaint ot cipher, will delegate to him
+     * @param lockDurationMicro how long ones thread should try and wait on others, in micro seconds
      */
-
 
     public ServerWriter(Writer bridgeImplementation, int lockDurationMicro) {
         super(bridgeImplementation);

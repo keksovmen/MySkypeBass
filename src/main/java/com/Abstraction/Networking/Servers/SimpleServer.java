@@ -84,8 +84,7 @@ public class SimpleServer extends AbstractServer {
         }
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
         users = new ConcurrentHashMap<>();//change to one of concurrent maps
-        audioFormat = new AbstractAudioFormatWithMic(sampleRate, sampleSizeInBits,
-                micCapSize);
+        audioFormat = new AbstractAudioFormatWithMic(sampleRate, sampleSizeInBits, micCapSize);
     }
 
     /**
@@ -239,6 +238,7 @@ public class SimpleServer extends AbstractServer {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
+
         Authenticator.CommonStorage storage = authenticator.serverAuthentication(
                 inputStream,
                 outputStream,
@@ -249,20 +249,11 @@ public class SimpleServer extends AbstractServer {
                 FormatWorker.getPackageSizeUDP(isCipherMode, audioFormat.getMicCaptureSize())
         );
 
-        if (storage.isNetworkFailure) {
+        if (!handleAuthenticationResults(storage)) {
             Algorithms.closeSocketThatCouldBeClosed(socket);
             return;
         }
-        if (!storage.isAudioFormatAccepted) {
-            Algorithms.closeSocketThatCouldBeClosed(socket);
-            return;
-        }
-        if (storage.isSecureConnection) {
-            if (!storage.isSecureConnectionAccepted) {
-                Algorithms.closeSocketThatCouldBeClosed(socket);
-                return;
-            }
-        }
+
         ServerUser user = createUser(storage, inputStream, outputStream, isFullTCP ? null : socket.getInetAddress());
         registerUser(user);
 
@@ -289,11 +280,14 @@ public class SimpleServer extends AbstractServer {
     @Override
     protected ServerUser createUser(Authenticator.CommonStorage storage, InputStream inputStream, OutputStream outputStream, InetAddress address) {
         final int partOfAudioUnitDuration = Algorithms.calculatePartOfAudioUnitDuration(Resources.getInstance().getUnitFrameDividerServer());
-        final ServerWriter writer = new ServerWriter(createWriterForUser(storage, outputStream), partOfAudioUnitDuration);
+        final ServerWriter writer = new ServerWriter(
+                createWriterForUser(storage, outputStream),
+                partOfAudioUnitDuration);
         writer.setSpeedMonitor(new SpeedMonitor(
                 partOfAudioUnitDuration,
                 this::asyncTusk)
         );
+
         final Reader reader = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final User user;
         if (storage.isSecureConnection) {
@@ -414,6 +408,23 @@ public class SimpleServer extends AbstractServer {
                     }
                 })
         );
+    }
+
+    /**
+     * @param storage not null
+     * @return true if connection is accepted
+     */
+
+    protected boolean handleAuthenticationResults(Authenticator.CommonStorage storage) {
+        if (storage.isNetworkFailure)
+            return false;
+        if (!storage.isAudioFormatAccepted)
+            return false;
+        if (storage.isSecureConnection) {
+            if (!storage.isSecureConnectionAccepted)
+                return false;
+        }
+        return true;
     }
 
 }

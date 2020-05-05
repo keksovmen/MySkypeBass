@@ -187,7 +187,7 @@ public class Algorithms {
     }
 
     /**
-     *
+     * @param unitFrameDivider what part of the whole. e.x 4 means one quarter
      * @return duration of a part of audio unit in MICRO seconds
      */
 

@@ -330,11 +330,7 @@ public abstract class AbstractClient implements Logic {
 
     protected void onSendSound(Object[] data) {
         try {
-//            long beforeNano = System.nanoTime();
             getWriter().writeSound((byte[]) data[0]);
-//            long timeMicro = (System.nanoTime() - beforeNano) / 1000;
-//            LogManagerHelper.getInstance().getClientLogger().logp(this.getClass().getName(), "onSendSound",
-//                    "Time - " + timeMicro);
         } catch (IOException ignored) {
             //Handler and its reader thread will close connection on failure
         }
@@ -367,17 +363,22 @@ public abstract class AbstractClient implements Logic {
      */
 
     protected ClientUser createClientUser(Authenticator.ClientStorage storage, OutputStream outputStream, InputStream inputStream, DatagramSocket datagramSocket, InetSocketAddress address) {
-        final ClientWriter writer = new ClientWriter(createWriterForClient(outputStream, storage, datagramSocket), storage.myID, address);
+        final ClientWriter writer = new ClientWriter(
+                createWriterForClient(outputStream, storage, datagramSocket),
+                storage.myID,
+                address);
         writer.setSpeedMonitor(new SpeedMonitor(
                 Algorithms.calculatePartOfAudioUnitDuration(
                         Resources.getInstance().getUnitFrameDividerClient()
                 ), this::asyncTask));
+
         final BaseReader readerTCP = new BaseReader(inputStream, Resources.getInstance().getBufferSize());
         final UDPReader readerUDP;
         if (datagramSocket == null)
             readerUDP = null;
         else
             readerUDP = new UDPReader(datagramSocket, storage.sizeUDP);
+
         final User user;
         if (storage.isSecureConnection) {
             user = new CipherUser(
