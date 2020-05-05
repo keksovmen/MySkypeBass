@@ -33,7 +33,8 @@ public abstract class AbstractResources {
         properties.setProperty("PingPeriod", "10");//server logic, in minutes
 
         properties.setProperty("SpeedMultiplier", "0.35");//server, client network optimiser
-        properties.setProperty("UnitFrameDivider", "4");//server, client network optimiser
+        properties.setProperty("UnitFrameDividerServer", "2");//server, network optimiser
+        properties.setProperty("UnitFrameDividerClient", "4");//client network optimiser
         properties.setProperty("ThreadSleepDuration", "1.5");//server, client network optimiser in seconds
 
         return properties;
@@ -54,11 +55,11 @@ public abstract class AbstractResources {
     public abstract Map<Integer, Track> getNotificationTracks();
 
     public int getMiCaptureSizeDivider() {
-        return checkIfZeroReturnDefault("MicCaptureSizeDivider", 20);
+        return checkIfZeroReturnDefaultInt("MicCaptureSizeDivider", 20);
     }
 
     public int getHistorySize() {
-        return checkIfZeroReturnDefault("HistorySize", 10);
+        return checkIfZeroReturnDefaultInt("HistorySize", 10);
     }
 
     /**
@@ -67,7 +68,7 @@ public abstract class AbstractResources {
      */
 
     public int getBufferSize() {
-        return checkIfZeroReturnDefault("ReaderWriterBuffer", 64) * 1024;
+        return checkIfZeroReturnDefaultInt("ReaderWriterBuffer", 64) * 1024;
     }
 
     /**
@@ -76,7 +77,7 @@ public abstract class AbstractResources {
      */
 
     public int getTimeOut() {
-        return checkIfZeroReturnDefault("TimeOut", 10);
+        return checkIfZeroReturnDefaultInt("TimeOut", 10);
     }
 
     public String getDefaultName() {
@@ -102,15 +103,19 @@ public abstract class AbstractResources {
      */
 
     public int getPingPeriod(){
-        return checkIfZeroReturnDefault("PingPeriod", 10);
+        return checkIfZeroReturnDefaultInt("PingPeriod", 10);
     }
 
     public double getSpeedMultiplier(){
-        return checkIfZeroReturnDefault("SpeedMultiplier", 0.35);
+        return checkIfZeroReturnDefaultDouble("SpeedMultiplier", 0.35d);
     }
 
-    public double getUnitFrameDivider(){
-        return checkIfZeroReturnDefault("UnitFrameDivider", 4);
+    public double getUnitFrameDividerClient(){
+        return checkIfZeroReturnDefaultDouble("UnitFrameDividerClient", 4d);
+    }
+
+    public double getUnitFrameDividerServer(){
+        return checkIfZeroReturnDefaultDouble("UnitFrameDividerServer", 2d);
     }
 
     /**
@@ -119,17 +124,17 @@ public abstract class AbstractResources {
      */
 
     public double getThreadSleepDuration(){
-        return checkIfZeroReturnDefault("ThreadSleepDuration", 1.5d);
+        return checkIfZeroReturnDefaultDouble("ThreadSleepDuration", 1.5d);
     }
 
-    protected int checkIfZeroReturnDefault(String property, int standard){
+    protected int checkIfZeroReturnDefaultInt(String property, int standard){
         int retrieved = Integer.parseInt(properties.getProperty(property));
         if (retrieved == 0)
             return standard;
         return retrieved;
     }
 
-    protected double checkIfZeroReturnDefault(String property, double standard){
+    protected double checkIfZeroReturnDefaultDouble(String property, double standard){
         double retrieved = Double.parseDouble(properties.getProperty(property));
         if (retrieved == 0)
             return standard;

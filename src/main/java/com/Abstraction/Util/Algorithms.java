@@ -188,11 +188,11 @@ public class Algorithms {
 
     /**
      *
-     * @return duration of audio unit in MICRO seconds
+     * @return duration of a part of audio unit in MICRO seconds
      */
 
-    public static int calculatePartOfAudioUnitDuration(){
+    public static int calculatePartOfAudioUnitDuration(double unitFrameDivider){
         double durationInMillis = 1000d / Resources.getInstance().getMiCaptureSizeDivider();
-        return (int) ((durationInMillis * 1000) / Resources.getInstance().getUnitFrameDivider());
+        return (int) ((durationInMillis * 1000) / unitFrameDivider);
     }
 }

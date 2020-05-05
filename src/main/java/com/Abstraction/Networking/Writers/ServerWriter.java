@@ -4,7 +4,6 @@ import com.Abstraction.Networking.Protocol.AbstractDataPackage;
 import com.Abstraction.Networking.Protocol.AbstractDataPackagePool;
 import com.Abstraction.Networking.Protocol.CODE;
 import com.Abstraction.Networking.Utility.WHO;
-import com.Abstraction.Util.Algorithms;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 import com.Abstraction.Util.Logging.Loggers.BaseLogger;
 
@@ -27,6 +26,10 @@ public class ServerWriter extends AbstractWriter {
 
     protected final Lock optimiserLock;
 
+    /**
+     * In micro seconds
+     */
+
     protected final int lockDuration;
 
     /**
@@ -34,10 +37,10 @@ public class ServerWriter extends AbstractWriter {
      */
 
 
-    public ServerWriter(Writer bridgeImplementation) {
+    public ServerWriter(Writer bridgeImplementation, int lockDurationMicro) {
         super(bridgeImplementation);
         optimiserLock = new ReentrantLock();
-        lockDuration = Algorithms.calculatePartOfAudioUnitDuration();
+        lockDuration = lockDurationMicro;
     }
 
     @Override
