@@ -16,7 +16,7 @@ public abstract class AbstractResources {
     private static Properties createDefaultProperties() {
         Properties properties = new Properties();
 
-        properties.setProperty("MicCaptureSizeDivider", "20");//server -> audio
+        properties.setProperty("MicCaptureSizeDivider", "8");//server -> audio
 
         properties.setProperty("HistorySize", "10");//gui
 
@@ -33,9 +33,9 @@ public abstract class AbstractResources {
         properties.setProperty("PingPeriod", "10");//server logic, in minutes
 
         properties.setProperty("SpeedMultiplier", "0.35");//server, client network optimiser
-        properties.setProperty("UnitFrameDividerServer", "2");//server, network optimiser
+        properties.setProperty("UnitFrameDividerServer", "1.3");//server, network optimiser
         properties.setProperty("UnitFrameDividerClient", "4");//client network optimiser
-        properties.setProperty("ThreadSleepDuration", "1");//server, client network optimiser in seconds
+        properties.setProperty("ThreadSleepDuration", "1.5");//server, client network optimiser in seconds
 
         return properties;
     }
@@ -55,7 +55,7 @@ public abstract class AbstractResources {
     public abstract Map<Integer, Track> getNotificationTracks();
 
     public int getMiCaptureSizeDivider() {
-        return checkIfZeroReturnDefaultInt("MicCaptureSizeDivider", 20);
+        return checkIfZeroReturnDefaultInt("MicCaptureSizeDivider", 8);
     }
 
     public int getHistorySize() {
@@ -115,7 +115,7 @@ public abstract class AbstractResources {
     }
 
     public double getUnitFrameDividerServer(){
-        return checkIfZeroReturnDefaultDouble("UnitFrameDividerServer", 2d);
+        return checkIfZeroReturnDefaultDouble("UnitFrameDividerServer", 1.3d);
     }
 
     /**
@@ -124,7 +124,7 @@ public abstract class AbstractResources {
      */
 
     public double getThreadSleepDuration(){
-        return checkIfZeroReturnDefaultDouble("ThreadSleepDuration", 1d);
+        return checkIfZeroReturnDefaultDouble("ThreadSleepDuration", 1.5d);
     }
 
     protected int checkIfZeroReturnDefaultInt(String property, int standard){

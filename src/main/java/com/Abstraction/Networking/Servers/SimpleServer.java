@@ -18,6 +18,7 @@ import com.Abstraction.Networking.Writers.ServerCipherWriter;
 import com.Abstraction.Networking.Writers.ServerWriter;
 import com.Abstraction.Networking.Writers.Writer;
 import com.Abstraction.Util.Algorithms;
+import com.Abstraction.Util.Cryptographics.Crypto;
 import com.Abstraction.Util.FormatWorker;
 import com.Abstraction.Util.Monitors.SpeedMonitor;
 import com.Abstraction.Util.Resources.Resources;
@@ -80,6 +81,7 @@ public class SimpleServer extends AbstractServer {
             micCapSize = calculateMicCaptureSize(sampleRate, sampleSizeInBits);
         } catch (ProtocolValueException e) {
             serverSocket.close();
+            serverLogger.loge(timer.getClass().getName(), "Constructor", e);
             throw e;
         }
         id = new AtomicInteger(WHO.SIZE);//because some ids already in use @see BaseWriter enum WHO
@@ -338,13 +340,30 @@ public class SimpleServer extends AbstractServer {
     }
 
     private int calculateMicCaptureSize(int sampleRate, int sampleSizeInBits) throws ProtocolValueException {
-        int i = (sampleRate / Resources.getInstance().getMiCaptureSizeDivider()) * (sampleSizeInBits / 8);
-        i = i - i % (sampleSizeInBits / 8);
-        int udpPackage = FormatWorker.getPackageSizeUDP(isCipherMode, i);
-        if (ProtocolBitMap.MAX_VALUE < i || ProtocolBitMap.MAX_VALUE < udpPackage)
-            throw new ProtocolValueException("Audio capture size is larger than length of the protocol! " +
-                    i + " must be " + "<= " + ProtocolBitMap.MAX_VALUE);
-        return i;
+        final int sampleSizeBytes = sampleSizeInBits / 8;
+        int micCaptureSize = (sampleRate / Resources.getInstance().getMiCaptureSizeDivider()) * (sampleSizeBytes);
+
+        /*
+        those 2 statements below will fail on:
+        if sample size is 3 bytes and Cipher padding isn't dividable by 3
+        TODO://so be prepared to calculate sizes properly with less common divider
+        for now just runtime error will be dropped
+        */
+
+        //make proper frames, if your sample size 2 bytes then must be true (n % mod 2 == 0)
+        micCaptureSize = micCaptureSize - micCaptureSize % (sampleSizeBytes);
+
+        //made (mic capture size + package header) mod (Cipher padding(16)) == 0
+        if (isCipherMode) {
+            micCaptureSize -= calculateRemainderForCipherPadding(sampleSizeBytes, micCaptureSize);
+        }
+
+        int udpPackage = FormatWorker.getPackageSizeUDP(isCipherMode, micCaptureSize);
+        if (ProtocolBitMap.MAX_VALUE < micCaptureSize || ProtocolBitMap.MAX_VALUE < udpPackage
+                || micCaptureSize < 0 || udpPackage < 0)
+            throw new ProtocolValueException("Audio capture size is larger than length of the protocol! Or less than 0" +
+                    micCaptureSize + " must be > 0 " + "<= " + ProtocolBitMap.MAX_VALUE);
+        return micCaptureSize;
     }
 
     /**
@@ -425,6 +444,25 @@ public class SimpleServer extends AbstractServer {
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Will throw runtime if padding and sample size doesn't have common divider
+     *
+     * @param sampleSizeBytes to check for divisibility
+     * @param micCaptureSize  raw calculated before
+     * @return amount of bytes you have to subtract from micCaptureSize
+     */
+
+    protected int calculateRemainderForCipherPadding(int sampleSizeBytes, int micCaptureSize) {
+        if (Crypto.STANDARD_PADDING % sampleSizeBytes != 0) {
+            RuntimeException exception = new RuntimeException();
+            serverLogger.loge(this.getClass().getName(), "calculateRemainderForCipherPadding",
+                    "Bad decoder padding and frame size in bytes", exception);
+            throw exception;
+        }
+        final int range = Crypto.STANDARD_PADDING - ProtocolBitMap.PACKET_SIZE;
+        return micCaptureSize % range;
     }
 
 }

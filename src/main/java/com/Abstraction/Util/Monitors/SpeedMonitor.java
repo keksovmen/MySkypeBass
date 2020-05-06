@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 
 /**
  * Helper for sending TCP audio data
- *
+ * <p>
  * Checks value against given boundary
  */
 public class SpeedMonitor {
@@ -39,15 +39,14 @@ public class SpeedMonitor {
     }
 
     /**
-     *
      * @param value {@code >=} 0
      */
 
-    public synchronized void feedValue(int value){
+    public synchronized void feedValue(int value) {
         int additional = (int) (previouslyAccumulated * multiplier);
         int result = value + additional;
         //check if int overflow occurs
-        if(result < 0) {
+        if (result < 0) {
             handleBoundaryBreach();
             return;
         }
@@ -58,26 +57,25 @@ public class SpeedMonitor {
         }
     }
 
-    public boolean isAllowed(){
+    public boolean isAllowed() {
         return isAllowed;
     }
 
-    private void handleBoundaryBreach(){
+    private void handleBoundaryBreach() {
         resetAccumulator();
         isAllowed = false;
         pushWakeUpCall();
     }
 
-    private void resetAccumulator(){
+    private void resetAccumulator() {
         previouslyAccumulated = 0;
     }
 
-    private void setAllowed(){
+    private void setAllowed() {
         isAllowed = true;
-        resetAccumulator();
     }
 
-    private void pushWakeUpCall(){
+    private void pushWakeUpCall() {
         pushAsyncTask.accept(() -> {
             try {
                 Thread.sleep((long) (Resources.getInstance().getThreadSleepDuration() * 1000));
