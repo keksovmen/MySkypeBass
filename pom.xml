@@ -12,6 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.release.name>MySkypeBass</project.release.name>
+        <exec.mainClass>com.Implementation.Main</exec.mainClass>
     </properties>
 
     <dependencies>
