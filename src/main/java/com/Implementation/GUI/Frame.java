@@ -39,7 +39,7 @@ public class Frame implements CompositeComponent {
     public Frame() {
         buttonsHandlers = new ArrayList<>();
 
-        frame = new JFrame("Skype Bass"); // take it from property
+        frame = new JFrame("Narfu VOIP"); // take it from property
 
         entrancePane = new EntrancePane(this, this::onServerPaneCreate);
         serverCreatePane = new AudioFormatStats(this, this::onServerCancel);

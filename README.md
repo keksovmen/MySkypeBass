@@ -1,4 +1,9 @@
-# MySkypeBass
+# Ветка для САФУ
+**Основные изменения:**
+- заменены звуковые уведомления на приличные
+- изменено название приложения
+
+# NARFU VOIP
 Simple VoIP program, made without any dependencies except for intellij idea swing extension, just plain java 1.8 SE.
 
 Contain 2 major packages Abstraction and Implementation:
@@ -13,13 +18,4 @@ POM file instructed to produce 2 artifacts, and javadoc:
 
 When starting can specify -logD flag to disable logging.
 
-When writing a message can specify a particular sound through <$n> or <$n-m>
-where: n - index of specific notification, m - delay in millis.
-
 All you need for server side is port forwarding if your internet connection made through a router.
-
-Has some good sound notification, 18+ I guess.
-
-P.S:
-Some times trying to port on pure WIN32 api, but you know it's tough one, maybe some day I finally do it.
-Reason just to make something bigger than console application on C++, to better understand it.
