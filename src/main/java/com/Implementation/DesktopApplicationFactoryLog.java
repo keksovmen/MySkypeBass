@@ -1,8 +1,16 @@
 package com.Implementation;
 
+import com.Abstraction.AbstractApplicationFactory;
+import com.Abstraction.ApplicationFactoryDecorator;
 import com.Abstraction.Util.Logging.LogManagerHelper;
 
-public class DesktopApplicationFactoryLog extends DesktopApplicationFactory {
+public class DesktopApplicationFactoryLog extends ApplicationFactoryDecorator
+{
+
+    public DesktopApplicationFactoryLog(AbstractApplicationFactory child)
+    {
+        super(child);
+    }
 
     @Override
     public LogManagerHelper createLogManager() {
